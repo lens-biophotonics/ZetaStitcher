@@ -1,1 +1,3 @@
 pip-tools
+sphinx
+numpydoc

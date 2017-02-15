@@ -4,7 +4,19 @@
 #
 #    pip-compile --output-file requirements.dev.txt requirements.dev.in
 #
+alabaster==0.7.9          # via sphinx
+babel==2.3.4              # via sphinx
 click==6.7                # via pip-tools
+docutils==0.13.1          # via sphinx
 first==2.0.1              # via pip-tools
+imagesize==0.7.1          # via sphinx
+jinja2==2.9.5             # via sphinx
+markupsafe==0.23          # via jinja2
+numpydoc==0.6.0
 pip-tools==1.8.0
-six==1.10.0               # via pip-tools
+pygments==2.2.0           # via sphinx
+pytz==2016.10             # via babel
+requests==2.13.0          # via sphinx
+six==1.10.0               # via pip-tools, sphinx
+snowballstemmer==1.2.1    # via sphinx
+sphinx==1.5.2
