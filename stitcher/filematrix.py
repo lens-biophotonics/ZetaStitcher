@@ -4,7 +4,7 @@ import os
 import re
 import logging
 
-import numpy as np
+import pandas as pd
 
 
 logger = logging.getLogger('FileMatrix')
@@ -42,19 +42,14 @@ class FileMatrix:
     def __init__(self, directory):
         self.dir = directory
 
-        self.input_files = None
-        """List of found files"""
-
-        self.stage_coords = None
-        """Numpy array with nominal stage coordinates, as parsed from file
-        names. Shape is (*n*, 3) where *n* is the length of
-        :py:attr:`~.input_files`."""
+        self.data_frame = None
+        """A :py:class:`pandas.DataFrame` object. Contains four columns: `X`,
+        `Y`, `Z` and `filename`."""
 
         self.load_dir(directory)
 
     def load_dir(self, dir=None):
-        """Look for files in `dir` and its subfolders and populate data
-        structures.
+        """Look for files in `dir` recursively and populate data structures.
 
         Parameters
         ----------
@@ -64,19 +59,20 @@ class FileMatrix:
             dir = self.dir
 
         input_files = []
+        list = []
 
         for root, dirs, files in os.walk(dir):
             for f in files:
                 input_files.append(os.path.join(root, f))
 
-        stage_coords = np.zeros((len(input_files), 3), dtype=np.uint32)
-
-        self.input_files = []
         for i, f in enumerate(input_files):
             try:
-                stage_coords[i, :] = parse_input_file(f)
-                self.input_files.append(f)
+                list += parse_input_file(f)
+                list.append(f)
             except RuntimeError as e:
                 logger.error(e.args[0])
 
-        self.stage_coords = stage_coords
+        data = {'X': list[0::4], 'Y': list[1::4], 'Z': list[2::4],
+                'filename': list[3::4]}
+        df = pd.DataFrame(data)
+        self.data_frame = df.sort_values(['Z', 'Y', 'X'])
