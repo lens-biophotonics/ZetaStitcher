@@ -6,11 +6,13 @@ import logging
 
 import pandas as pd
 
+import dcimg
+
 
 logger = logging.getLogger('FileMatrix')
 
 
-def parse_input_file(file_name):
+def parse_file_name(file_name):
     """Parse fields (stage coordinates) contained in `file_name`.
 
     Parameters
@@ -27,8 +29,8 @@ def parse_input_file(file_name):
     m = re.search('^x_(\d+).*y_(\d+).*z_(\d+).*zstep_(\d+)', file_name)
     if m is None:
         m = re.search('^(\d+)_(\d+)_(\d+)', file_name)
-        if m is None:
-            raise RuntimeError('Invalid file name {}'.format(file_name))
+    if m is None:
+        raise RuntimeError('Invalid file name {}'.format(file_name))
 
     fields = []
     for i in range(1, 4):
@@ -43,8 +45,8 @@ class FileMatrix:
         self.dir = directory
 
         self.data_frame = None
-        """A :py:class:`pandas.DataFrame` object. Contains four columns: `X`,
-        `Y`, `Z` and `filename`."""
+        """A :py:class:`pandas.DataFrame` object. Contains the following
+        columns: `X`, `Y`, `Z`, `Z_end`."""
 
         self.load_dir(directory)
 
@@ -67,12 +69,18 @@ class FileMatrix:
 
         for i, f in enumerate(input_files):
             try:
-                list += parse_input_file(f)
+                fields = parse_file_name(f)
+                dc = dcimg.DCIMGFile(f)
+                fields.append(dc.nfrms)
+                list += fields
                 list.append(f)
-            except RuntimeError as e:
+            except (RuntimeError, ValueError) as e:
                 logger.error(e.args[0])
 
-        data = {'X': list[0::4], 'Y': list[1::4], 'Z': list[2::4],
-                'filename': list[3::4]}
+        data = {'X': list[0::5], 'Y': list[1::5], 'Z': list[2::5],
+                'nfrms': list[3::5], 'filename': list[4::5]}
         df = pd.DataFrame(data)
-        self.data_frame = df.sort_values(['Z', 'Y', 'X'])
+        df = df.sort_values(['Z', 'Y', 'X'])
+        df['Z_end'] = df['Z'] + df['nfrms']
+
+        self.data_frame = df
