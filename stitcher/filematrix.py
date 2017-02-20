@@ -5,6 +5,7 @@ import re
 import logging
 
 import pandas as pd
+import networkx as nx
 
 import dcimg
 
@@ -84,3 +85,28 @@ class FileMatrix:
         df['Z_end'] = df['Z'] + df['nfrms']
 
         self.data_frame = df
+
+    @property
+    def slices(self):
+        """A slice is a group of tiles that share at least a `z` frame.
+
+        Returns
+        -------
+        comp : generator
+            A generator of graphs, one for each connected component of G,
+            where G is the graph of tiles connected by at least a `z` frame.
+        """
+        G = nx.Graph()
+        for index, row in self.data_frame.iterrows():
+            G.add_node(index)
+
+        for index, row in self.data_frame.iterrows():
+            view = self.data_frame[
+                (self.data_frame['Z'] <= row['Z'])
+                & (self.data_frame['Z_end'] >= row['Z_end'])
+            ]
+            pairs = zip(view.index.values[::1], view.index.values[1::1])
+            G.add_edges_from(pairs)
+            G.add_edge((view.index.values[0]), view.index.values[-1])
+
+        return nx.connected_component_subgraphs(G)
