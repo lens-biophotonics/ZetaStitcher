@@ -2,3 +2,5 @@ dcimg
 networkx
 numpy
 pandas
+tensorflow-gpu
+scipy

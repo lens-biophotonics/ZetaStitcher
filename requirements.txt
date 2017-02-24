@@ -4,11 +4,21 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-dcimg==0.1.0
+appdirs==1.4.2            # via setuptools
+dcimg==0.1.1
 decorator==4.0.11         # via networkx
 networkx==1.11
 numpy==1.12.0
+packaging==16.8           # via setuptools
 pandas==0.19.2
+protobuf==3.2.0           # via tensorflow-gpu
+pyparsing==2.1.10         # via packaging
 python-dateutil==2.6.0    # via pandas
 pytz==2016.10             # via pandas
-six==1.10.0               # via python-dateutil
+scipy==0.18.1
+six==1.10.0               # via packaging, protobuf, python-dateutil, setuptools, tensorflow-gpu
+tensorflow-gpu==1.0.0
+wheel==0.29.0             # via tensorflow-gpu
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools                # via protobuf
