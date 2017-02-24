@@ -94,13 +94,14 @@ def stitch(aname, bname, bottom, top, overlap):
     tf.reset_default_graph()
 
     argmax = np.argmax(phase_corr)
+
     frame_size = phase_corr.shape[1] * phase_corr.shape[2]
 
     dz = floor(argmax / frame_size)
 
-    dy = floor((argmax - dz * frame_size) / 2048)
+    dy = floor((argmax - dz * frame_size) / phase_corr.shape[2])
 
-    dx = (argmax - dz * frame_size - dy * phase_corr.shape[2]) % 2048
+    dx = argmax - dz * frame_size - dy * phase_corr.shape[2]
     if dx > phase_corr.shape[2] / 2:
         dx -= phase_corr.shape[2]
 
