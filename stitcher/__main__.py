@@ -73,19 +73,16 @@ def stitch(aname, bname, bottom, top, overlap):
         bt = bt * my_filter_t
 
     with tf.name_scope('FFT'):
-        ac = tf.complex(at, tf.zeros_like(at))
-        bc = tf.complex(bt, tf.zeros_like(bt))
+        ac = tf.cast(at, tf.complex64, name='to_complex')
+        bc = tf.cast(bt, tf.complex64, name='to_complex')
 
         aft = tf.fft3d(ac)
         bft = tf.fft3d(bc)
 
     with tf.name_scope('cross_power_spectrum'):
         prod = aft * tf.conj(bft)
-        with tf.name_scope('denominator'):
-            prodnorm = tf.abs(prod, name='norm')
-            zl = tf.zeros_like(prodnorm, name='zero_imaginary_part')
-            denom = tf.complex(prodnorm, zl)
-        ratio = prod / denom
+        prodnorm = tf.abs(prod, name='norm')
+        ratio = prod / tf.cast(prodnorm, tf.complex64, name='to_complex')
 
     with tf.name_scope('phase_correlation'):
         phase_corr = tf.real(tf.ifft3d(ratio))
