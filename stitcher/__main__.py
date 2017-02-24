@@ -56,37 +56,39 @@ def stitch(aname, bname, bottom, top, overlap):
 
     my_filter = window_filter(*awhole.shape).astype(np.float32)
 
-    aph = tf.placeholder(dtype=tf.uint16, shape=awhole.shape)
-    bph = tf.placeholder(dtype=tf.uint16, shape=bwhole.shape)
+    with tf.name_scope('input'):
+        aph = tf.placeholder(dtype=tf.uint16, shape=awhole.shape,
+                             name='a_placeholder')
+        bph = tf.placeholder(dtype=tf.uint16, shape=bwhole.shape,
+                             name='b_placeholder')
 
-    at = tf.to_float(aph)
-    bt = tf.to_float(bph)
+        at = tf.to_float(aph)
+        bt = tf.to_float(bph)
 
-    my_filter_t = tf.placeholder(dtype=tf.float32, shape=my_filter.shape)
+    my_filter_t = tf.placeholder(dtype=tf.float32, shape=my_filter.shape,
+                                 name='filter_placeholder')
 
-    at = at * my_filter_t
-    bt = bt * my_filter_t
+    with tf.name_scope('window_filter'):
+        at = at * my_filter_t
+        bt = bt * my_filter_t
 
-    ac = tf.complex(at, tf.zeros_like(at))
-    bc = tf.complex(bt, tf.zeros_like(bt))
+    with tf.name_scope('FFT'):
+        ac = tf.complex(at, tf.zeros_like(at))
+        bc = tf.complex(bt, tf.zeros_like(bt))
 
-    aft = tf.fft3d(ac)
-    bft = tf.fft3d(bc)
+        aft = tf.fft3d(ac)
+        bft = tf.fft3d(bc)
 
-    prod = aft * tf.conj(bft)
-    real = tf.real(prod)
-    imag = tf.imag(prod)
-    prod = tf.complex(tf.to_double(real), tf.to_double(imag))
-    prodnorm = tf.abs(prod)
-    zl = tf.zeros_like(prodnorm)
-    denom = tf.complex(prodnorm, zl)
-    ratio = prod / denom
-    real = tf.real(ratio)
-    imag = tf.imag(ratio)
+    with tf.name_scope('cross_power_spectrum'):
+        prod = aft * tf.conj(bft)
+        with tf.name_scope('denominator'):
+            prodnorm = tf.abs(prod, name='norm')
+            zl = tf.zeros_like(prodnorm, name='zero_imaginary_part')
+            denom = tf.complex(prodnorm, zl)
+        ratio = prod / denom
 
-    ratio = tf.complex(tf.to_float(real), tf.to_float(imag))
-
-    phase_corr = tf.abs(tf.real(tf.ifft3d(ratio)))
+    with tf.name_scope('phase_correlation'):
+        phase_corr = tf.real(tf.ifft3d(ratio))
 
     with tf.Session() as sess:
         phase_corr = sess.run(phase_corr, feed_dict={aph: awhole, bph: bwhole,
