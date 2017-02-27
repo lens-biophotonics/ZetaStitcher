@@ -46,7 +46,7 @@ class FileMatrix:
         self.dir = directory
 
         self.data_frame = None
-        """A :py:class:`pandas.DataFrame` object. Contains the following
+        """A :class:`pandas.DataFrame` object. Contains the following
         columns: `X`, `Y`, `Z`, `Z_end`."""
 
         self.load_dir(directory)
@@ -110,3 +110,59 @@ class FileMatrix:
             G.add_edge((view.index.values[0]), view.index.values[-1])
 
         return nx.connected_component_subgraphs(G)
+
+    @property
+    def tiles_along_dir(self):
+        """Groups of tiles to be stitched along a given direction.
+
+        You need to send to this generator a tuple containing:
+            - a list for sorting the :class:`pandas.DataFrame`, such as \
+            :code:`['Z', 'Y', 'X']`
+
+            - an axis for grouping, such as :code:`'Y'`
+
+        Yields
+        -------
+        :class:`pandas.DataFrame`
+            A group of tiles
+        """
+        for s in self.slices:
+            got = yield
+            view = self.data_frame.loc[s.nodes()].sort_values(
+                got[0]).groupby(got[1])
+            for name, group in view:
+                yield group
+
+    @property
+    def tiles_along_X(self):
+        """Groups of tiles to be stitched along `X`.
+
+        Equivalent to :attr:`~tiles_along_dir` having sent the following
+        tuple: :code:`(['Z', 'X', 'Y'], 'Y')`
+
+        Yields
+        -------
+        :class:`pandas.DataFrame`
+            A group of tiles
+        """
+        g = self.tiles_along_dir
+        next(g)
+        yield g.send((['Z', 'X', 'Y'], 'Y'))
+        yield next(g)
+
+    @property
+    def tiles_along_Y(self):
+        """Groups of tiles to be stitched along `Y`.
+
+        Equivalent to :attr:`~tiles_along_dir` having sent the following
+        tuple: :code:`(['Z', 'Y', 'X'], 'X')`
+
+        Yields
+        -------
+        :class:`pandas.DataFrame`
+            A group of tiles
+        """
+        g = self.tiles_along_dir
+        next(g)
+        yield g.send((['Z', 'Y', 'X'], 'X'))
+        yield next(g)
