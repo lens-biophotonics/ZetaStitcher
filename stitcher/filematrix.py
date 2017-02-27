@@ -71,8 +71,8 @@ class FileMatrix:
         for i, f in enumerate(input_files):
             try:
                 fields = parse_file_name(f)
-                dc = dcimg.DCIMGFile(f)
-                fields.append(dc.nfrms)
+                with dcimg.DCIMGFile(f) as dc:
+                    fields.append(dc.nfrms)
                 list += fields
                 list.append(f)
             except (RuntimeError, ValueError) as e:
