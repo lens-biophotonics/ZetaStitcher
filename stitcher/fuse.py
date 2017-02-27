@@ -4,7 +4,7 @@ import skimage.external.tifffile as tiff
 from dcimg import DCIMGFile
 
 
-def fuse(fname_1, fname_2, shift, zplane):
+def fuse(fname_1, fname_2, shift, zplane, axis=1):
     dx = shift[0]
     dy = shift[1]
     dz = shift[2]
@@ -14,6 +14,10 @@ def fuse(fname_1, fname_2, shift, zplane):
 
     aframe = a.frame(zplane, dtype=np.float32)
     bframe = b.frame(zplane + dz, dtype=np.float32)
+
+    if axis == 2:
+        aframe = np.rot90(aframe)
+        bframe = np.rot90(bframe)
 
     output_height = aframe.shape[1] + bframe.shape[1] - dy
 

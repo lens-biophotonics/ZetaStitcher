@@ -22,12 +22,14 @@ def main():
 
     parser.add_argument('-f', type=int, help='frame', dest='frame',
                         required=True)
+    parser.add_argument('-a', type=int, help='axis (1=Y, 2=X)', dest='axis',
+                        choices=(1, 2), default=1)
     parser.add_argument('--overlap', type=int, help='overlap', default=600)
 
     args = parser.parse_args(sys.argv[1:])
 
     stitch(args.input_file1, args.input_file2, args.frame,
-           args.frame + 5, args.overlap)
+           args.frame + 5, args.overlap, axis=args.axis)
 
 
 def window_filter(wz, wy, wx):
@@ -44,15 +46,21 @@ def window_filter(wz, wy, wx):
     return f
 
 
-def stitch(aname, bname, bottom, top, overlap):
+def stitch(aname, bname, bottom, top, overlap, axis=1):
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
 
     awhole = a.whole()
-    awhole = awhole[bottom:top, -overlap:, :]
+    awhole = awhole[bottom:top, :]
+    if axis == 2:
+        awhole = np.rot90(awhole, axes=(1, 2))
+    awhole = awhole[:, -overlap:, :]
 
     bwhole = b.whole()
-    bwhole = bwhole[bottom:top, 0:overlap, :]
+    bwhole = bwhole[bottom:top, :]
+    if axis == 2:
+        bwhole = np.rot90(bwhole, axes=(1, 2))
+    bwhole = bwhole[:, 0:overlap, :]
 
     my_filter = window_filter(*awhole.shape).astype(np.float32)
 
