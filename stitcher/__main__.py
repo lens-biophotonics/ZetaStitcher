@@ -50,14 +50,12 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
 
-    awhole = a.whole()
-    awhole = awhole[bottom:top, :]
+    awhole = a.layer(bottom, top)
     if axis == 2:
         awhole = np.rot90(awhole, axes=(1, 2))
     awhole = awhole[:, -overlap:, :]
 
-    bwhole = b.whole()
-    bwhole = bwhole[bottom:top, :]
+    bwhole = b.layer(bottom, top)
     if axis == 2:
         bwhole = np.rot90(bwhole, axes=(1, 2))
     bwhole = bwhole[:, 0:overlap, :]
