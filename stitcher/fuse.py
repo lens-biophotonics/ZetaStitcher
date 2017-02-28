@@ -19,12 +19,12 @@ def fuse(fname_1, fname_2, shift, zplane, axis=1):
         aframe = np.rot90(aframe)
         bframe = np.rot90(bframe)
 
-    output_height = aframe.shape[1] + bframe.shape[1] - dy
+    output_height = aframe.shape[0] + bframe.shape[0] - dy
+    # for the moment consider a and b to have same width
+    output_width = aframe.shape[1] - abs(dx)
 
     aframe_roi = aframe[-dy:, :]
     bframe_roi = bframe[0:dy, :]
-
-    output_width = min(a.xsize, b.xsize) - dx
 
     ax_min = 0
     if dx > 0:
@@ -32,10 +32,12 @@ def fuse(fname_1, fname_2, shift, zplane, axis=1):
     ax_max = ax_min + output_width
 
     bx_min = 0
+    bx_max = output_width
+
     if dx < 0:
         bx_min = -dx
+        bx_max += abs(dx)
 
-    bx_max = output_width
 
     aframe_roi = aframe_roi[:, ax_min:ax_max]
     bframe_roi = bframe_roi[:, bx_min:bx_max]
