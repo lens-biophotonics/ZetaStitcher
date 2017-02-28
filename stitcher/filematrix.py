@@ -49,6 +49,9 @@ class FileMatrix:
         """A :class:`pandas.DataFrame` object. Contains the following
         columns: `X`, `Y`, `Z`, `Z_end`."""
 
+        self._ascending_tiles_X = True
+        self._ascending_tiles_Y = True
+
         self.load_dir(directory)
 
     def load_dir(self, dir=None):
@@ -112,6 +115,22 @@ class FileMatrix:
         return nx.connected_component_subgraphs(G)
 
     @property
+    def ascending_tiles_X(self):
+        return self._ascending_tiles_X
+
+    @ascending_tiles_X.setter
+    def ascending_tiles_X(self, value):
+        self._ascending_tiles_X = value
+
+    @property
+    def ascending_tiles_Y(self):
+        return self._ascending_tiles_Y
+
+    @ascending_tiles_Y.setter
+    def ascending_tiles_Y(self, value):
+        self._ascending_tiles_Y = value
+
+    @property
     def tiles_along_dir(self):
         """Groups of tiles to be stitched along a given direction.
 
@@ -129,7 +148,7 @@ class FileMatrix:
         for s in self.slices:
             got = yield
             view = self.data_frame.loc[s.nodes()].sort_values(
-                got[0]).groupby(got[1])
+                got[0], ascending=got[1]).groupby(got[2])
             for name, group in view:
                 yield group
 
@@ -147,7 +166,7 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'X', 'Y'], 'Y'))
+        yield g.send((['Z', 'X', 'Y'], self.ascending_tiles_X, 'Y'))
         yield next(g)
 
     @property
@@ -164,5 +183,5 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'Y', 'X'], 'X'))
+        yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_Y, 'X'))
         yield next(g)
