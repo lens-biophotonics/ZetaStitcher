@@ -69,6 +69,10 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
         at = tf.to_float(aph)
         bt = tf.to_float(bph)
 
+    with tf.name_scope('normalize'):
+        at /= tf.reduce_mean(at)
+        bt /= tf.reduce_mean(bt)
+
     my_filter_t = tf.placeholder(dtype=tf.float32, shape=my_filter.shape,
                                  name='filter_placeholder')
 
