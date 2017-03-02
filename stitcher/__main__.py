@@ -1,8 +1,6 @@
 import sys
 import argparse
 
-from math import floor
-
 import numpy as np
 import tensorflow as tf
 
@@ -100,13 +98,9 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
 
     argmax = np.argmax(phase_corr)
 
-    frame_size = phase_corr.shape[1] * phase_corr.shape[2]
 
-    dz = floor(argmax / frame_size)
+    dz, dy, dx = np.unravel_index(argmax, phase_corr.shape)
 
-    dy = floor((argmax - dz * frame_size) / phase_corr.shape[2])
-
-    dx = argmax - dz * frame_size - dy * phase_corr.shape[2]
     if dx > phase_corr.shape[2] / 2:
         dx -= phase_corr.shape[2]
 
