@@ -107,12 +107,16 @@ def phase_corr_op(ashape, bshape, filter_shape):
     return phase_corr
 
 
-def find_phase_corr_max(phase_corr):
+def find_phase_corr_max(phase_corr, max_shift_x=100, max_shift_y=100):
     """Find maximum in phase correlation map.
 
     Parameters
     ----------
     phase_corr : :class:`numpy.ndarray`.
+    max_shift_x : int
+        Maximum allowed shift along X in px
+    max_shift_y : int
+        Maximum allowed shift along Y in px.
 
     Returns
     -------
@@ -120,8 +124,8 @@ def find_phase_corr_max(phase_corr):
         Coordinates of maximum: (`z`, `y`, `x`).
     """
     temp = phase_corr.view(np.ma.MaskedArray)
-    temp[:, 100:, :] = np.ma.masked
-    temp[:, 0:100:, 100:-100] = np.ma.masked
+    temp[:, max_shift_y:, :] = np.ma.masked
+    temp[:, :max_shift_y, max_shift_x:-max_shift_x] = np.ma.masked
 
     argmax = np.argmax(temp)
 
@@ -248,7 +252,8 @@ def overlap_score(alayer, blayer, dz, dy, dx):
     return score
 
 
-def stitch(aname, bname, z_min, z_max, overlap, axis=1):
+def stitch(aname, bname, z_min, z_max, overlap, axis=1, max_shift_x=100,
+           max_shift_y=100):
     """Compute optimal shift between adjacent tiles.
 
     Parameters
@@ -266,6 +271,10 @@ def stitch(aname, bname, z_min, z_max, overlap, axis=1):
     axis : int
         1 = stitch along Y
         2 = stitch along X
+    max_shift_x : int
+        Maximum allowed shift along X in px
+    max_shift_y : int
+        Maximum allowed shift along Y in px.
 
     Returns
     -------
@@ -297,7 +306,7 @@ def stitch(aname, bname, z_min, z_max, overlap, axis=1):
             'input/filter_placeholder:0': my_filter})
     tf.reset_default_graph()
 
-    dz, dy, dx = find_phase_corr_max(phase_corr)
+    dz, dy, dx = find_phase_corr_max(phase_corr, max_shift_x, max_shift_y)
     dy = overlap - dy
 
     score = overlap_score(alayer, blayer, dz, dy, dx)
