@@ -112,6 +112,73 @@ def find_shift(phase_corr):
     return dz, dy, dx
 
 
+def conv2d_op(ashape, bshape):
+    with tf.name_scope('input'):
+        at = tf.placeholder(dtype=tf.float32, shape=ashape,
+                            name='a_placeholder')
+        bt = tf.placeholder(dtype=tf.float32, shape=bshape,
+                            name='b_placeholder')
+
+        at = tf.expand_dims(at, 0)  # add dummy batch dimension
+        at = tf.expand_dims(at, -1)  # add dummy in_channels dimension
+
+        bt = tf.expand_dims(bt, -1)  # add dummy in_channels dimension
+        bt = tf.expand_dims(bt, -1)  # add dummy out_channels dimension
+
+    with tf.name_scope('normalize'):
+        at /= tf.reduce_mean(at)
+        bt /= tf.reduce_mean(bt)
+
+    conv = tf.nn.conv2d(at, bt, padding='SAME',
+                        strides=list((1,) + bshape + (1,)))
+    conv = tf.squeeze(conv)
+
+    return conv
+
+
+def overlap_score(alayer, blayer, dz, dy, dx):
+    if dz < 0:
+        az = 0
+        bz = -dz
+    else:
+        az = dz
+        bz = 0
+
+    aframe = np.squeeze(alayer[az, :])
+    bframe = np.squeeze(blayer[bz, :])
+
+    # for the moment consider a and b to have same width
+    roi_width = aframe.shape[1] - abs(dx)
+
+    aframe_roi = aframe[-dy:, :]
+    bframe_roi = bframe[0:dy, :]
+
+    ax_min = 0
+    if dx > 0:
+        ax_min = dx
+    ax_max = ax_min + roi_width
+
+    bx_min = 0
+    bx_max = roi_width
+
+    if dx < 0:
+        bx_min = -dx
+        bx_max += abs(dx)
+
+    aframe_roi = aframe_roi[-dy:, ax_min:ax_max].astype(np.float32)
+    bframe_roi = bframe_roi[:dy, bx_min:bx_max].astype(np.float32)
+
+    score = conv2d_op(aframe_roi.shape, bframe_roi.shape)
+
+    with tf.Session() as sess:
+        score = sess.run(score, feed_dict={
+            'input/a_placeholder:0': aframe_roi,
+            'input/b_placeholder:0': bframe_roi})
+    tf.reset_default_graph()
+
+    return score
+
+
 def stitch(aname, bname, bottom, top, overlap, axis=1):
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
@@ -140,8 +207,11 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
     dz, dy, dx = find_shift(phase_corr)
     dy = overlap - dy
 
+    score = overlap_score(alayer, blayer, dz, dy, dx)
+
     print('phase_corr.shape = {}'.format(phase_corr.shape))
-    print('dx = {}, dy = {}, dz = {}'.format(dx, dy, dz))
+    print('dx = {}, dy = {}, dz = {} @ {}, axis = {}, score = {:e}'.format(
+        dx, dy, dz, bottom, axis, score))
 
     a.close()
     b.close()
