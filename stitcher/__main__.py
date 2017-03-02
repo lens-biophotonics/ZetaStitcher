@@ -5,6 +5,8 @@ import numpy as np
 import tensorflow as tf
 
 from scipy import signal
+from scipy.ndimage.filters import maximum_filter
+from skimage.restoration import denoise_tv_bregman
 
 from dcimg import DCIMGFile
 
@@ -83,6 +85,33 @@ def phase_corr_op(ashape, bshape, filter_shape):
     return phase_corr
 
 
+def find_shift(phase_corr):
+    temp = phase_corr.view(np.ma.MaskedArray)
+    temp[:, 100:, :] = np.ma.masked
+    temp[:, 0:100:, 100:-100] = np.ma.masked
+
+    argmax = np.argmax(temp)
+
+    dz, dy, dx = np.unravel_index(argmax, temp.shape)
+
+    data = np.squeeze(denoise_tv_bregman(phase_corr[dz, :], weight=0.1))
+    data = data.view(np.ma.MaskedArray)
+    data.mask = temp.mask
+    data_max = maximum_filter(data, 512)
+    mask = (data != data_max)
+
+    data = data.view(np.ma.MaskedArray)
+    data.mask = mask
+    argmax = np.argmax(data)
+
+    dy, dx = np.unravel_index(argmax, data.shape)
+
+    if dx > phase_corr.shape[2] / 2:
+        dx -= phase_corr.shape[2]
+
+    return dz, dy, dx
+
+
 def stitch(aname, bname, bottom, top, overlap, axis=1):
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
@@ -108,13 +137,10 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
             'input/filter_placeholder:0': my_filter})
     tf.reset_default_graph()
 
-    argmax = np.argmax(phase_corr)
+    dz, dy, dx = find_shift(phase_corr)
 
 
-    dz, dy, dx = np.unravel_index(argmax, phase_corr.shape)
 
-    if dx > phase_corr.shape[2] / 2:
-        dx -= phase_corr.shape[2]
 
     print('phase_corr.shape = {}'.format(phase_corr.shape))
     print('dx = {}, dy = {}, dz = {}'.format(dx, dy, dz))
