@@ -116,24 +116,24 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
 
-    awhole = a.layer(bottom, top)
+    alayer = a.layer(bottom, top)
     if axis == 2:
-        awhole = np.rot90(awhole, axes=(1, 2))
-    awhole = awhole[:, -overlap:, :]
+        alayer = np.rot90(alayer, axes=(1, 2))
+    alayer = alayer[:, -overlap:, :]
 
-    bwhole = b.layer(bottom, top)
+    blayer = b.layer(bottom, top)
     if axis == 2:
-        bwhole = np.rot90(bwhole, axes=(1, 2))
-    bwhole = bwhole[:, 0:overlap, :]
+        blayer = np.rot90(blayer, axes=(1, 2))
+    blayer = blayer[:, 0:overlap, :]
 
-    my_filter = window_filter(*awhole.shape).astype(np.float32)
+    my_filter = window_filter(*alayer.shape).astype(np.float32)
 
-    phase_corr = phase_corr_op(awhole.shape, bwhole.shape, my_filter.shape)
+    phase_corr = phase_corr_op(alayer.shape, blayer.shape, my_filter.shape)
 
     with tf.Session() as sess:
         phase_corr = sess.run(phase_corr, feed_dict={
-            'input/a_placeholder:0': awhole,
-            'input/b_placeholder:0': bwhole,
+            'input/a_placeholder:0': alayer,
+            'input/b_placeholder:0': blayer,
             'input/filter_placeholder:0': my_filter})
     tf.reset_default_graph()
 
