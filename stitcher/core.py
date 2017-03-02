@@ -1,3 +1,5 @@
+from os import environ
+
 import numpy as np
 import tensorflow as tf
 
@@ -6,6 +8,16 @@ from scipy.ndimage.filters import maximum_filter
 from skimage.restoration import denoise_tv_bregman
 
 from dcimg import DCIMGFile
+
+
+gpu_options = tf.GPUOptions()
+try:
+    gpu_options.per_process_gpu_memory_fraction = \
+        float(environ['TF_GPU_PER_PROCESS_GPU_MEMORY_FRACTION'])
+except (KeyError, ValueError):
+    pass
+
+sess_config = tf.ConfigProto(gpu_options=gpu_options)
 
 
 def window_filter(wz, wy, wx):
@@ -146,7 +158,7 @@ def overlap_score(alayer, blayer, dz, dy, dx):
 
     score = conv2d_op(aframe_roi.shape, bframe_roi.shape)
 
-    with tf.Session() as sess:
+    with tf.Session(config=sess_config) as sess:
         score = sess.run(score, feed_dict={
             'input/a_placeholder:0': aframe_roi,
             'input/b_placeholder:0': bframe_roi})
@@ -173,7 +185,7 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
 
     phase_corr = phase_corr_op(alayer.shape, blayer.shape, my_filter.shape)
 
-    with tf.Session() as sess:
+    with tf.Session(config=sess_config) as sess:
         phase_corr = sess.run(phase_corr, feed_dict={
             'input/a_placeholder:0': alayer,
             'input/b_placeholder:0': blayer,
