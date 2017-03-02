@@ -20,7 +20,22 @@ except (KeyError, ValueError):
 sess_config = tf.ConfigProto(gpu_options=gpu_options)
 
 
-def window_filter(wz, wy, wx):
+def hamming_window(wz, wy, wx):
+    """A 3D Hamming window.
+
+    Parameters
+    ----------
+    wz : int
+        Width along Z.
+    wy : int
+        Width along Y.
+    wx
+        Width along X.
+
+    Returns
+    -------
+    :class:`numpy.ndarray`.
+    """
     gx = signal.hamming(wx)
     gy = signal.hamming(wy)
     gz = signal.hamming(wz)
@@ -35,6 +50,25 @@ def window_filter(wz, wy, wx):
 
 
 def phase_corr_op(ashape, bshape, filter_shape):
+    """Construct a TensorFlow op to compute phase correlation.
+
+    Parameters
+    ----------
+    ashape : tuple of ints
+        Shape of input array.
+    bshape : tuple of ints
+        Shape of input array.
+    filter_shape : tuple
+        Shape of filter array.
+
+    Returns
+    -------
+    phase_corr : tf.Operation
+        The op to be run to compute phase correlation. When running the op,
+        values for the following placeholders must be fed:
+        `input/a_placeholder:0`, `input/b_placeholder:0`,
+        `input/filter_placeholder:0`.
+    """
     with tf.name_scope('input'):
         aph = tf.placeholder(dtype=tf.uint16, shape=ashape,
                              name='a_placeholder')
@@ -73,7 +107,18 @@ def phase_corr_op(ashape, bshape, filter_shape):
     return phase_corr
 
 
-def find_shift(phase_corr):
+def find_phase_corr_max(phase_corr):
+    """Find maximum in phase correlation map.
+
+    Parameters
+    ----------
+    phase_corr : :class:`numpy.ndarray`.
+
+    Returns
+    -------
+    tuple
+        Coordinates of maximum: (`z`, `y`, `x`).
+    """
     temp = phase_corr.view(np.ma.MaskedArray)
     temp[:, 100:, :] = np.ma.masked
     temp[:, 0:100:, 100:-100] = np.ma.masked
@@ -100,7 +145,23 @@ def find_shift(phase_corr):
     return dz, dy, dx
 
 
-def conv2d_op(ashape, bshape):
+def xcorr2d_op(ashape, bshape):
+    """Construct a TensorFlow op to compute 2D cross-correlation.
+
+    Parameters
+    ----------
+    ashape : tuple of ints
+        Shape of input array.
+    bshape : tuple of ints
+        Shape of input array.
+
+    Returns
+    -------
+    tf.Operation
+        The op to be run to compute 2D cross-correlation. When running the op,
+        values for the following placeholders must be fed:
+        `input/a_placeholder:0`, `input/b_placeholder:0`.
+    """
     with tf.name_scope('input'):
         at = tf.placeholder(dtype=tf.float32, shape=ashape,
                             name='a_placeholder')
@@ -125,6 +186,26 @@ def conv2d_op(ashape, bshape):
 
 
 def overlap_score(alayer, blayer, dz, dy, dx):
+    """Compute overlap score between two layers at the given shifts.
+
+    The score is computed as the 2D cross-correlation in the first
+    overlapping plane of the input layers.
+
+    Parameters
+    ----------
+    alayer : 3D class:`numpy.ndarray`.
+    blayer : 3D class:`numpy.ndarray`.
+    dz : int
+        Shift along Z.
+    dy : int
+        Shift along Y.
+    dx : int
+        Shift along X.
+
+    Returns
+    -------
+    score : int
+    """
     if dz < 0:
         az = 0
         bz = -dz
@@ -156,7 +237,7 @@ def overlap_score(alayer, blayer, dz, dy, dx):
     aframe_roi = aframe_roi[-dy:, ax_min:ax_max].astype(np.float32)
     bframe_roi = bframe_roi[:dy, bx_min:bx_max].astype(np.float32)
 
-    score = conv2d_op(aframe_roi.shape, bframe_roi.shape)
+    score = xcorr2d_op(aframe_roi.shape, bframe_roi.shape)
 
     with tf.Session(config=sess_config) as sess:
         score = sess.run(score, feed_dict={
@@ -167,21 +248,45 @@ def overlap_score(alayer, blayer, dz, dy, dx):
     return score
 
 
-def stitch(aname, bname, bottom, top, overlap, axis=1):
+def stitch(aname, bname, z_min, z_max, overlap, axis=1):
+    """Compute optimal shift between adjacent tiles.
+
+    Parameters
+    ----------
+    aname : str
+        Input file name.
+    bname : str
+        Input file name.
+    z_min : int
+        Minimum frame index.
+    z_max : int
+        Maximum frame index.
+    overlap : int
+        Overlap height in px along the stitching axis
+    axis : int
+        1 = stitch along Y
+        2 = stitch along X
+
+    Returns
+    -------
+    tuple
+        Optimal shifts and overlap score as given by :func:`overlap_score`:
+        (`z`, `y`, `x`, `score`).
+    """
     a = DCIMGFile(aname)
     b = DCIMGFile(bname)
 
-    alayer = a.layer(bottom, top)
+    alayer = a.layer(z_min, z_max)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(1, 2))
     alayer = alayer[:, -overlap:, :]
 
-    blayer = b.layer(bottom, top)
+    blayer = b.layer(z_min, z_max)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(1, 2))
     blayer = blayer[:, 0:overlap, :]
 
-    my_filter = window_filter(*alayer.shape).astype(np.float32)
+    my_filter = hamming_window(*alayer.shape).astype(np.float32)
 
     phase_corr = phase_corr_op(alayer.shape, blayer.shape, my_filter.shape)
 
@@ -192,14 +297,14 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
             'input/filter_placeholder:0': my_filter})
     tf.reset_default_graph()
 
-    dz, dy, dx = find_shift(phase_corr)
+    dz, dy, dx = find_phase_corr_max(phase_corr)
     dy = overlap - dy
 
     score = overlap_score(alayer, blayer, dz, dy, dx)
 
     print('phase_corr.shape = {}'.format(phase_corr.shape))
     print('dx = {}, dy = {}, dz = {} @ {}, axis = {}, score = {:e}'.format(
-        dx, dy, dz, bottom, axis, score))
+        dx, dy, dz, z_min, axis, score))
 
     a.close()
     b.close()
