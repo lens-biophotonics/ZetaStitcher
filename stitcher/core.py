@@ -302,7 +302,6 @@ def stitch(aname, bname, z_min, z_max, overlap, axis=1):
 
     score = overlap_score(alayer, blayer, dz, dy, dx)
 
-    print('phase_corr.shape = {}'.format(phase_corr.shape))
     print('dx = {}, dy = {}, dz = {} @ {}, axis = {}, score = {:e}'.format(
         dx, dy, dz, z_min, axis, score))
 
