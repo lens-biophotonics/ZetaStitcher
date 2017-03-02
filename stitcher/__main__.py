@@ -216,6 +216,8 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
     a.close()
     b.close()
 
+    return dz, dy, dx, score
+
 
 if __name__ == '__main__':
     main()
