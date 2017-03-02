@@ -138,9 +138,7 @@ def stitch(aname, bname, bottom, top, overlap, axis=1):
     tf.reset_default_graph()
 
     dz, dy, dx = find_shift(phase_corr)
-
-
-
+    dy = overlap - dy
 
     print('phase_corr.shape = {}'.format(phase_corr.shape))
     print('dx = {}, dy = {}, dz = {}'.format(dx, dy, dz))
