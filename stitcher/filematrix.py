@@ -47,7 +47,8 @@ class FileMatrix:
 
         self.data_frame = None
         """A :class:`pandas.DataFrame` object. Contains the following
-        columns: `X`, `Y`, `Z`, `Z_end`."""
+        columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, 'nfrms`,
+        `filename`."""
 
         self._ascending_tiles_X = True
         self._ascending_tiles_Y = True
@@ -75,14 +76,16 @@ class FileMatrix:
             try:
                 fields = parse_file_name(f)
                 with dcimg.DCIMGFile(f) as dc:
-                    fields.append(dc.nfrms)
+                    for el in dc.shape:
+                        fields.append(el)
                 list += fields
                 list.append(f)
             except (RuntimeError, ValueError) as e:
                 logger.error(e.args[0])
 
-        data = {'X': list[0::5], 'Y': list[1::5], 'Z': list[2::5],
-                'nfrms': list[3::5], 'filename': list[4::5]}
+        data = {'X': list[0::7], 'Y': list[1::7], 'Z': list[2::7],
+                'nfrms': list[3::7], 'ysize': list[4::7], 'xsize': list[5::7],
+                'filename': list[6::7]}
         df = pd.DataFrame(data)
         df = df.sort_values(['Z', 'Y', 'X'])
         df['Z_end'] = df['Z'] + df['nfrms']
