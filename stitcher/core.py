@@ -182,8 +182,8 @@ def xcorr2d_op(ashape, bshape):
         at -= tf.reduce_mean(at)
         bt -= tf.reduce_mean(bt)
 
-    conv = tf.nn.conv2d(at, bt, padding='SAME',
-                        strides=list((1,) + bshape + (1,)))
+    conv = tf.nn.conv2d(at, bt, padding='VALID',
+                        strides=[1, 1, 1, 1])
     conv = tf.squeeze(conv)
 
     return conv
