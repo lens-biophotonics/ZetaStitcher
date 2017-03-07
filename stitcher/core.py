@@ -81,9 +81,9 @@ def phase_corr_op(ashape, bshape, filter_shape):
         at = tf.to_float(aph)
         bt = tf.to_float(bph)
 
-    with tf.name_scope('normalize'):
-        at /= tf.reduce_mean(at)
-        bt /= tf.reduce_mean(bt)
+    with tf.name_scope('subtract_mean'):
+        at -= tf.reduce_mean(at)
+        bt -= tf.reduce_mean(bt)
 
     with tf.name_scope('window_filter'):
         at = at * my_filter_t
@@ -178,9 +178,9 @@ def xcorr2d_op(ashape, bshape):
         bt = tf.expand_dims(bt, -1)  # add dummy in_channels dimension
         bt = tf.expand_dims(bt, -1)  # add dummy out_channels dimension
 
-    with tf.name_scope('normalize'):
-        at /= tf.reduce_mean(at)
-        bt /= tf.reduce_mean(bt)
+    with tf.name_scope('subtract_mean'):
+        at -= tf.reduce_mean(at)
+        bt -= tf.reduce_mean(bt)
 
     conv = tf.nn.conv2d(at, bt, padding='SAME',
                         strides=list((1,) + bshape + (1,)))
