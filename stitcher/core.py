@@ -127,14 +127,19 @@ def overlap_score(alayer, blayer, dz, dy, dx):
         az = dz
         bz = 0
 
+    az = int(az)
+    bz = int(bz)
+    dy = int(dy)
+
     aframe = np.squeeze(alayer[az, :])
     bframe = np.squeeze(blayer[bz, :])
 
     # for the moment consider a and b to have same width
     roi_width = aframe.shape[1] - abs(dx)
 
+    dyb = dy if dy else bframe.shape[0]
     aframe_roi = aframe[-dy:, :]
-    bframe_roi = bframe[0:dy, :]
+    bframe_roi = bframe[:dyb, :]
 
     ax_min = 0
     if dx > 0:
@@ -146,10 +151,18 @@ def overlap_score(alayer, blayer, dz, dy, dx):
 
     if dx < 0:
         bx_min = -dx
-        bx_max += abs(dx)
+    bx_max = bx_min + roi_width
+
+    ax_min = int(ax_min)
+    ax_max = int(ax_max)
+    bx_min = int(bx_min)
+    bx_max = int(bx_max)
 
     aframe_roi = aframe_roi[-dy:, ax_min:ax_max].astype(np.float32)
-    bframe_roi = bframe_roi[:dy, bx_min:bx_max].astype(np.float32)
+    bframe_roi = bframe_roi[:dyb, bx_min:bx_max].astype(np.float32)
+
+    if 0 in aframe_roi.shape or 0 in bframe_roi.shape:
+        return -1
 
     score = ops.xcorr2d_op(aframe_roi.shape, bframe_roi.shape)
 
