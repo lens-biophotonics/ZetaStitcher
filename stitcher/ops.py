@@ -41,7 +41,7 @@ def xcorr2d_op(ashape, bshape):
     return conv
 
 
-def phase_corr_op(ashape, bshape, filter_shape):
+def phase_corr_op(ashape, bshape, filter_shape=None):
     """Construct a TensorFlow op to compute phase correlation.
 
     Parameters
@@ -51,7 +51,8 @@ def phase_corr_op(ashape, bshape, filter_shape):
     bshape : tuple of ints
         Shape of input array.
     filter_shape : tuple
-        Shape of filter array.
+        Shape of filter array. Optional. If not given, the window filter is
+        not applied.
 
     Returns
     -------
@@ -61,14 +62,17 @@ def phase_corr_op(ashape, bshape, filter_shape):
         `input/a_placeholder:0`, `input/b_placeholder:0`,
         `input/filter_placeholder:0`.
     """
+    my_filter_t = None
+
     with tf.name_scope('input'):
         aph = tf.placeholder(dtype=tf.uint16, shape=ashape,
                              name='a_placeholder')
         bph = tf.placeholder(dtype=tf.uint16, shape=bshape,
                              name='b_placeholder')
 
-        my_filter_t = tf.placeholder(dtype=tf.float32, shape=filter_shape,
-                                     name='filter_placeholder')
+        if filter_shape is not None:
+            my_filter_t = tf.placeholder(dtype=tf.float32, shape=filter_shape,
+                                         name='filter_placeholder')
 
         at = tf.to_float(aph)
         bt = tf.to_float(bph)
@@ -77,9 +81,10 @@ def phase_corr_op(ashape, bshape, filter_shape):
         at -= tf.reduce_mean(at)
         bt -= tf.reduce_mean(bt)
 
-    with tf.name_scope('window_filter'):
-        at = at * my_filter_t
-        bt = bt * my_filter_t
+    if filter_shape is not None:
+        with tf.name_scope('window_filter'):
+            at = at * my_filter_t
+            bt = bt * my_filter_t
 
     with tf.name_scope('FFT'):
         ac = tf.cast(at, tf.complex64, name='to_complex')
