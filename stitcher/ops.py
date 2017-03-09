@@ -99,6 +99,8 @@ def phase_corr_op(ashape, bshape, filter_shape=None):
         ratio = prod / tf.cast(prodnorm, tf.complex64, name='to_complex')
 
     with tf.name_scope('phase_correlation'):
-        phase_corr = tf.real(tf.ifft3d(ratio))
+        ifft = tf.ifft3d(ratio)
+        phase_corr = tf.square(tf.real(ifft) + tf.square(tf.imag(ifft)))
+        phase_corr = tf.sqrt(phase_corr)
 
     return phase_corr
