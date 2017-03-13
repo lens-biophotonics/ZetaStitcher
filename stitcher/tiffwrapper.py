@@ -1,3 +1,4 @@
+import numpy as np
 import skimage.external.tifffile as tiff
 
 
@@ -40,6 +41,9 @@ class TiffWrapper(object):
         if end_frame is None:
             end_frame = start_frame + 1
         a = self.file.asarray(range(start_frame, end_frame), memmap=True)
+
+        if end_frame - start_frame == 1:
+            a = np.expand_dims(a, axis=0)
 
         if dtype is None:
             return a
