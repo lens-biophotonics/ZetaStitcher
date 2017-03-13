@@ -86,7 +86,10 @@ class InputFile(object):
         l = ['nfrms', 'xsize', 'ysize', 'channels', 'close']
 
         for a in l:
-            setattr(self, a, getattr(self.wrapper, a))
+            try:
+                setattr(self, a, getattr(self.wrapper, a))
+            except AttributeError:
+                pass
 
     def layer(self, *args, **kwargs):
         """Return a layer, i.e a stack of frames.
