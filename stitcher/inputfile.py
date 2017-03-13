@@ -9,7 +9,7 @@ class InputFile(object):
     def __init__(self, file_name=None):
         self.file_name = file_name
         self.wrapper = None
-        self.channel = -1
+        self._channel = -1
         self.channels = 1
 
         if file_name is not None:
@@ -23,6 +23,16 @@ class InputFile(object):
 
     def __exit__(self, *args):
         self.close()
+
+    @property
+    def channel(self):
+        return self._channel
+
+    @channel.setter
+    def channel(self, value):
+        if isinstance(self.wrapper, dcimg.DCIMGFile):
+            return
+        self._channel = value
 
     @property
     def file(self):
