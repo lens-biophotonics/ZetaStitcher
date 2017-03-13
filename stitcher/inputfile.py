@@ -100,8 +100,8 @@ class InputFile(object):
             there is only one channel, the `channels` dimension is squeezed.
         """
         l = self.wrapper.layer(*args, **kwargs)
-        if self.channel != -1 and len(l.shape) > 3:
-            l = l[:, :, :, self.channel]
+        if self.channel != -1:
+            l = l[..., self.channel]
         return l
 
     def layer_idx(self, index, frames_per_layer=1, dtype=None):
