@@ -82,8 +82,14 @@ class InputFile(object):
 
         raise ValueError('Unsupported file type')
 
+    def close(self):
+        try:
+            self.wrapper.close()
+        except AttributeError:
+            pass
+
     def _setattrs(self):
-        l = ['nfrms', 'xsize', 'ysize', 'channels', 'close']
+        l = ['nfrms', 'xsize', 'ysize', 'channels']
 
         for a in l:
             try:
