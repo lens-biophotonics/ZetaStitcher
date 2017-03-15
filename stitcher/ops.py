@@ -1,8 +1,8 @@
 import tensorflow as tf
 
 
-def xcorr2d_op(ashape, bshape):
-    """Construct a TensorFlow op to compute 2D cross-correlation.
+def xcorr3d(ashape, bshape):
+    """Construct a TensorFlow op to compute 3D cross-correlation.
 
     Parameters
     ----------
@@ -14,28 +14,26 @@ def xcorr2d_op(ashape, bshape):
     Returns
     -------
     tf.Operation
-        The op to be run to compute 2D cross-correlation. When running the op,
+        The op to be run to compute 3D cross-correlation. When running the op,
         values for the following placeholders must be fed:
         `input/a_placeholder:0`, `input/b_placeholder:0`.
     """
     with tf.name_scope('input'):
-        at = tf.placeholder(dtype=tf.float32, shape=ashape,
-                            name='a_placeholder')
-        bt = tf.placeholder(dtype=tf.float32, shape=bshape,
-                            name='b_placeholder')
+        at = tf.placeholder(dtype=tf.float32, shape=ashape, name='a_ph')
+        bt = tf.placeholder(dtype=tf.float32, shape=bshape, name='b_ph')
 
+    with tf.name_scope('subtract_mean'):
+        at -= tf.reduce_mean(at)
+        bt -= tf.reduce_mean(bt)
+
+    with tf.name_scope('expand_dims'):
         at = tf.expand_dims(at, 0)  # add dummy batch dimension
         at = tf.expand_dims(at, -1)  # add dummy in_channels dimension
 
         bt = tf.expand_dims(bt, -1)  # add dummy in_channels dimension
         bt = tf.expand_dims(bt, -1)  # add dummy out_channels dimension
 
-    with tf.name_scope('subtract_mean'):
-        at -= tf.reduce_mean(at)
-        bt -= tf.reduce_mean(bt)
-
-    conv = tf.nn.conv2d(at, bt, padding='VALID',
-                        strides=[1, 1, 1, 1])
+    conv = tf.nn.conv3d(at, bt, padding='VALID', strides=[1, 1, 1, 1, 1])
     conv = tf.squeeze(conv)
 
     return conv
