@@ -91,7 +91,7 @@ class InputFile(object):
             except AttributeError:
                 pass
 
-    def layer(self, *args, **kwargs):
+    def layer(self, start_frame, end_frame, dtype=None):
         """Return a layer, i.e a stack of frames.
 
         Parameters
@@ -112,7 +112,7 @@ class InputFile(object):
             color channels in the image. If :attr:`channel` is set or if
             there is only one channel, the `channels` dimension is squeezed.
         """
-        l = self.wrapper.layer(*args, **kwargs)
+        l = self.wrapper.layer(start_frame, end_frame, dtype)
         if self.channel != -1:
             l = l[..., self.channel]
         return l
@@ -135,7 +135,7 @@ class InputFile(object):
         """
         start_frame = index * frames_per_layer
         end_frame = start_frame + frames_per_layer
-        return self.layer(start_frame, end_frame)
+        return self.layer(start_frame, end_frame, dtype)
 
     def whole(self, dtype=None):
         """Convenience function to retrieve the whole stack.
