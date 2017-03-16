@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-from stitcher import stitch
+from .core import stitch
 
 
 def main():
@@ -21,8 +21,8 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    stitch(args.input_file1, args.input_file2, args.frame,
-           args.frame + 5, args.overlap, axis=args.axis)
+    stitch(args.input_file1, args.input_file2, z_frame=args.frame,
+           overlap=args.overlap, axis=args.axis)
 
 
 if __name__ == '__main__':

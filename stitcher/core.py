@@ -1,183 +1,54 @@
-from os import environ
-
 import numpy as np
-import tensorflow as tf
 
-from scipy import signal
-from scipy.ndimage.filters import maximum_filter
-from skimage.restoration import denoise_tv_bregman
-
-from dcimg import DCIMGFile
-
-from . import ops
+from . import inputfile
 
 
-gpu_options = tf.GPUOptions()
-try:
-    gpu_options.per_process_gpu_memory_fraction = \
-        float(environ['TF_GPU_PER_PROCESS_GPU_MEMORY_FRACTION'])
-except (KeyError, ValueError):
-    pass
+def normxcorr2(alayer, blayer):
+    ashape = alayer.shape
+    bshape = blayer.shape
 
-sess_config = tf.ConfigProto(gpu_options=gpu_options)
+    out_height = ashape[1] - bshape[1] + 1
+    out_width = ashape[2] - bshape[2] + 1
 
+    b1 = np.ones_like(blayer)
 
-def hamming_window(wz, wy, wx):
-    """A 3D Hamming window.
+    fft_a = np.fft.fft2(alayer)
+    fft_a2 = np.fft.fft2(np.square(alayer))
+    fft_b = np.fft.fft2(blayer, s=[ashape[1], ashape[2]])
+    fft_b1 = np.fft.fft2(b1, s=[ashape[1], ashape[2]])
 
-    Parameters
-    ----------
-    wz : int
-        Width along Z.
-    wy : int
-        Width along Y.
-    wx
-        Width along X.
+    conv = np.fft.ifft2(fft_a * np.conj(fft_b))
+    conv = np.real(conv[:, :out_height, :out_width])
+    sums_a = np.fft.ifft2(fft_a * np.conj(fft_b1))
+    sums_a = np.real(sums_a[:, :out_height, :out_width])
+    sums_a2 = np.fft.ifft2(fft_a2 * np.conj(fft_b1))
+    sums_a2 = np.real(sums_a2[:, :out_height, :out_width])
 
-    Returns
-    -------
-    :class:`numpy.ndarray`.
-    """
-    gx = signal.hamming(wx)
-    gy = signal.hamming(wy)
-    gz = signal.hamming(wz)
+    sums_b = np.sum(blayer)
+    sums_b2 = np.sum(np.square(blayer))
 
-    f = np.outer(gx, gy)
-    f = np.outer(f, gz)
+    A = np.array(bshape[1] * bshape[2])
 
-    f = np.reshape(f, (wx, wy, wz))
-    f = f.T
+    num = conv - sums_b * sums_a / A
+    denom = np.sqrt(
+        (sums_a2 - np.square(sums_a) / A) * (sums_b2 - np.square(sums_b) / A))
 
-    return f
+    normxcorr = num / denom
+
+    return normxcorr
 
 
-def find_phase_corr_max(phase_corr, max_shift_x=100, max_shift_y=100):
-    """Find maximum in phase correlation map.
-
-    Parameters
-    ----------
-    phase_corr : :class:`numpy.ndarray`.
-    max_shift_x : int
-        Maximum allowed shift along X in px
-    max_shift_y : int
-        Maximum allowed shift along Y in px.
-
-    Returns
-    -------
-    tuple
-        Coordinates of maximum: (`z`, `y`, `x`).
-    """
-    temp = phase_corr.view(np.ma.MaskedArray)
-    temp[:, max_shift_y:, :] = np.ma.masked
-    temp[:, :max_shift_y, max_shift_x:-max_shift_x] = np.ma.masked
-
-    argmax = np.argmax(temp)
-
-    dz, dy, dx = np.unravel_index(argmax, temp.shape)
-
-    data = np.squeeze(denoise_tv_bregman(phase_corr[dz, :], weight=0.1))
-    data = data.view(np.ma.MaskedArray)
-    data.mask = temp.mask
-    data_max = maximum_filter(data, 512)
-    mask = (data != data_max)
-
-    data = data.view(np.ma.MaskedArray)
-    data.mask = mask
-    argmax = np.argmax(data)
-
-    dy, dx = np.unravel_index(argmax, data.shape)
-
-    if dx > phase_corr.shape[2] / 2:
-        dx -= phase_corr.shape[2]
-
-    return dz, dy, dx
-
-
-
-
-
-
-
-
-def overlap_score(alayer, blayer, dz, dy, dx):
-    """Compute overlap score between two layers at the given shifts.
-
-    The score is computed as the 2D cross-correlation in the first
-    overlapping plane of the input layers.
-
-    Parameters
-    ----------
-    alayer : 3D class:`numpy.ndarray`.
-    blayer : 3D class:`numpy.ndarray`.
-    dz : int
-        Shift along Z.
-    dy : int
-        Shift along Y.
-    dx : int
-        Shift along X.
-
-    Returns
-    -------
-    score : int
-    """
-    if dz < 0:
-        az = 0
-        bz = -dz
-    else:
-        az = dz
-        bz = 0
-
-    az = int(az)
-    bz = int(bz)
-    dy = int(dy)
-
-    aframe = np.squeeze(alayer[az, :])
-    bframe = np.squeeze(blayer[bz, :])
-
-    # for the moment consider a and b to have same width
-    roi_width = aframe.shape[1] - abs(dx)
-
-    dyb = dy if dy else bframe.shape[0]
-    aframe_roi = aframe[-dy:, :]
-    bframe_roi = bframe[:dyb, :]
-
-    ax_min = 0
-    if dx > 0:
-        ax_min = dx
-    ax_max = ax_min + roi_width
-
-    bx_min = 0
-    bx_max = roi_width
-
-    if dx < 0:
-        bx_min = -dx
-    bx_max = bx_min + roi_width
-
-    ax_min = int(ax_min)
-    ax_max = int(ax_max)
-    bx_min = int(bx_min)
-    bx_max = int(bx_max)
-
-    aframe_roi = aframe_roi[-dy:, ax_min:ax_max].astype(np.float32)
-    bframe_roi = bframe_roi[:dyb, bx_min:bx_max].astype(np.float32)
-
-    if 0 in aframe_roi.shape or 0 in bframe_roi.shape:
-        return -1
-
-    score = ops.xcorr2d_op(aframe_roi.shape, bframe_roi.shape)
-
-    with tf.Session(config=sess_config) as sess:
-        score = sess.run(score, feed_dict={
-            'input/a_placeholder:0': aframe_roi,
-            'input/b_placeholder:0': bframe_roi})
-    tf.reset_default_graph()
-
-    return score
-
-
-def stitch(aname, bname, z_min, z_max, overlap, axis=1, max_shift_x=100,
-           max_shift_y=100):
+def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
+           max_shift_x=20):
     """Compute optimal shift between adjacent tiles.
+
+    Two 3D tiles are compared at the specified frame index to find their best
+    alignment. The following conventions are used:
+
+    * Z is the direction along the stack height,
+    * (X, Y) is the frame plane,
+    * Y is the direction along which frames are supposed to overlap,
+    * X is the direction orthogonal to Y in the frame plane (X, Y).
 
     Parameters
     ----------
@@ -185,59 +56,59 @@ def stitch(aname, bname, z_min, z_max, overlap, axis=1, max_shift_x=100,
         Input file name.
     bname : str
         Input file name.
-    z_min : int
-        Minimum frame index.
-    z_max : int
-        Maximum frame index.
-    overlap : int
-        Overlap height in px along the stitching axis
+    z_frame : int
+        Index of frame used for alignment.
     axis : int
-        1 = stitch along Y
-        2 = stitch along X
+        Perform stitching along this axis. Following the convention above, this
+        axis will be called Y. The following values can be used:
+
+        1. stitch vertically
+        2. stitch horizontally
+    overlap : int
+        Overlap height in px along the stitching axis (Y).
+    max_shift_z : int
+        Maximum allowed shift in px along the stack height (Z).
     max_shift_x : int
-        Maximum allowed shift along X in px
-    max_shift_y : int
-        Maximum allowed shift along Y in px.
+        Maximum allowed lateral shift in px.
 
     Returns
     -------
     tuple
-        Optimal shifts and overlap score as given by :func:`overlap_score`:
-        (`z`, `y`, `x`, `score`).
+        Optimal shifts and overlap score computed by means of normalized
+        cross correlation: (`z`, `y`, `x`, `score`).
     """
-    a = DCIMGFile(aname)
-    b = DCIMGFile(bname)
+    a = inputfile.InputFile(aname)
+    b = inputfile.InputFile(bname)
 
-    alayer = a.layer(z_min, z_max)
+    a.channel = 1
+    b.channel = 1
+
+    z_min = z_frame - max_shift_z
+    z_max = z_frame + max_shift_z + 1
+
+    alayer = a.layer(z_min, z_max, dtype=np.float64)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(1, 2))
     alayer = alayer[:, -overlap:, :]
 
-    blayer = b.layer(z_min, z_max)
+    blayer = b.layer_idx(z_frame, dtype=np.float64)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(1, 2))
     blayer = blayer[:, 0:overlap, :]
 
-    my_filter = hamming_window(*alayer.shape).astype(np.float32)
+    half_max_shift_x = max_shift_x // 2
 
-    phase_corr = ops.phase_corr_op(alayer.shape, blayer.shape, my_filter.shape)
+    blayer = blayer[:, 0:int(overlap * 0.5),
+                    half_max_shift_x:-half_max_shift_x]
 
-    with tf.Session(config=sess_config) as sess:
-        phase_corr = sess.run(phase_corr, feed_dict={
-            'input/a_placeholder:0': alayer,
-            'input/b_placeholder:0': blayer,
-            'input/filter_placeholder:0': my_filter})
-    tf.reset_default_graph()
+    xcorr = normxcorr2(alayer, blayer)
 
-    dz, dy, dx = find_phase_corr_max(phase_corr, max_shift_x, max_shift_y)
-    dy = overlap - dy
+    shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
+    score = xcorr[tuple(shift)]
 
-    score = overlap_score(alayer, blayer, dz, dy, dx)
+    print('shift: ' + str(shift))
+    shift[0] -= max_shift_z
+    shift[1] = overlap - shift[1]
+    shift[2] -= half_max_shift_x
 
-    print('dx = {}, dy = {}, dz = {} @ {}, axis = {}, score = {:e}'.format(
-        dx, dy, dz, z_min, axis, score))
-
-    a.close()
-    b.close()
-
-    return dz, dy, dx, score
+    print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
