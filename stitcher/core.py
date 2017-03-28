@@ -21,13 +21,13 @@ def normxcorr2_fftw(alayer, blayer):
     bshape = blayer.shape
 
     fft_a = pyfftw.empty_aligned((ashape[0], ashape[1], ashape[2] // 2 + 1),
-                                 dtype='complex128')
-    fft_a2 = pyfftw.empty_aligned(fft_a.shape, dtype='complex128')
+                                 dtype='complex64')
+    fft_a2 = pyfftw.empty_aligned(fft_a.shape, dtype='complex64')
 
     fft_b = pyfftw.empty_aligned((bshape[0], bshape[1], bshape[2] // 2 + 1),
-                                 dtype='complex128')
+                                 dtype='complex64')
     fft_b1 = pyfftw.empty_aligned(
-        (b1.shape[0], b1.shape[1], b1.shape[2] // 2 + 1), dtype='complex128')
+        (b1.shape[0], b1.shape[1], b1.shape[2] // 2 + 1), dtype='complex64')
 
     fft_object = pyfftw.FFTW(alayer, fft_a, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
@@ -44,7 +44,7 @@ def normxcorr2_fftw(alayer, blayer):
     fft_object = pyfftw.FFTW(b1, fft_b1, axes=(1, 2), flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
-    conv = pyfftw.empty_aligned(ashape, dtype='float64')
+    conv = pyfftw.empty_aligned(ashape, dtype='float32')
     fft_object = pyfftw.FFTW(fft_a * np.conj(fft_b), conv, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'],
                              direction='FFTW_BACKWARD')
@@ -53,14 +53,14 @@ def normxcorr2_fftw(alayer, blayer):
     # fftw performs unscaled transforms, therefore we need to rescale
 
     fft_b1_conj = np.conj(fft_b1)
-    sums_a = pyfftw.empty_aligned(ashape, dtype='float64')
+    sums_a = pyfftw.empty_aligned(ashape, dtype='float32')
     fft_object = pyfftw.FFTW(fft_a * fft_b1_conj, sums_a, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'],
                              direction='FFTW_BACKWARD')
     fft_object.execute()
     sums_a = sums_a[:, :out_height, :out_width] / (ashape[1] * ashape[2])
 
-    sums_a2 = pyfftw.empty_aligned(ashape, dtype='float64')
+    sums_a2 = pyfftw.empty_aligned(ashape, dtype='float32')
     fft_object = pyfftw.FFTW(fft_a2 * fft_b1_conj, sums_a2, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
     fft_object.execute()
@@ -163,12 +163,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     z_min = z_frame - max_shift_z
     z_max = z_frame + max_shift_z + 1
 
-    alayer = a.layer(z_min, z_max, dtype=np.float64)
+    alayer = a.layer(z_min, z_max, dtype=np.float32)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(1, 2))
     alayer = alayer[:, -overlap:, :]
 
-    blayer = b.layer_idx(z_frame, dtype=np.float64)
+    blayer = b.layer_idx(z_frame, dtype=np.float32)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(1, 2))
     blayer = blayer[:, 0:overlap, :]
