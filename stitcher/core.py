@@ -1,6 +1,83 @@
+import pyfftw
 import numpy as np
 
 from . import inputfile
+
+
+def normxcorr2_fftw(alayer, blayer):
+    ashape = alayer.shape
+    b_old_shape = blayer.shape
+
+    out_height = ashape[1] - b_old_shape[1] + 1
+    out_width = ashape[2] - b_old_shape[2] + 1
+
+    b1 = np.ones_like(blayer)
+    blayer = np.pad(blayer, ((0, 0),
+                             (0, ashape[1] - b_old_shape[1]),
+                             (0, ashape[2] - b_old_shape[2])), 'constant')
+    b1 = np.pad(b1, ((0, 0),
+                     (0, ashape[1] - b_old_shape[1]),
+                     (0, ashape[2] - b_old_shape[2])), 'constant')
+    bshape = blayer.shape
+
+    fft_a = pyfftw.empty_aligned((ashape[0], ashape[1], ashape[2] // 2 + 1),
+                                 dtype='complex128')
+    fft_a2 = pyfftw.empty_aligned(fft_a.shape, dtype='complex128')
+
+    fft_b = pyfftw.empty_aligned((bshape[0], bshape[1], bshape[2] // 2 + 1),
+                                 dtype='complex128')
+    fft_b1 = pyfftw.empty_aligned(
+        (b1.shape[0], b1.shape[1], b1.shape[2] // 2 + 1), dtype='complex128')
+
+    fft_object = pyfftw.FFTW(alayer, fft_a, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'])
+    fft_object.execute()
+
+    fft_object = pyfftw.FFTW(np.square(alayer), fft_a2, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'])
+    fft_object.execute()
+
+    fft_object = pyfftw.FFTW(blayer, fft_b, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'])
+    fft_object.execute()
+
+    fft_object = pyfftw.FFTW(b1, fft_b1, axes=(1, 2), flags=['FFTW_ESTIMATE'])
+    fft_object.execute()
+
+    conv = pyfftw.empty_aligned(ashape, dtype='float64')
+    fft_object = pyfftw.FFTW(fft_a * np.conj(fft_b), conv, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'],
+                             direction='FFTW_BACKWARD')
+    fft_object.execute()
+    conv = conv[:, :out_height, :out_width] / (ashape[1] * ashape[2])
+    # fftw performs unscaled transforms, therefore we need to rescale
+
+    fft_b1_conj = np.conj(fft_b1)
+    sums_a = pyfftw.empty_aligned(ashape, dtype='float64')
+    fft_object = pyfftw.FFTW(fft_a * fft_b1_conj, sums_a, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'],
+                             direction='FFTW_BACKWARD')
+    fft_object.execute()
+    sums_a = sums_a[:, :out_height, :out_width] / (ashape[1] * ashape[2])
+
+    sums_a2 = pyfftw.empty_aligned(ashape, dtype='float64')
+    fft_object = pyfftw.FFTW(fft_a2 * fft_b1_conj, sums_a2, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
+    fft_object.execute()
+    sums_a2 = sums_a2[:, :out_height, :out_width] / (ashape[1] * ashape[2])
+
+    sums_b = np.sum(blayer)
+    sums_b2 = np.sum(np.square(blayer))
+
+    A = np.array(b_old_shape[1] * b_old_shape[2])
+
+    num = conv - sums_b * sums_a / A
+    denom = np.sqrt(
+        (sums_a2 - np.square(sums_a) / A) * (sums_b2 - np.square(sums_b) / A))
+
+    normxcorr = num / denom
+
+    return normxcorr
 
 
 def normxcorr2(alayer, blayer):
@@ -101,7 +178,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     blayer = blayer[:, 0:int(overlap * 0.5),
                     half_max_shift_x:-half_max_shift_x]
 
-    xcorr = normxcorr2(alayer, blayer)
+    xcorr = normxcorr2_fftw(alayer, blayer)
 
     shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
     score = xcorr[tuple(shift)]
