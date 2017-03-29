@@ -31,7 +31,7 @@ def parse_file_name(file_name):
     if m is None:
         m = re.search('^(\d+)_(\d+)_(\d+)', file_name)
     if m is None:
-        raise RuntimeError('Invalid file name {}'.format(file_name))
+        raise ValueError('Invalid file name {}'.format(file_name))
 
     fields = []
     for i in range(1, 4):
