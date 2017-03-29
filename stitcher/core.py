@@ -126,11 +126,11 @@ def normxcorr2(alayer, blayer):
 
 
 def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
-           max_shift_x=20):
+           max_shift_y=150, max_shift_x=20):
     """Compute optimal shift between adjacent tiles.
 
     Two 3D tiles are compared at the specified frame index to find their best
-    alignment. The following conventions are used:
+    alignment. The following naming conventions are used:
 
     * Z is the direction along the stack height,
     * (X, Y) is the frame plane,
@@ -155,6 +155,8 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
         Overlap height in px along the stitching axis (Y).
     max_shift_z : int
         Maximum allowed shift in px along the stack height (Z).
+    max_shift_y : int
+        Maximum allowed shift in px *of the overlapping area* along (Y).
     max_shift_x : int
         Maximum allowed lateral shift in px.
 
@@ -162,7 +164,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     -------
     tuple
         Optimal shifts and overlap score computed by means of normalized
-        cross correlation: (`z`, `y`, `x`, `score`).
+        cross correlation: (`dz`, `dy`, `dx`, `score`).
     """
     a = inputfile.InputFile(aname)
     b = inputfile.InputFile(bname)
@@ -185,8 +187,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
 
     half_max_shift_x = max_shift_x // 2
 
-    blayer = blayer[:, 0:int(overlap * 0.5),
-                    half_max_shift_x:-half_max_shift_x]
+    blayer = blayer[:, :-max_shift_y, half_max_shift_x:-half_max_shift_x]
 
     xcorr = normxcorr2_fftw(alayer, blayer)
 
