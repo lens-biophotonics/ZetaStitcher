@@ -2,6 +2,8 @@ import sys
 import os.path
 import argparse
 
+import numpy as np
+
 import colored
 from colored import stylize
 
@@ -48,15 +50,12 @@ Unless otherwise stated, all values are expected in px.
     group = parser.add_argument_group(
         'multiple sampling along Z',
         description='Measure the optimal shift at different heights around '
-                    'the center of the stack')
-    group1 = group.add_mutually_exclusive_group()
-    group1.add_argument('-a', action='store_true',
-                        help='take the average result weighted by the score',
-                        dest='average')
-
-    group1.add_argument('-m', action='store_true',
-                        help='take the result with the maximum score',
-                        dest='maximum')
+                    'the center of the stack, then take the result with the '
+                    'maximum score')
+    group.add_argument('-a', action='store_true',
+                       help='instead of maximum score, take the average '
+                            'result weighted by the score',
+                       dest='average')
 
     group.add_argument('--z-samples', type=int, default=1, metavar='ZSAMP',
                        help='number of samples to take along Z')
@@ -93,13 +92,22 @@ Unless otherwise stated, all values are expected in px.
                 start_frame = (central_frame
                                - (arg.z_samples // 2 * arg.stride)
                                + (0 if arg.z_samples % 2 else arg.stride // 2))
+                results = []
                 for i in range(0, arg.z_samples):
                     z_frame = start_frame + i * arg.stride
-                    stitch(
+                    ret = stitch(
                         atile.filename, btile.filename, z_frame, axis=axis,
                         overlap=overlap, max_shift_z=arg.max_dz,
                         max_shift_y=arg.max_dy, max_shift_x=arg.max_dx)
-
+                    results.append(ret)
+                print('results: ' + str(results))
+                results = np.array(results)
+                if arg.average:
+                    results = np.average(
+                        results, axis=0, weights=results[:, 3])
+                else:
+                    results = results[np.argmax(results[:, 3]), :]
+                print('results: ' + str(results))
                 atile = btile
 
             print('===================================')

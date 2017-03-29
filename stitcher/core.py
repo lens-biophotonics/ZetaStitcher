@@ -164,7 +164,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     -------
     tuple
         Optimal shifts and overlap score computed by means of normalized
-        cross correlation: (`dz`, `dy`, `dx`, `score`).
+        cross correlation: [`dz`, `dy`, `dx`, `score`].
     """
     a = inputfile.InputFile(aname)
     b = inputfile.InputFile(bname)
@@ -200,3 +200,5 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     shift[2] -= half_max_shift_x
 
     print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
+
+    return shift + [score]
