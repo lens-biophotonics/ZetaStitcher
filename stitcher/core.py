@@ -11,65 +11,75 @@ def normxcorr2_fftw(alayer, blayer):
     out_height = ashape[1] - b_old_shape[1] + 1
     out_width = ashape[2] - b_old_shape[2] + 1
 
+    sums_b = np.sum(blayer)
+    sums_b2 = np.sum(np.square(blayer))
+
     b1 = np.ones_like(blayer)
     blayer = np.pad(blayer, ((0, 0),
                              (0, ashape[1] - b_old_shape[1]),
                              (0, ashape[2] - b_old_shape[2])), 'constant')
     b1 = np.pad(b1, ((0, 0),
                      (0, ashape[1] - b_old_shape[1]),
-                     (0, ashape[2] - b_old_shape[2])), 'constant')
+                     (0, ashape[2] - b_old_shape[2] + 2)), 'constant')
+    b1_real_input = b1[..., :ashape[2]]
+    b1_complex_output = b1.view('complex64')
     bshape = blayer.shape
 
-    fft_a = pyfftw.empty_aligned((ashape[0], ashape[1], ashape[2] // 2 + 1),
-                                 dtype='complex64')
-    fft_a2 = pyfftw.empty_aligned(fft_a.shape, dtype='complex64')
-
-    fft_b = pyfftw.empty_aligned((bshape[0], bshape[1], bshape[2] // 2 + 1),
-                                 dtype='complex64')
-    fft_b1 = pyfftw.empty_aligned(
-        (b1.shape[0], b1.shape[1], b1.shape[2] // 2 + 1), dtype='complex64')
-
-    fft_object = pyfftw.FFTW(alayer, fft_a, axes=(1, 2),
+    a_full = pyfftw.empty_aligned(
+        (ashape[0], ashape[1], 2 * (ashape[2] // 2 + 1)), dtype='float32')
+    a_real_input = a_full[..., :ashape[2]]
+    a_real_input[:] = alayer[:]
+    a_complex_output = a_full.view('complex64')
+    fft_object = pyfftw.FFTW(a_real_input, a_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
+    fft_a2 = pyfftw.empty_aligned(a_complex_output.shape, dtype='complex64')
     fft_object = pyfftw.FFTW(np.square(alayer), fft_a2, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
-    fft_object = pyfftw.FFTW(blayer, fft_b, axes=(1, 2),
+    b_full = pyfftw.empty_aligned(
+        (bshape[0], bshape[1], 2 * (bshape[2] // 2 + 1)), dtype='float32')
+    b_real_input = b_full[..., :ashape[2]]
+    b_real_input[:] = blayer[:]
+    b_complex_output = b_full.view('complex64')
+    fft_object = pyfftw.FFTW(b_real_input, b_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
-    fft_object = pyfftw.FFTW(b1, fft_b1, axes=(1, 2), flags=['FFTW_ESTIMATE'])
+    fft_object = pyfftw.FFTW(
+        b1_real_input, b1_complex_output, axes=(1, 2), flags=['FFTW_ESTIMATE'])
     fft_object.execute()
+
+    # fftw performs unscaled transforms, therefore we need to rescale by the
+    # frame area
+    a_frame_area = np.array(ashape[1] * ashape[2], dtype=np.float32)
 
     conv = pyfftw.empty_aligned(ashape, dtype='float32')
-    fft_object = pyfftw.FFTW(fft_a * np.conj(fft_b), conv, axes=(1, 2),
-                             flags=['FFTW_ESTIMATE'],
-                             direction='FFTW_BACKWARD')
+    fft_object = pyfftw.FFTW(
+        a_complex_output * np.conj(b_complex_output), conv, axes=(1, 2),
+        flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
     fft_object.execute()
-    conv = conv[:, :out_height, :out_width] / (ashape[1] * ashape[2])
-    # fftw performs unscaled transforms, therefore we need to rescale
+    conv = conv[:, :out_height, :out_width] / a_frame_area
 
-    fft_b1_conj = np.conj(fft_b1)
+
+    fft_b1_conj = np.conj(b1_complex_output)
     sums_a = pyfftw.empty_aligned(ashape, dtype='float32')
-    fft_object = pyfftw.FFTW(fft_a * fft_b1_conj, sums_a, axes=(1, 2),
-                             flags=['FFTW_ESTIMATE'],
-                             direction='FFTW_BACKWARD')
+    fft_object = pyfftw.FFTW(
+        a_complex_output * fft_b1_conj, sums_a, axes=(1, 2),
+        flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
     fft_object.execute()
-    sums_a = sums_a[:, :out_height, :out_width] / (ashape[1] * ashape[2])
+    sums_a = sums_a[:, :out_height, :out_width] / a_frame_area
 
     sums_a2 = pyfftw.empty_aligned(ashape, dtype='float32')
-    fft_object = pyfftw.FFTW(fft_a2 * fft_b1_conj, sums_a2, axes=(1, 2),
-                             flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
+    fft_object = pyfftw.FFTW(
+        fft_a2 * fft_b1_conj, sums_a2, axes=(1, 2),
+        flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
     fft_object.execute()
-    sums_a2 = sums_a2[:, :out_height, :out_width] / (ashape[1] * ashape[2])
+    sums_a2 = sums_a2[:, :out_height, :out_width] / a_frame_area
 
-    sums_b = np.sum(blayer)
-    sums_b2 = np.sum(np.square(blayer))
-
-    A = np.array(b_old_shape[1] * b_old_shape[2])
+    A = np.array(b_old_shape[1] * b_old_shape[2], dtype=np.float32)
 
     num = conv - sums_b * sums_a / A
     denom = np.sqrt(
