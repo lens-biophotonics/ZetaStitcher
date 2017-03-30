@@ -2,6 +2,6 @@ dcimg
 networkx
 numpy
 pandas
-tensorflow-gpu
+pyfftw
 scipy
 scikit-image
