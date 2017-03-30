@@ -172,12 +172,12 @@ def main():
         z_min = z_frame - max_shift_z
         z_max = z_frame + max_shift_z + 1
 
-        alayer = a.layer(z_min, z_max, dtype=np.float32)
+        alayer = a.layer(z_min, z_max)
         if axis == 2:
             alayer = np.rot90(alayer, axes=(1, 2))
         alayer = alayer[:, -overlap:, :]
 
-        blayer = b.layer_idx(z_frame, dtype=np.float32)
+        blayer = b.layer_idx(z_frame)
         if axis == 2:
             blayer = np.rot90(blayer, axes=(1, 2))
         blayer = blayer[:, 0:overlap, :]
@@ -185,6 +185,9 @@ def main():
         half_max_shift_x = max_shift_x // 2
 
         blayer = blayer[:, :-max_shift_y, half_max_shift_x:-half_max_shift_x]
+
+        alayer = alayer.astype(np.float32)
+        blayer = blayer.astype(np.float32)
 
         data_queue.put([aname, bname, axis, alayer, blayer])
 

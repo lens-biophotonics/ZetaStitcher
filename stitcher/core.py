@@ -5,8 +5,27 @@ from . import inputfile
 
 
 def normxcorr2_fftw(alayer, blayer):
+    """Compute normalized cross correlation using fftw.
+
+    .. DANGER::
+        Input arrays might be overwritten by in-place transforms!
+
+    Parameters
+    ----------
+    alayer : :class:`numpy.ndarray`
+    blayer : :class:`numpy.ndarray`
+
+    Returns
+    -------
+    :class:`numpy.ndarray`
+    """
     ashape = alayer.shape
     b_old_shape = blayer.shape
+
+    if not (alayer.dtype == np.float32):
+        alayer = alayer.astype(np.float32)
+    if not (blayer.dtype == np.float32):
+        blayer = blayer.astype(np.float32)
 
     out_height = ashape[1] - b_old_shape[1] + 1
     out_width = ashape[2] - b_old_shape[2] + 1
@@ -25,25 +44,28 @@ def normxcorr2_fftw(alayer, blayer):
     b1_complex_output = b1.view('complex64')
     bshape = blayer.shape
 
-    a_full = pyfftw.empty_aligned(
-        (ashape[0], ashape[1], 2 * (ashape[2] // 2 + 1)), dtype='float32')
-    a_real_input = a_full[..., :ashape[2]]
-    a_real_input[:] = alayer[:]
-    a_complex_output = a_full.view('complex64')
+    # pad for in-place transform
+    alayer = np.pad(alayer, ((0, 0), (0, 0), (0, 2)), 'constant')
+
+    a_real_input = alayer[..., :ashape[2]]
+    a_complex_output = alayer.view('complex64')
+
+    fft_a2 = pyfftw.empty_aligned(a_complex_output.shape, dtype='complex64')
+    fft_object = pyfftw.FFTW(np.square(a_real_input), fft_a2, axes=(1, 2),
+                             flags=['FFTW_ESTIMATE'])
+    fft_object.execute()
+
+    # will overwrite alayer
     fft_object = pyfftw.FFTW(a_real_input, a_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
-    fft_a2 = pyfftw.empty_aligned(a_complex_output.shape, dtype='complex64')
-    fft_object = pyfftw.FFTW(np.square(alayer), fft_a2, axes=(1, 2),
-                             flags=['FFTW_ESTIMATE'])
-    fft_object.execute()
+    # pad for in-place transform
+    blayer = np.pad(blayer, ((0, 0), (0, 0), (0, 2)), 'constant')
 
-    b_full = pyfftw.empty_aligned(
-        (bshape[0], bshape[1], 2 * (bshape[2] // 2 + 1)), dtype='float32')
-    b_real_input = b_full[..., :ashape[2]]
-    b_real_input[:] = blayer[:]
-    b_complex_output = b_full.view('complex64')
+    b_real_input = blayer[..., :ashape[2]]
+    b_real_input[:] = blayer[..., :ashape[2]]
+    b_complex_output = blayer.view('complex64')
     fft_object = pyfftw.FFTW(b_real_input, b_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
@@ -175,12 +197,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     z_min = z_frame - max_shift_z
     z_max = z_frame + max_shift_z + 1
 
-    alayer = a.layer(z_min, z_max, dtype=np.float32)
+    alayer = a.layer(z_min, z_max)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(1, 2))
     alayer = alayer[:, -overlap:, :]
 
-    blayer = b.layer_idx(z_frame, dtype=np.float32)
+    blayer = b.layer_idx(z_frame)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(1, 2))
     blayer = blayer[:, 0:overlap, :]
