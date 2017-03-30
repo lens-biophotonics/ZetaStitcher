@@ -70,19 +70,17 @@ Unless otherwise stated, all values are expected in px.
     return parser.parse_args(sys.argv[1:])
 
 
-def build_queue(arg):
-    fm = FileMatrix(arg.input_folder)
+def build_queue(input_folder, z_samples, stride):
+    fm = FileMatrix(input_folder)
     fm.ascending_tiles_X = True
     fm.ascending_tiles_Y = False
 
     group_generators = [fm.tiles_along_X, fm.tiles_along_Y]
     stitch_axis = [2, 1]
-    overlap = [arg.overlap_h, arg.overlap_v]
 
     q = queue.Queue()
 
-    for group_generator, axis, overlap in zip(
-                group_generators, stitch_axis, overlap):
+    for group_generator, axis in zip(group_generators, stitch_axis):
         for group in group_generator:
 
             tile_generator = group.itertuples()
@@ -92,19 +90,15 @@ def build_queue(arg):
             for btile in tile_generator:
                 central_frame = atile.nfrms // 2
                 start_frame = (central_frame
-                               - (arg.z_samples // 2 * arg.stride)
-                               + (0 if arg.z_samples % 2 else arg.stride // 2))
-                for i in range(0, arg.z_samples):
-                    z_frame = start_frame + i * arg.stride
+                               - (z_samples // 2 * stride)
+                               + (0 if z_samples % 2 else stride // 2))
+                for i in range(0, z_samples):
+                    z_frame = start_frame + i * stride
                     params_dict = {
                         'aname': atile.filename,
                         'bname': btile.filename,
                         'z_frame': z_frame,
                         'axis': axis,
-                        'overlap': overlap,
-                        'max_shift_z': arg.max_dz,
-                        'max_shift_y': arg.max_dy,
-                        'max_shift_x': arg.max_dx
                     }
                     q.put(params_dict)
                 atile = btile
@@ -137,7 +131,7 @@ def main():
 
     arg = parse_args()
 
-    q = build_queue(arg)
+    q = build_queue(arg.input_folder, arg.z_samples, arg.stride)
     initial_queue_length = q.qsize()
     data_queue = queue.Queue(maxsize=int(arg.n * 2))
     output_q = queue.Queue()
@@ -147,6 +141,7 @@ def main():
         t.start()
         threads.append(t)
 
+    overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
     while True:
         try:
             item = q.get_nowait()
@@ -154,12 +149,9 @@ def main():
             break
         aname = item['aname']
         bname = item['bname']
-        max_shift_z = item['max_shift_z']
-        max_shift_y = item['max_shift_y']
-        max_shift_x = item['max_shift_x']
         z_frame = item['z_frame']
         axis = item['axis']
-        overlap = item['overlap']
+        overlap = overlap_dict[axis]
 
         a = InputFile(aname)
         b = InputFile(bname)
@@ -167,8 +159,8 @@ def main():
         a.channel = 1
         b.channel = 1
 
-        z_min = z_frame - max_shift_z
-        z_max = z_frame + max_shift_z + 1
+        z_min = z_frame - arg.max_dz
+        z_max = z_frame + arg.max_dz + 1
 
         alayer = a.layer(z_min, z_max)
         if axis == 2:
@@ -180,9 +172,9 @@ def main():
             blayer = np.rot90(blayer, axes=(1, 2))
         blayer = blayer[:, 0:overlap, :]
 
-        half_max_shift_x = max_shift_x // 2
+        half_max_shift_x = arg.max_dx // 2
 
-        blayer = blayer[:, :-max_shift_y, half_max_shift_x:-half_max_shift_x]
+        blayer = blayer[:, :-arg.max_dy, half_max_shift_x:-half_max_shift_x]
 
         alayer = alayer.astype(np.float32)
         blayer = blayer.astype(np.float32)
