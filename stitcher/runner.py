@@ -1,6 +1,5 @@
 import sys
 import queue
-import os.path
 import argparse
 import threading
 
@@ -129,6 +128,61 @@ def main():
                 data_queue.task_done()
                 q.task_done()
 
+    def keep_filling_data_queue():
+        overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
+        while True:
+            try:
+                item = q.get_nowait()
+            except queue.Empty:
+                break
+            aname = item['aname']
+            bname = item['bname']
+            z_frame = item['z_frame']
+            axis = item['axis']
+            overlap = overlap_dict[axis]
+
+            a = InputFile(aname)
+            b = InputFile(bname)
+
+            a.channel = 1
+            b.channel = 1
+
+            z_min = z_frame - arg.max_dz
+            z_max = z_frame + arg.max_dz + 1
+
+            alayer = a.layer(z_min, z_max)
+            if axis == 2:
+                alayer = np.rot90(alayer, axes=(1, 2))
+            alayer = alayer[:, -overlap:, :]
+
+            blayer = b.layer_idx(z_frame)
+            if axis == 2:
+                blayer = np.rot90(blayer, axes=(1, 2))
+            blayer = blayer[:, 0:overlap, :]
+
+            half_max_shift_x = arg.max_dx // 2
+
+            blayer = blayer[
+                :, :-arg.max_dy, half_max_shift_x:-half_max_shift_x]
+
+            alayer = alayer.astype(np.float32)
+            blayer = blayer.astype(np.float32)
+
+            data_queue.put([aname, bname, axis, alayer, blayer])
+
+    def aggregate_results():
+        df = pd.DataFrame(list(output_q.queue))
+        df.columns = ['aname', 'bname', 'axis', 'dz', 'dy', 'dx', 'score']
+
+        if arg.average:
+            view = df.groupby(['aname', 'bname', 'axis']).agg(
+                lambda x: np.average(x, weights=df.loc[x.index, 'score']))
+        else:
+            view = df.groupby(['aname', 'bname', 'axis']).agg(
+                lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name])
+
+        return view
+
     arg = parse_args()
 
     q = build_queue(arg.input_folder, arg.z_samples, arg.stride)
@@ -141,45 +195,7 @@ def main():
         t.start()
         threads.append(t)
 
-    overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
-    while True:
-        try:
-            item = q.get_nowait()
-        except queue.Empty:
-            break
-        aname = item['aname']
-        bname = item['bname']
-        z_frame = item['z_frame']
-        axis = item['axis']
-        overlap = overlap_dict[axis]
-
-        a = InputFile(aname)
-        b = InputFile(bname)
-
-        a.channel = 1
-        b.channel = 1
-
-        z_min = z_frame - arg.max_dz
-        z_max = z_frame + arg.max_dz + 1
-
-        alayer = a.layer(z_min, z_max)
-        if axis == 2:
-            alayer = np.rot90(alayer, axes=(1, 2))
-        alayer = alayer[:, -overlap:, :]
-
-        blayer = b.layer_idx(z_frame)
-        if axis == 2:
-            blayer = np.rot90(blayer, axes=(1, 2))
-        blayer = blayer[:, 0:overlap, :]
-
-        half_max_shift_x = arg.max_dx // 2
-
-        blayer = blayer[:, :-arg.max_dy, half_max_shift_x:-half_max_shift_x]
-
-        alayer = alayer.astype(np.float32)
-        blayer = blayer.astype(np.float32)
-
-        data_queue.put([aname, bname, axis, alayer, blayer])
+    keep_filling_data_queue()
 
     # block until all tasks are done
     data_queue.join()
@@ -190,20 +206,11 @@ def main():
     for t in threads:
         t.join()
 
-    # aggregate results
-    df = pd.DataFrame(list(output_q.queue))
-    df.columns = ['aname', 'bname', 'axis', 'dz', 'dy', 'dx', 'score']
-
-    if arg.average:
-        weighted_average = \
-            lambda x: np.average(x, weights=df.loc[x.index, 'score'])
-        view = df.groupby(['aname', 'bname', 'axis']).agg(weighted_average)
-    else:
-        max_score = \
-            lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name]
-        view = df.groupby(['aname', 'bname', 'axis']).agg(max_score)
+    view = aggregate_results()
 
     print(view)
+
+
 
 if __name__ == '__main__':
     main()
