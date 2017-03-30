@@ -5,9 +5,7 @@ import argparse
 import threading
 
 import numpy as np
-
-import colored
-from colored import stylize
+import pandas as pd
 
 from .core import normxcorr2_fftw
 from .filematrix import FileMatrix
@@ -200,22 +198,20 @@ def main():
     for t in threads:
         t.join()
 
-    for el in list(output_q.queue):
-        print(el)
+    # aggregate results
+    df = pd.DataFrame(list(output_q.queue))
+    df.columns = ['aname', 'bname', 'axis', 'dz', 'dy', 'dx', 'score']
+
+    if arg.average:
+        weighted_average = \
+            lambda x: np.average(x, weights=df.loc[x.index, 'score'])
+        view = df.groupby(['aname', 'bname', 'axis']).agg(weighted_average)
+    else:
+        max_score = \
+            lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name]
+        view = df.groupby(['aname', 'bname', 'axis']).agg(max_score)
+
+    print(view)
 
 if __name__ == '__main__':
     main()
-
-    # print(
-    #     stylize('stitching {} {}, axis = {}'.format(*temp, axis),
-    #             colored.fg('magenta')))
-
-    # results.append(ret)
-    # print('results: ' + str(results))
-    # results = np.array(results)
-    # if arg.average:
-    #     results = np.average(
-    #         results, axis=0, weights=results[:, 3])
-    # else:
-    #     results = results[np.argmax(results[:, 3]), :]
-    # print('results: ' + str(results))
