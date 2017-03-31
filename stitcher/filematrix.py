@@ -170,7 +170,7 @@ class FileMatrix:
         g = self.tiles_along_dir
         next(g)
         yield g.send((['Z', 'X', 'Y'], self.ascending_tiles_X, 'Y'))
-        yield next(g)
+        yield from g
 
     @property
     def tiles_along_Y(self):
@@ -187,4 +187,4 @@ class FileMatrix:
         g = self.tiles_along_dir
         next(g)
         yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_Y, 'X'))
-        yield next(g)
+        yield from g
