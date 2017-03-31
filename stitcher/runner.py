@@ -186,7 +186,7 @@ def main():
             view = df.groupby(['aname', 'bname', 'axis']).agg(
                 lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name])
 
-        return view
+        return view.reset_index()
 
     arg = parse_args()
 
@@ -215,6 +215,8 @@ def main():
 
     print(view)
 
+    with open('stitch.json', 'w') as f:
+        f.write(view.to_json(orient='records'))
 
 
 if __name__ == '__main__':
