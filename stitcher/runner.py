@@ -134,7 +134,6 @@ def main():
                 q.task_done()
 
     def keep_filling_data_queue():
-        overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
         while True:
             try:
                 item = q.get_nowait()
@@ -165,8 +164,6 @@ def main():
                 blayer = np.rot90(blayer, axes=(1, 2))
             blayer = blayer[:, 0:overlap, :]
 
-            half_max_shift_x = arg.max_dx // 2
-
             blayer = blayer[
                 :, :-arg.max_dy, half_max_shift_x:-half_max_shift_x]
 
@@ -186,9 +183,19 @@ def main():
             view = df.groupby(['aname', 'bname', 'axis']).agg(
                 lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name])
 
-        return view.reset_index()
+        view = view.reset_index()
+
+        view.dz -= arg.max_dz
+        for a in [1, 2]:
+            indexes = (view['axis'] == a)
+            view.loc[indexes, 'dy'] = overlap_dict[a] - view.loc[indexes, 'dy']
+        view.dx -= half_max_shift_x
+
+        return view
 
     arg = parse_args()
+    overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
+    half_max_shift_x = arg.max_dx // 2
 
     q = build_queue(arg.input_folder, arg.z_samples, arg.stride)
     initial_queue_length = q.qsize()
