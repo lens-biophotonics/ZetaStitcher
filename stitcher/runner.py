@@ -116,13 +116,18 @@ def main():
                 axis = item[2]
                 alayer = item[3]
                 blayer = item[4]
+                z_frame = item[5]
 
                 xcorr = normxcorr2_fftw(alayer, blayer)
 
                 shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
                 score = xcorr[tuple(shift)]
 
-                print(100 * (1 - q.qsize() / initial_queue_length))
+                print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
+                      '{shift}\t{score}'.format(
+                    progress=100 * (1 - q.qsize() / initial_queue_length),
+                    aname=aname, bname=bname, z_frame=z_frame, shift=shift,
+                    score=score))
                 output_q.put([aname, bname, axis] + shift + [score])
             finally:
                 data_queue.task_done()
@@ -168,7 +173,7 @@ def main():
             alayer = alayer.astype(np.float32)
             blayer = blayer.astype(np.float32)
 
-            data_queue.put([aname, bname, axis, alayer, blayer])
+            data_queue.put([aname, bname, axis, alayer, blayer, z_frame])
 
     def aggregate_results():
         df = pd.DataFrame(list(output_q.queue))
