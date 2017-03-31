@@ -60,7 +60,7 @@ Unless otherwise stated, all values are expected in px.
     group.add_argument('--z-samples', type=int, default=1, metavar='ZSAMP',
                        help='number of samples to take along Z')
 
-    group.add_argument('--stride', type=int, default=200,
+    group.add_argument('--z-stride', type=int, default=200,
                        help='stride used for multiple Z sampling')
 
     parser.add_argument('-n', type=int, default=1,
@@ -69,7 +69,7 @@ Unless otherwise stated, all values are expected in px.
     return parser.parse_args(sys.argv[1:])
 
 
-def build_queue(input_folder, z_samples, stride):
+def build_queue(input_folder, z_samples, z_stride):
     fm = FileMatrix(input_folder)
     fm.ascending_tiles_X = True
     fm.ascending_tiles_Y = False
@@ -89,10 +89,10 @@ def build_queue(input_folder, z_samples, stride):
             for btile in tile_generator:
                 central_frame = atile.nfrms // 2
                 start_frame = (central_frame
-                               - (z_samples // 2 * stride)
-                               + (0 if z_samples % 2 else stride // 2))
+                               - (z_samples // 2 * z_stride)
+                               + (0 if z_samples % 2 else z_stride // 2))
                 for i in range(0, z_samples):
-                    z_frame = start_frame + i * stride
+                    z_frame = start_frame + i * z_stride
                     params_dict = {
                         'aname': atile.filename,
                         'bname': btile.filename,
@@ -197,7 +197,7 @@ def main():
     overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
     half_max_shift_x = arg.max_dx // 2
 
-    q = build_queue(arg.input_folder, arg.z_samples, arg.stride)
+    q = build_queue(arg.input_folder, arg.z_samples, arg.z_stride)
     initial_queue_length = q.qsize()
     data_queue = queue.Queue(maxsize=int(arg.n * 2))
     output_q = queue.Queue()
