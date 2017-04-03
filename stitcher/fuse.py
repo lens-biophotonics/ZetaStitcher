@@ -5,9 +5,10 @@ from . import inputfile
 
 
 def fuse(fname_1, fname_2, shift, zplane, axis=1):
-    dx = shift[0]
+    dx = shift[2]
     dy = shift[1]
-    dz = shift[2]
+    dz = shift[0]
+
     a = inputfile.InputFile(fname_1)
     b = inputfile.InputFile(fname_2)
 
@@ -15,7 +16,7 @@ def fuse(fname_1, fname_2, shift, zplane, axis=1):
     b.channel = 1
 
     aframe = a.frame(zplane, dtype=np.float32)
-    bframe = b.frame(zplane + dz, dtype=np.float32)
+    bframe = b.frame(zplane - dz, dtype=np.float32)
 
     if axis == 2:
         aframe = np.rot90(aframe)
