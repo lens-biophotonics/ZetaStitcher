@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import skimage.external.tifffile as tiff
 
@@ -75,3 +77,9 @@ def fuse(fname_1, fname_2, shift, zplane, axis=1):
     b.close()
 
     return output
+
+
+if __name__ == '__main__':
+    fuse(sys.argv[1], sys.argv[2],
+         (int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])),
+         int(sys.argv[6]), axis=int(sys.argv[7]))
