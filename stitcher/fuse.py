@@ -1,16 +1,18 @@
 import numpy as np
 import skimage.external.tifffile as tiff
 
-from dcimg import DCIMGFile
+from . import inputfile
 
 
 def fuse(fname_1, fname_2, shift, zplane, axis=1):
     dx = shift[0]
     dy = shift[1]
     dz = shift[2]
+    a = inputfile.InputFile(fname_1)
+    b = inputfile.InputFile(fname_2)
 
-    a = DCIMGFile(fname_1)
-    b = DCIMGFile(fname_2)
+    a.channel = 1
+    b.channel = 1
 
     aframe = a.frame(zplane, dtype=np.float32)
     bframe = b.frame(zplane + dz, dtype=np.float32)
