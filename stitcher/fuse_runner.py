@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
+import skimage.external.tifffile as tiff
+
 from .filematrix import FileMatrix
+from .inputfile import InputFile
 
 
 class FuseRunner(object):
@@ -37,6 +40,8 @@ class FuseRunner(object):
         self.df = df
         fm = FileMatrix(path)
         fm.data_frame = fm.data_frame.set_index('filename')
+        fm.ascending_tiles_X = True
+        fm.ascending_tiles_Y = False
         self.fm = fm
 
     def _compute_absolute_positions(self):
@@ -130,6 +135,98 @@ class FuseRunner(object):
         T = nx.minimum_spanning_tree(G)
         return T
 
+    def run(self):
+        for group in self.fm.tiles_along_Y:
+            if group.iloc[0]['X'] != 160000:
+                continue
+
+            m = group.min()
+            M = group.max()
+
+            stripe_width = M['Xs'] - m['Xs'] + group.iloc[-1]['xsize']
+            stripe_height = M['Ys'] - m['Ys'] + group.iloc[-1]['ysize']
+
+            print(stripe_height, stripe_width)
+
+            output_array = np.zeros((1, stripe_height, stripe_width),
+                                    dtype=np.float32)
+
+            tile_generator = group.itertuples()
+            atile = next(tile_generator)
+
+            z_frame = 1500
+
+            dy_prev = 0
+            for btile in tile_generator:
+                print(atile)
+                print(btile)
+                print('fusing {} and {}'.format(atile.Index, btile.Index))
+                # atile = btile
+                # continue
+                a = InputFile(atile.Index)
+                b = InputFile(btile.Index)
+
+                oy_to = atile.Ys + atile.ysize
+
+                dx = btile.Xs - atile.Xs
+                dy = oy_to - btile.Ys
+                dz = btile.Zs - atile.Zs
+
+                alayer = a.layer(z_frame, dtype=np.float32)
+
+                # the updated zframe will be reused in the next loop with
+                # alayer
+                z_frame = z_frame - dz
+                blayer = b.layer(z_frame, dtype=np.float32)
+
+                # for the moment consider a and b to have same width
+                fused_width = alayer.shape[2] - abs(dx)
+
+                ax_min = 0
+                if dx > 0:
+                    ax_min = dx
+                ax_max = ax_min + fused_width
+
+                bx_min = 0
+                bx_max = fused_width
+
+                if dx < 0:
+                    bx_min = -dx
+                    bx_max += abs(dx)
+
+                a_roi = alayer[:, -dy:, ax_min:ax_max]
+                b_roi = blayer[:, 0:dy, bx_min:bx_max]
+
+                # add first part
+                ox_from = atile.Xs - m['Xs']
+                ox_to = ox_from + atile.xsize
+                oy_from = atile.Ys - m['Ys'] + dy_prev
+                oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
+                output_array[0, oy_from:oy_to, ox_from:ox_to] = \
+                    alayer[0, dy_prev:-dy, :]
+
+                # add fused part
+                ox_from = btile.Xs - m['Xs']
+                ox_to = ox_from + fused_width
+                oy_from = btile.Ys - m['Ys']
+                oy_to = oy_from + dy
+                self._fuse(a_roi, b_roi,
+                           output_array[:, oy_from:oy_to, ox_from:ox_to])
+
+                atile = btile
+                dy_prev = dy
+                print('===============')
+
+            # add last part
+            ox_from = atile.Xs - m['Xs']
+            ox_to = ox_from + atile.xsize
+            oy_from = atile.Ys - m['Ys'] + dy_prev
+            oy_to = atile.Ys - m['Ys'] + atile.ysize
+            output_array[0, oy_from:oy_to, ox_from:ox_to] = \
+            alayer[0, dy_prev:, :]
+
+            tiff.imsave('/mnt/data/temp/stitch/output.tiff', output_array)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -145,6 +242,7 @@ def parse_args():
 def main():
     arg = parse_args()
     fr = FuseRunner(arg.input_file)
+    fr.run()
 
 
 if __name__ == '__main__':

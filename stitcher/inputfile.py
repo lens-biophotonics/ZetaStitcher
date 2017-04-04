@@ -97,7 +97,7 @@ class InputFile(object):
             except AttributeError:
                 pass
 
-    def layer(self, start_frame, end_frame, dtype=None):
+    def layer(self, start_frame, end_frame=None, dtype=None):
         """Return a layer, i.e a stack of frames.
 
         Parameters
