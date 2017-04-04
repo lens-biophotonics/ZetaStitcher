@@ -55,6 +55,8 @@ class FuseRunner(object):
 
                 key_Xs = 'Ys'
                 key_Ys = 'Xs'
+
+                ascending_sign = 1 if self.fm.ascending_tiles_X else -1
             else:
                 stride_y = fm_df.ix[edge[1], 'ysize']
                 key_Y = 'Y'
@@ -62,7 +64,10 @@ class FuseRunner(object):
                 key_Xs = 'Xs'
                 key_Ys = 'Ys'
 
-            sign_y = (1 if fm_df.ix[edge[1], key_Y] > fm_df.ix[edge[0], key_Y]
+                ascending_sign = 1 if self.fm.ascending_tiles_Y else -1
+
+            sign_y = (1 if fm_df.ix[edge[1], key_Y] >= fm_df.ix[edge[0], key_Y]
+                      else -1) * ascending_sign
             sign_z = (1 if fm_df.ix[edge[1], 'Z'] >= fm_df.ix[edge[0], 'Z']
                       else -1)
 
