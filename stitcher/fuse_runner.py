@@ -157,23 +157,36 @@ class FuseRunner(object):
             z_frame = 1500
 
             dy_prev = 0
-            for btile in tile_generator:
+            while True:
+                try:
+                    btile = next(tile_generator)
+
+                    oy_to = atile.Ys + atile.ysize
+                    dx = btile.Xs - atile.Xs
+                    dy = oy_to - btile.Ys
+                    ay_to = atile.ysize - dy
+                    dz = btile.Zs - atile.Zs
+                except StopIteration:
+                    dy = 0
+                    ay_to = atile.ysize
+                    break
+                finally:
+                    a = InputFile(atile.Index)
+                    alayer = a.layer(z_frame, dtype=np.float32)
+
+                    # add first part
+                    ox_from = atile.Xs - m['Xs']
+                    ox_to = ox_from + atile.xsize
+                    oy_from = atile.Ys - m['Ys'] + dy_prev
+                    oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
+                    output_array[0, oy_from:oy_to, ox_from:ox_to] = \
+                        alayer[0, dy_prev:ay_to, :]
+
                 print(atile)
                 print(btile)
                 print('fusing {} and {}'.format(atile.Index, btile.Index))
-                # atile = btile
-                # continue
-                a = InputFile(atile.Index)
+
                 b = InputFile(btile.Index)
-
-                oy_to = atile.Ys + atile.ysize
-
-                dx = btile.Xs - atile.Xs
-                dy = oy_to - btile.Ys
-                dz = btile.Zs - atile.Zs
-
-                alayer = a.layer(z_frame, dtype=np.float32)
-
                 # the updated zframe will be reused in the next loop with
                 # alayer
                 z_frame = z_frame - dz
@@ -197,14 +210,6 @@ class FuseRunner(object):
                 a_roi = alayer[:, -dy:, ax_min:ax_max]
                 b_roi = blayer[:, 0:dy, bx_min:bx_max]
 
-                # add first part
-                ox_from = atile.Xs - m['Xs']
-                ox_to = ox_from + atile.xsize
-                oy_from = atile.Ys - m['Ys'] + dy_prev
-                oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
-                output_array[0, oy_from:oy_to, ox_from:ox_to] = \
-                    alayer[0, dy_prev:-dy, :]
-
                 # add fused part
                 ox_from = btile.Xs - m['Xs']
                 ox_to = ox_from + fused_width
@@ -216,14 +221,6 @@ class FuseRunner(object):
                 atile = btile
                 dy_prev = dy
                 print('===============')
-
-            # add last part
-            ox_from = atile.Xs - m['Xs']
-            ox_to = ox_from + atile.xsize
-            oy_from = atile.Ys - m['Ys'] + dy_prev
-            oy_to = atile.Ys - m['Ys'] + atile.ysize
-            output_array[0, oy_from:oy_to, ox_from:ox_to] = \
-            alayer[0, dy_prev:, :]
 
             tiff.imsave('/mnt/data/temp/stitch/output.tiff', output_array)
 
