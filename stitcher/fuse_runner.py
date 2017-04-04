@@ -46,6 +46,7 @@ class FuseRunner(object):
 
         fm_df['Xs'] = 0
         fm_df['Ys'] = 0
+        fm_df['Zs'] = 0
         for edge in nx.dfs_edges(T, source=fm_df.iloc[0].name):
             edge_data = T.get_edge_data(*edge)
             if df.loc[edge_data['label']]['axis'] == 2:
@@ -62,21 +63,25 @@ class FuseRunner(object):
                 key_Ys = 'Ys'
 
             sign_y = (1 if fm_df.ix[edge[1], key_Y] > fm_df.ix[edge[0], key_Y]
+            sign_z = (1 if fm_df.ix[edge[1], 'Z'] >= fm_df.ix[edge[0], 'Z']
                       else -1)
 
             # absolute stitched positions
             Xs = (fm_df.ix[edge[0], key_Xs] + df.loc[edge_data['label']]['dx'])
             Ys = (fm_df.ix[edge[0], key_Ys]
                   + sign_y * (stride_y - df.loc[edge_data['label']]['dy']))
+            Zs = (fm_df.ix[edge[0], 'Zs']
+                  + sign_z * df.loc[edge_data['label']]['dz'])
 
             fm_df.ix[edge[1], key_Xs] = Xs
             fm_df.ix[edge[1], key_Ys] = Ys
+            fm_df.ix[edge[1], 'Zs'] = Zs
 
-        fm_df['Xs'] -= fm_df['Xs'].min()
-        fm_df['Xs'] = np.rint(fm_df['Xs']).astype(np.int64)
+        for key in ['Xs', 'Ys', 'Zs']:
+            fm_df[key] -= fm_df[key].min()
+            fm_df[key] = np.rint(fm_df[key]).astype(np.int64)
 
-        fm_df['Ys'] -= fm_df['Ys'].min()
-        fm_df['Ys'] = np.rint(fm_df['Ys']).astype(np.int64)
+
 
     @property
     def minimum_spanning_tree(self):
