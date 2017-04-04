@@ -86,7 +86,34 @@ class FuseRunner(object):
             fm_df[key] -= fm_df[key].min()
             fm_df[key] = np.rint(fm_df[key]).astype(np.int64)
 
+    def _fuse(self, a_roi, b_roi, dest):
+        """Fuse two overlapping regions.
 
+        Fuses `a_roi` and `b_roi` applying a sinusoidal smoothing. All
+        parameters must have equal shapes.
+
+        Parameters
+        ----------
+        a_roi : :class:`numpy.ndarray`
+        b_roi : :class:`numpy.ndarray`
+        dest : :class:`numpy.ndarray`
+        """
+        if a_roi.shape != b_roi.shape or a_roi.shape != dest.shape:
+            raise ValueError(
+                'ROI shapes must be equal. a: {}, b: {}, dest: {}'.format(
+                    a_roi.shape, b_roi.shape, dest.shape))
+
+        output_height = a_roi.shape[1]
+        output_width = a_roi.shape[2]
+
+        rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
+
+        alpha = (np.cos(rad) + 1) / 2
+        alpha = np.tile(alpha, [output_width])
+        alpha = np.reshape(alpha, [output_width, output_height])
+        alpha = np.transpose(alpha)
+
+        dest[:] = a_roi * alpha + b_roi * (1 - alpha)
 
     @property
     def minimum_spanning_tree(self):
