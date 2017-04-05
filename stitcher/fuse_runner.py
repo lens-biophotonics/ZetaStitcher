@@ -52,6 +52,7 @@ class FuseRunner(object):
         fm_df['Xs'] = 0
         fm_df['Ys'] = 0
         fm_df['Zs'] = 0
+        fm_df['weight'] = 0
         for edge in nx.dfs_edges(T, source=fm_df.iloc[0].name):
             edge_data = T.get_edge_data(*edge)
             if df.loc[edge_data['label']]['axis'] == 2:
@@ -86,6 +87,7 @@ class FuseRunner(object):
             fm_df.ix[edge[1], key_Xs] = Xs
             fm_df.ix[edge[1], key_Ys] = Ys
             fm_df.ix[edge[1], 'Zs'] = Zs
+            fm_df.ix[edge[1], 'weight'] = edge_data['weight']
 
         for key in ['Xs', 'Ys', 'Zs']:
             fm_df[key] -= fm_df[key].min()
@@ -146,6 +148,9 @@ class FuseRunner(object):
         for group in self.fm.tiles_along_Y:
             if group.iloc[0]['X'] != 160000:
                 continue
+
+            # skip unstitchable tiles
+            group = group[group.weight < 0.6]
 
             m = group.min()
             M = group.max()
