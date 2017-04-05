@@ -89,7 +89,6 @@ class FuseRunner(object):
 
         for key in ['Xs', 'Ys', 'Zs']:
             fm_df[key] -= fm_df[key].min()
-            fm_df[key] = np.rint(fm_df[key]).astype(np.int64)
 
     def _fuse(self, a_roi, b_roi, dest):
         """Fuse two overlapping regions.
@@ -143,8 +142,10 @@ class FuseRunner(object):
             m = group.min()
             M = group.max()
 
-            stripe_width = M['Xs'] - m['Xs'] + group.iloc[-1]['xsize']
-            stripe_height = M['Ys'] - m['Ys'] + group.iloc[-1]['ysize']
+            stripe_width = int(
+                np.rint(M['Xs'] - m['Xs'] + group.iloc[-1]['xsize']))
+            stripe_height = int(
+                np.rint(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize']))
 
             print(stripe_height, stripe_width)
 
@@ -156,7 +157,8 @@ class FuseRunner(object):
 
             z_frame = 1500
 
-            dy_prev = 0
+            dy_prev_i = 0
+            current_y_i = 0
             while True:
                 try:
                     btile = next(tile_generator)
@@ -164,24 +166,33 @@ class FuseRunner(object):
                     oy_to = atile.Ys + atile.ysize
                     dx = btile.Xs - atile.Xs
                     dy = oy_to - btile.Ys
-                    ay_to = atile.ysize - dy
                     dz = btile.Zs - atile.Zs
                 except StopIteration:
                     dy = 0
-                    ay_to = atile.ysize
                     break
                 finally:
                     a = InputFile(atile.Index)
-                    alayer = a.layer(z_frame, dtype=np.float32)
+                    alayer = a.layer(int(np.rint(z_frame)), dtype=np.float32)
 
                     # add first part
                     ox_from = atile.Xs - m['Xs']
                     ox_to = ox_from + atile.xsize
-                    oy_from = atile.Ys - m['Ys'] + dy_prev
                     oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
-                    output_array[0, oy_from:oy_to, ox_from:ox_to] = \
-                        alayer[0, dy_prev:ay_to, :]
 
+                    ox_from_i = int(np.rint(ox_from))
+                    ox_width_i = int(np.rint(ox_to - ox_from))
+                    ox_to_i = ox_from_i + ox_width_i
+
+                    oy_height_i = int(np.rint(oy_to - current_y_i))
+                    oy_to_i = current_y_i + oy_height_i
+
+                    ay_from_i = dy_prev_i
+                    ay_to_i = ay_from_i + oy_height_i
+
+                    output_array[0, current_y_i:oy_to_i, ox_from_i:ox_to_i] = \
+                        alayer[0, ay_from_i:ay_to_i, :]
+
+                    current_y_i = oy_to_i
                 print(atile)
                 print(btile)
                 print('fusing {} and {}'.format(atile.Index, btile.Index))
@@ -190,7 +201,7 @@ class FuseRunner(object):
                 # the updated zframe will be reused in the next loop with
                 # alayer
                 z_frame = z_frame - dz
-                blayer = b.layer(z_frame, dtype=np.float32)
+                blayer = b.layer(int(np.rint(z_frame)), dtype=np.float32)
 
                 # for the moment consider a and b to have same width
                 fused_width = alayer.shape[2] - abs(dx)
@@ -198,28 +209,34 @@ class FuseRunner(object):
                 ax_min = 0
                 if dx > 0:
                     ax_min = dx
-                ax_max = ax_min + fused_width
 
                 bx_min = 0
-                bx_max = fused_width
-
                 if dx < 0:
                     bx_min = -dx
-                    bx_max += abs(dx)
 
-                a_roi = alayer[:, -dy:, ax_min:ax_max]
-                b_roi = blayer[:, 0:dy, bx_min:bx_max]
+                fused_width_i = int(np.rint(fused_width))
+                fused_height_i = int(np.rint(dy))
+
+                ax_min_i = int(np.rint(ax_min))
+                ax_max_i = ax_min_i + fused_width_i
+
+                bx_min_i = int(np.rint(bx_min))
+                bx_max_i = bx_min_i + fused_width_i
+
+                a_roi = alayer[:, -fused_height_i:, ax_min_i:ax_max_i]
+                b_roi = blayer[:, 0:fused_height_i, bx_min_i:bx_max_i]
 
                 # add fused part
-                ox_from = btile.Xs - m['Xs']
-                ox_to = ox_from + fused_width
-                oy_from = btile.Ys - m['Ys']
-                oy_to = oy_from + dy
-                self._fuse(a_roi, b_roi,
-                           output_array[:, oy_from:oy_to, ox_from:ox_to])
+                ox_from_i = int(np.rint(btile.Xs - m['Xs']))
+                ox_to_i = ox_from_i + fused_width_i
+                oy_to_i = current_y_i + fused_height_i
 
+                self._fuse(a_roi, b_roi,
+                           output_array[:, current_y_i:oy_to_i,
+                                        ox_from_i:ox_to_i])
+                current_y_i = oy_to_i
                 atile = btile
-                dy_prev = dy
+                dy_prev_i = fused_height_i
                 print('===============')
 
             tiff.imsave('/mnt/data/temp/stitch/output.tiff', output_array)
