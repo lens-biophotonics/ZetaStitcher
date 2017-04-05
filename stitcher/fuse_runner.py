@@ -155,8 +155,10 @@ class FuseRunner(object):
             m = group.min()
             M = group.max()
 
+            stripe_left_edge = int(np.rint(M['Xs'] - m['Xs']))
+
             stripe_width = int(
-                np.rint(M['Xs'] - m['Xs'] + group.iloc[-1]['xsize']))
+                np.rint(group.iloc[-1]['xsize'] - stripe_left_edge))
             stripe_height = int(
                 np.rint(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize']))
 
@@ -179,7 +181,6 @@ class FuseRunner(object):
                     btile = next(tile_generator)
 
                     oy_to = atile.Ys + atile.ysize
-                    dx = btile.Xs - atile.Xs
                     dy = oy_to - btile.Ys
                     dz = btile.Zs - atile.Zs
                 except StopIteration:
@@ -189,24 +190,22 @@ class FuseRunner(object):
                     alayer = a.layer(int(np.rint(z_frame)))
 
                     # add first part
-                    ox_from = atile.Xs - m['Xs']
-                    ox_to = ox_from + atile.xsize
                     oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
-
-                    ox_from_i = int(np.rint(ox_from))
-                    ox_width_i = int(np.rint(ox_to - ox_from))
-                    ox_to_i = ox_from_i + ox_width_i
 
                     oy_height_i = int(np.rint(oy_to - current_y_i))
                     oy_to_i = current_y_i + oy_height_i
 
+                    ax_from_i = int(
+                        np.rint(stripe_left_edge - (atile.Xs - m['Xs'])))
+                    ax_to_i = ax_from_i + stripe_width
                     ay_from_i = dy_prev_i
                     ay_to_i = ay_from_i + oy_height_i
 
-                    output_array[0, current_y_i:oy_to_i, ox_from_i:ox_to_i] = \
-                        alayer[0, ay_from_i:ay_to_i, :]
+                    output_array[0, current_y_i:oy_to_i, :] = \
+                        alayer[0, ay_from_i:ay_to_i, ax_from_i:ax_to_i]
 
                     current_y_i = oy_to_i
+
                 print(atile)
                 print(btile)
                 print('fusing {} and {}'.format(atile.Index, btile.Index))
@@ -217,37 +216,20 @@ class FuseRunner(object):
                 z_frame = z_frame - dz
                 blayer = b.layer(int(np.rint(z_frame)))
 
-                # for the moment consider a and b to have same width
-                fused_width = alayer.shape[2] - abs(dx)
-
-                ax_min = 0
-                if dx > 0:
-                    ax_min = dx
-
-                bx_min = 0
-                if dx < 0:
-                    bx_min = -dx
-
-                fused_width_i = int(np.rint(fused_width))
                 fused_height_i = int(np.rint(dy))
 
-                ax_min_i = int(np.rint(ax_min))
-                ax_max_i = ax_min_i + fused_width_i
+                bx_from_i = int(
+                    np.rint(stripe_left_edge - (btile.Xs - m['Xs'])))
+                bx_to_i = bx_from_i + stripe_width
 
-                bx_min_i = int(np.rint(bx_min))
-                bx_max_i = bx_min_i + fused_width_i
-
-                a_roi = alayer[:, -fused_height_i:, ax_min_i:ax_max_i]
-                b_roi = blayer[:, 0:fused_height_i, bx_min_i:bx_max_i]
+                a_roi = alayer[:, -fused_height_i:, ax_from_i:ax_to_i]
+                b_roi = blayer[:, 0:fused_height_i, bx_from_i:bx_to_i]
 
                 # add fused part
-                ox_from_i = int(np.rint(btile.Xs - m['Xs']))
-                ox_to_i = ox_from_i + fused_width_i
                 oy_to_i = current_y_i + fused_height_i
 
                 self._fuse(a_roi, b_roi,
-                           output_array[:, current_y_i:oy_to_i,
-                                        ox_from_i:ox_to_i])
+                           output_array[:, current_y_i:oy_to_i, :])
                 current_y_i = oy_to_i
 
                 a.close()
