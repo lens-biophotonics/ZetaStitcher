@@ -107,6 +107,10 @@ class FuseRunner(object):
                 'ROI shapes must be equal. a: {}, b: {}, dest: {}'.format(
                     a_roi.shape, b_roi.shape, dest.shape))
 
+        dtype = a_roi.dtype
+        a_roi = a_roi.astype(np.float32)
+        b_roi = b_roi.astype(np.float32)
+
         output_height = a_roi.shape[1]
         output_width = a_roi.shape[2]
 
@@ -117,7 +121,11 @@ class FuseRunner(object):
         alpha = np.reshape(alpha, [output_width, output_height])
         alpha = np.transpose(alpha)
 
-        dest[:] = a_roi * alpha + b_roi * (1 - alpha)
+        def possibly_to_int(x):
+            return np.rint(x) if np.issubdtype(dtype, np.integer) else x
+
+        dest[:] = possibly_to_int(
+            a_roi * alpha + b_roi * (1 - alpha)).astype(dtype)
 
     @property
     def minimum_spanning_tree(self):
@@ -149,13 +157,13 @@ class FuseRunner(object):
 
             print(stripe_height, stripe_width)
 
-            output_array = np.zeros((1, stripe_height, stripe_width),
-                                    dtype=np.float32)
-
             tile_generator = group.itertuples()
+
             atile = next(tile_generator)
             a = InputFile(atile.Index)
 
+            output_array = np.zeros((1, stripe_height, stripe_width),
+                                    dtype=a.dtype)
 
             z_frame = 1500
 
@@ -173,7 +181,7 @@ class FuseRunner(object):
                     dy = 0
                     break
                 finally:
-                    alayer = a.layer(int(np.rint(z_frame)), dtype=np.float32)
+                    alayer = a.layer(int(np.rint(z_frame)))
 
                     # add first part
                     ox_from = atile.Xs - m['Xs']
@@ -202,7 +210,7 @@ class FuseRunner(object):
                 # the updated zframe will be reused in the next loop with
                 # alayer
                 z_frame = z_frame - dz
-                blayer = b.layer(int(np.rint(z_frame)), dtype=np.float32)
+                blayer = b.layer(int(np.rint(z_frame)))
 
                 # for the moment consider a and b to have same width
                 fused_width = alayer.shape[2] - abs(dx)

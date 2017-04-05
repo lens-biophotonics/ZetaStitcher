@@ -89,7 +89,7 @@ class InputFile(object):
             pass
 
     def _setattrs(self):
-        l = ['nfrms', 'xsize', 'ysize', 'channels']
+        l = ['nfrms', 'xsize', 'ysize', 'channels', 'dtype']
 
         for a in l:
             try:
