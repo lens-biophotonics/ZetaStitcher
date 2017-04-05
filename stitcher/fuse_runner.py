@@ -154,6 +154,8 @@ class FuseRunner(object):
 
             tile_generator = group.itertuples()
             atile = next(tile_generator)
+            a = InputFile(atile.Index)
+
 
             z_frame = 1500
 
@@ -171,7 +173,6 @@ class FuseRunner(object):
                     dy = 0
                     break
                 finally:
-                    a = InputFile(atile.Index)
                     alayer = a.layer(int(np.rint(z_frame)), dtype=np.float32)
 
                     # add first part
@@ -235,10 +236,14 @@ class FuseRunner(object):
                            output_array[:, current_y_i:oy_to_i,
                                         ox_from_i:ox_to_i])
                 current_y_i = oy_to_i
+
+                a.close()
+                a = b
                 atile = btile
                 dy_prev_i = fused_height_i
                 print('===============')
 
+            b.close()
             tiff.imsave('/mnt/data/temp/stitch/output.tiff', output_array)
 
 
