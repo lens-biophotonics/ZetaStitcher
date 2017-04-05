@@ -10,6 +10,7 @@ import skimage.external.tifffile as tiff
 
 from .filematrix import FileMatrix
 from .inputfile import InputFile
+from .fuse import fuse
 
 
 class FuseRunner(object):
@@ -91,43 +92,6 @@ class FuseRunner(object):
 
         for key in ['Xs', 'Ys', 'Zs']:
             fm_df[key] -= fm_df[key].min()
-
-    def _fuse(self, a_roi, b_roi, dest):
-        """Fuse two overlapping regions.
-
-        Fuses `a_roi` and `b_roi` applying a sinusoidal smoothing. All
-        parameters must have equal shapes.
-
-        Parameters
-        ----------
-        a_roi : :class:`numpy.ndarray`
-        b_roi : :class:`numpy.ndarray`
-        dest : :class:`numpy.ndarray`
-        """
-        if a_roi.shape != b_roi.shape or a_roi.shape != dest.shape:
-            raise ValueError(
-                'ROI shapes must be equal. a: {}, b: {}, dest: {}'.format(
-                    a_roi.shape, b_roi.shape, dest.shape))
-
-        dtype = a_roi.dtype
-        a_roi = a_roi.astype(np.float32)
-        b_roi = b_roi.astype(np.float32)
-
-        output_height = a_roi.shape[1]
-        output_width = a_roi.shape[2]
-
-        rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
-
-        alpha = (np.cos(rad) + 1) / 2
-        alpha = np.tile(alpha, [output_width])
-        alpha = np.reshape(alpha, [output_width, output_height])
-        alpha = np.transpose(alpha)
-
-        def possibly_to_int(x):
-            return np.rint(x) if np.issubdtype(dtype, np.integer) else x
-
-        dest[:] = possibly_to_int(
-            a_roi * alpha + b_roi * (1 - alpha)).astype(dtype)
 
     @property
     def minimum_spanning_tree(self):
@@ -228,8 +192,7 @@ class FuseRunner(object):
                 # add fused part
                 oy_to_i = current_y_i + fused_height_i
 
-                self._fuse(a_roi, b_roi,
-                           output_array[:, current_y_i:oy_to_i, :])
+                fuse(a_roi, b_roi, output_array[:, current_y_i:oy_to_i, :])
                 current_y_i = oy_to_i
 
                 a.close()

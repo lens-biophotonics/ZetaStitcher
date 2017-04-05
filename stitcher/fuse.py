@@ -1,85 +1,40 @@
-import sys
-
 import numpy as np
-import skimage.external.tifffile as tiff
-
-from . import inputfile
 
 
-def fuse(fname_1, fname_2, shift, zplane, axis=1):
-    dx = shift[2]
-    dy = shift[1]
-    dz = shift[0]
-
-    a = inputfile.InputFile(fname_1)
-    b = inputfile.InputFile(fname_2)
-
-    a.channel = 1
-    b.channel = 1
-
-    aframe = a.frame(zplane, dtype=np.float32)
-    bframe = b.frame(zplane - dz, dtype=np.float32)
-
-    if axis == 2:
-        aframe = np.rot90(aframe)
-        bframe = np.rot90(bframe)
-
-    output_height = aframe.shape[0] + bframe.shape[0] - dy
-    # for the moment consider a and b to have same width
-    output_width = aframe.shape[1] - abs(dx)
-
-    aframe_roi = aframe[-dy:, :]
-    bframe_roi = bframe[0:dy, :]
-
-    ax_min = 0
-    if dx > 0:
-        ax_min = dx
-    ax_max = ax_min + output_width
-
-    bx_min = 0
-    bx_max = output_width
-
-    if dx < 0:
-        bx_min = -dx
-        bx_max += abs(dx)
+def to_dtype(x, dtype):
+    x = np.rint(x) if np.issubdtype(dtype, np.integer) else x
+    return x.astype(dtype, copy=False)
 
 
-    aframe_roi = aframe_roi[:, ax_min:ax_max]
-    bframe_roi = bframe_roi[:, bx_min:bx_max]
+def fuse(a_roi, b_roi, dest):
+    """Fuse two overlapping regions.
 
-    plateau_size = dy // 10
+    Fuses `a_roi` and `b_roi` applying a sinusoidal smoothing. All
+    parameters must have equal shapes.
 
-    plateau_size = 0
+    Parameters
+    ----------
+    a_roi : :class:`numpy.ndarray`
+    b_roi : :class:`numpy.ndarray`
+    dest : :class:`numpy.ndarray`
+    """
+    if a_roi.shape != b_roi.shape or a_roi.shape != dest.shape:
+        raise ValueError(
+            'ROI shapes must be equal. a: {}, b: {}, dest: {}'.format(
+                a_roi.shape, b_roi.shape, dest.shape))
 
-    rad = np.linspace(0.0, np.pi, dy - 2 * plateau_size, dtype=np.float32)
+    dtype = a_roi.dtype
+    a_roi = a_roi.astype(np.float32, copy=False)
+    b_roi = b_roi.astype(np.float32, copy=False)
 
-    rad = np.append(np.zeros(plateau_size, dtype=np.float32), rad)
-    rad = np.append(rad, np.full(plateau_size, np.pi, dtype=np.float32))
+    output_height = a_roi.shape[1]
+    output_width = a_roi.shape[2]
+
+    rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
 
     alpha = (np.cos(rad) + 1) / 2
     alpha = np.tile(alpha, [output_width])
-    alpha = np.reshape(alpha, [output_width, dy])
+    alpha = np.reshape(alpha, [output_width, output_height])
     alpha = np.transpose(alpha)
 
-    fused = aframe_roi * alpha + bframe_roi * (1 - alpha)
-
-    output = np.zeros((output_height, output_width), dtype=np.float32)
-
-    output[0:aframe.shape[1] - dy, :] = (
-        aframe[0:aframe.shape[1] - dy, ax_min:ax_max])
-
-    output[aframe.shape[1] - dy:aframe.shape[1], :] = fused
-
-    output[aframe.shape[1]:output_height, :] = (
-        bframe[dy:bframe.shape[1], bx_min:bx_max])
-
-    a.close()
-    b.close()
-
-    return output
-
-
-if __name__ == '__main__':
-    fuse(sys.argv[1], sys.argv[2],
-         (int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])),
-         int(sys.argv[6]), axis=int(sys.argv[7]))
+    dest[:] = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
