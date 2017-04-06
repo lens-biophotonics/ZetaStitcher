@@ -135,27 +135,24 @@ class FuseRunner(object):
             tile_generator = group.itertuples()
 
             z_frame = 1500
-            prev_Ys_end = 0
             prev_Zs = 0
             q = Queue()
             for tile in tile_generator:
                 with InputFile(tile.Index) as f:
                     layer = np.copy(f.layer(int(np.rint(z_frame))))
 
-                dy = int(np.rint(prev_Ys_end - tile.Ys))
                 dz = int(np.rint(tile.Zs - prev_Zs))
 
                 ax_from_i = int(
                     np.rint(stripe_left_edge - (tile.Xs - m['Xs'])))
                 ax_to_i = ax_from_i + stripe_width
 
-                q.put([layer[..., ax_from_i:ax_to_i], dy])
+                q.put([layer[..., ax_from_i:ax_to_i], np.asscalar(tile.Ys)])
 
                 z_frame = z_frame - dz
-                prev_Ys_end = tile.Ys + tile.ysize
                 prev_Zs = tile.Zs
 
-            q.put([None, 0])
+            q.put([None, None])
             fuse_queue(q, stripe_shape=(stripe_height, stripe_width),
                        dest_queue=stripe_q)
         stripe_q.put(None)

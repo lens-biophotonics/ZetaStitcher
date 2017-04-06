@@ -44,7 +44,7 @@ def fuse_queue(q, stripe_shape, dest_queue=None):
     stripe_height = stripe_shape[0]
     stripe_width = stripe_shape[1]
 
-    alayer, _ = q.get()
+    alayer, Ys = q.get()
     q.task_done()
 
     output_stripe = np.zeros((1, stripe_height, stripe_width),
@@ -52,9 +52,15 @@ def fuse_queue(q, stripe_shape, dest_queue=None):
 
     fused_height_prev = 0
     current_y = 0
+    prev_Ys_end = Ys + alayer.shape[1]
     while True:
         # add first part
-        blayer, fused_height = q.get()
+        blayer, Ys = q.get()
+
+        if Ys is None:
+            fused_height = 0
+        else:
+            fused_height = round(prev_Ys_end - Ys)
 
         oy_height = alayer.shape[1] - fused_height_prev - fused_height
         oy_to = current_y + oy_height
@@ -85,6 +91,8 @@ def fuse_queue(q, stripe_shape, dest_queue=None):
         current_y = oy_to
         alayer = blayer
         fused_height_prev = fused_height
+        prev_Ys_end = Ys + blayer.shape[1]
+
 
     if dest_queue is None:
         return output_stripe
