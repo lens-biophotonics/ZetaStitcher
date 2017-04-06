@@ -2,6 +2,8 @@ import sys
 import os.path
 import argparse
 
+from queue import Queue
+
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -10,7 +12,7 @@ import skimage.external.tifffile as tiff
 
 from .filematrix import FileMatrix
 from .inputfile import InputFile
-from .fuse import fuse
+from .fuse import fuse_queue
 
 
 class FuseRunner(object):
@@ -109,8 +111,10 @@ class FuseRunner(object):
         return T
 
     def run(self):
+        stripe_q = Queue()
+
         for group in self.fm.tiles_along_Y:
-            if group.iloc[0]['X'] != 160000:
+            if group.iloc[0]['X'] < 180000 or group.iloc[0]['X'] > 210000:
                 continue
 
             # skip unstitchable tiles
@@ -124,85 +128,41 @@ class FuseRunner(object):
             stripe_width = int(
                 np.rint(group.iloc[-1]['xsize'] - stripe_left_edge))
             stripe_height = int(
-                np.rint(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize']))
+                np.rint(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize'])) + 1
 
             print(stripe_height, stripe_width)
 
             tile_generator = group.itertuples()
 
-            atile = next(tile_generator)
-            a = InputFile(atile.Index)
-
-            output_array = np.zeros((1, stripe_height, stripe_width),
-                                    dtype=a.dtype)
-
             z_frame = 1500
+            prev_Ys_end = 0
+            prev_Zs = 0
+            q = Queue()
+            for tile in tile_generator:
+                with InputFile(tile.Index) as f:
+                    layer = np.copy(f.layer(int(np.rint(z_frame))))
 
-            dy_prev_i = 0
-            current_y_i = 0
-            while True:
-                try:
-                    btile = next(tile_generator)
+                dy = int(np.rint(prev_Ys_end - tile.Ys))
+                dz = int(np.rint(tile.Zs - prev_Zs))
 
-                    oy_to = atile.Ys + atile.ysize
-                    dy = oy_to - btile.Ys
-                    dz = btile.Zs - atile.Zs
-                except StopIteration:
-                    dy = 0
-                    break
-                finally:
-                    alayer = a.layer(int(np.rint(z_frame)))
+                ax_from_i = int(
+                    np.rint(stripe_left_edge - (tile.Xs - m['Xs'])))
+                ax_to_i = ax_from_i + stripe_width
 
-                    # add first part
-                    oy_to = atile.Ys - m['Ys'] + atile.ysize - dy
+                q.put([layer[..., ax_from_i:ax_to_i], dy])
 
-                    oy_height_i = int(np.rint(oy_to - current_y_i))
-                    oy_to_i = current_y_i + oy_height_i
-
-                    ax_from_i = int(
-                        np.rint(stripe_left_edge - (atile.Xs - m['Xs'])))
-                    ax_to_i = ax_from_i + stripe_width
-                    ay_from_i = dy_prev_i
-                    ay_to_i = ay_from_i + oy_height_i
-
-                    output_array[0, current_y_i:oy_to_i, :] = \
-                        alayer[0, ay_from_i:ay_to_i, ax_from_i:ax_to_i]
-
-                    current_y_i = oy_to_i
-
-                print(atile)
-                print(btile)
-                print('fusing {} and {}'.format(atile.Index, btile.Index))
-
-                b = InputFile(btile.Index)
-                # the updated zframe will be reused in the next loop with
-                # alayer
                 z_frame = z_frame - dz
-                blayer = b.layer(int(np.rint(z_frame)))
+                prev_Ys_end = tile.Ys + tile.ysize
+                prev_Zs = tile.Zs
 
-                fused_height_i = int(np.rint(dy))
-
-                bx_from_i = int(
-                    np.rint(stripe_left_edge - (btile.Xs - m['Xs'])))
-                bx_to_i = bx_from_i + stripe_width
-
-                a_roi = alayer[:, -fused_height_i:, ax_from_i:ax_to_i]
-                b_roi = blayer[:, 0:fused_height_i, bx_from_i:bx_to_i]
-
-                # add fused part
-                oy_to_i = current_y_i + fused_height_i
-
-                fuse(a_roi, b_roi, output_array[:, current_y_i:oy_to_i, :])
-                current_y_i = oy_to_i
-
-                a.close()
-                a = b
-                atile = btile
-                dy_prev_i = fused_height_i
-                print('===============')
-
-            b.close()
-            tiff.imsave('/mnt/data/temp/stitch/output.tiff', output_array)
+            q.put([None, 0])
+            fuse_queue(q, stripe_shape=(stripe_height, stripe_width),
+                       dest_queue=stripe_q)
+        stripe_q.put(None)
+        i = 0
+        for s in iter(stripe_q.get, None):
+            tiff.imsave('/mnt/data/temp/stitch/output{}.tiff'.format(i), s)
+            i += 1
 
 
 def parse_args():

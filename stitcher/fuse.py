@@ -38,3 +38,55 @@ def fuse(a_roi, b_roi, dest):
     alpha = np.transpose(alpha)
 
     dest[:] = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
+
+
+def fuse_queue(q, stripe_shape, dest_queue=None):
+    stripe_height = stripe_shape[0]
+    stripe_width = stripe_shape[1]
+
+    alayer, _ = q.get()
+    q.task_done()
+
+    output_stripe = np.zeros((1, stripe_height, stripe_width),
+                             dtype=alayer.dtype)
+
+    fused_height_prev = 0
+    current_y = 0
+    while True:
+        # add first part
+        blayer, fused_height = q.get()
+
+        oy_height = alayer.shape[1] - fused_height_prev - fused_height
+        oy_to = current_y + oy_height
+
+        ay_from = fused_height_prev
+        ay_to = ay_from + oy_height
+
+        output_stripe[0, current_y:oy_to, :] = alayer[0, ay_from:ay_to, :]
+
+        current_y = oy_to
+
+        if blayer is None:
+            diff = stripe_height - current_y
+            assert diff <=1
+            if diff:
+                output_stripe = output_stripe[:, :-diff, :]
+            break
+
+        a_roi = alayer[:, -fused_height:, :]
+        b_roi = blayer[:, 0:fused_height, :]
+
+        # add fused part
+        oy_to = current_y + fused_height
+
+        fuse(a_roi, b_roi, output_stripe[:, current_y:oy_to, :])
+        q.task_done()
+
+        current_y = oy_to
+        alayer = blayer
+        fused_height_prev = fused_height
+
+    if dest_queue is None:
+        return output_stripe
+
+    dest_queue.put(output_stripe)
