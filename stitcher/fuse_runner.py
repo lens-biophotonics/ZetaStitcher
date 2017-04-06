@@ -123,12 +123,12 @@ class FuseRunner(object):
             m = group.min()
             M = group.max()
 
-            stripe_left_edge = int(np.rint(M['Xs'] - m['Xs']))
+            stripe_left_edge = round(np.asscalar(M['Xs'] - m['Xs']))
 
-            stripe_width = int(
-                np.rint(group.iloc[-1]['xsize'] - stripe_left_edge))
-            stripe_height = int(
-                np.rint(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize'])) + 1
+            stripe_width = round(
+                np.asscalar(group.iloc[-1]['xsize']) - stripe_left_edge)
+            stripe_height = round(
+                np.asscalar(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize'])) + 1
 
             print(stripe_height, stripe_width)
 
@@ -139,12 +139,12 @@ class FuseRunner(object):
             q = Queue()
             for tile in tile_generator:
                 with InputFile(tile.Index) as f:
-                    layer = np.copy(f.layer(int(np.rint(z_frame))))
+                    layer = np.copy(f.layer(z_frame))
 
-                dz = int(np.rint(tile.Zs - prev_Zs))
+                dz = int(round(tile.Zs - prev_Zs))
 
-                ax_from_i = int(
-                    np.rint(stripe_left_edge - (tile.Xs - m['Xs'])))
+                ax_from_i = round(
+                    stripe_left_edge - np.asscalar((tile.Xs - m['Xs'])))
                 ax_to_i = ax_from_i + stripe_width
 
                 q.put([layer[..., ax_from_i:ax_to_i], np.asscalar(tile.Ys)])
