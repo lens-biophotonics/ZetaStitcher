@@ -153,8 +153,8 @@ class FuseRunner(object):
                 prev_Zs = tile.Zs
 
             q.put([None, None])
-            fuse_queue(q, stripe_shape=(stripe_height, stripe_width),
-                       dest_queue=stripe_q)
+            fuse_queue(q, dest_queue=stripe_q)
+
         stripe_q.put(None)
         i = 0
         for s in iter(stripe_q.get, None):

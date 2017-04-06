@@ -6,7 +6,7 @@ def to_dtype(x, dtype):
     return x.astype(dtype, copy=False)
 
 
-def fuse(a_roi, b_roi, dest):
+def fuse(a_roi, b_roi):
     """Fuse two overlapping regions.
 
     Fuses `a_roi` and `b_roi` applying a sinusoidal smoothing. All
@@ -16,12 +16,11 @@ def fuse(a_roi, b_roi, dest):
     ----------
     a_roi : :class:`numpy.ndarray`
     b_roi : :class:`numpy.ndarray`
-    dest : :class:`numpy.ndarray`
     """
-    if a_roi.shape != b_roi.shape or a_roi.shape != dest.shape:
+    if a_roi.shape != b_roi.shape:
         raise ValueError(
-            'ROI shapes must be equal. a: {}, b: {}, dest: {}'.format(
-                a_roi.shape, b_roi.shape, dest.shape))
+            'ROI shapes must be equal. a: {}, b: {}'.format(
+                a_roi.shape, b_roi.shape))
 
     dtype = a_roi.dtype
     a_roi = a_roi.astype(np.float32, copy=False)
@@ -37,25 +36,26 @@ def fuse(a_roi, b_roi, dest):
     alpha = np.reshape(alpha, [output_width, output_height])
     alpha = np.transpose(alpha)
 
-    dest[:] = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
+    fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
+    return fused
 
 
-def fuse_queue(q, stripe_shape, dest_queue=None):
-    stripe_height = stripe_shape[0]
-    stripe_width = stripe_shape[1]
-
-    alayer, Ys = q.get()
+def fuse_queue(q, axis=1, dest_queue=None):
+    alayer, stripe_top_Ys = q.get()
     q.task_done()
+    if axis == 2:
+        alayer = np.rot90(alayer, axes=(1, 2))
 
-    output_stripe = np.zeros((1, stripe_height, stripe_width),
-                             dtype=alayer.dtype)
+    output_stripe = np.zeros((1, 0, alayer.shape[2]), dtype=alayer.dtype)
 
     fused_height_prev = 0
-    current_y = 0
-    prev_Ys_end = Ys + alayer.shape[1]
+    prev_Ys_end = stripe_top_Ys + alayer.shape[1]
     while True:
         # add first part
         blayer, Ys = q.get()
+
+        if axis == 2:
+            blayer = np.rot90(blayer, axes=(1, 2))
 
         if Ys is None:
             fused_height = 0
@@ -63,32 +63,22 @@ def fuse_queue(q, stripe_shape, dest_queue=None):
             fused_height = round(prev_Ys_end - Ys)
 
         oy_height = alayer.shape[1] - fused_height_prev - fused_height
-        oy_to = current_y + oy_height
-
         ay_from = fused_height_prev
         ay_to = ay_from + oy_height
 
-        output_stripe[0, current_y:oy_to, :] = alayer[0, ay_from:ay_to, :]
-
-        current_y = oy_to
+        output_stripe = np.append(output_stripe, alayer[:, ay_from:ay_to, :],
+                                  axis=1)
 
         if blayer is None:
-            diff = stripe_height - current_y
-            assert diff <=1
-            if diff:
-                output_stripe = output_stripe[:, :-diff, :]
             break
 
         a_roi = alayer[:, -fused_height:, :]
         b_roi = blayer[:, 0:fused_height, :]
 
         # add fused part
-        oy_to = current_y + fused_height
-
-        fuse(a_roi, b_roi, output_stripe[:, current_y:oy_to, :])
+        output_stripe = np.append(output_stripe, fuse(a_roi, b_roi), axis=1)
         q.task_done()
 
-        current_y = oy_to
         alayer = blayer
         fused_height_prev = fused_height
         prev_Ys_end = Ys + blayer.shape[1]
