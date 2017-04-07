@@ -1,5 +1,4 @@
 import numpy as np
-import skimage.external.tifffile as tiff
 
 
 def to_dtype(x, dtype):
@@ -10,8 +9,8 @@ def to_dtype(x, dtype):
 def fuse(a_roi, b_roi):
     """Fuse two overlapping regions.
 
-    Fuses `a_roi` and `b_roi` applying a sinusoidal smoothing. All
-    parameters must have equal shapes.
+    Fuses `a_roi` and `b_roi` along Y applying a sinusoidal smoothing. The
+    passed arrays must have equal shapes.
 
     Parameters
     ----------
@@ -27,8 +26,8 @@ def fuse(a_roi, b_roi):
     a_roi = a_roi.astype(np.float32, copy=False)
     b_roi = b_roi.astype(np.float32, copy=False)
 
-    output_height = a_roi.shape[1]
-    output_width = a_roi.shape[2]
+    output_height = a_roi.shape[-2]
+    output_width = a_roi.shape[-1]
 
     rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
 
@@ -70,7 +69,7 @@ def fuse_queue(q, stripe_width=None):
         ay_to = round(ay_from + oy_height)
 
         pad_left = int(round(prev_Xs))
-        pad_right = stripe_width - pad_left - alayer.shape[2]
+        pad_right = stripe_width - pad_left - alayer.shape[-1]
 
         first = np.pad(alayer[:, ay_from:ay_to, :],
                        ((0, 0), (0, 0), (pad_left, pad_right)),
@@ -102,7 +101,7 @@ def fuse_queue(q, stripe_width=None):
         b_roi = blayer[:, 0:fused_height, bx_from:bx_to]
 
         pad_left = int(round(max(Xs, prev_Xs)))
-        pad_right = stripe_width - pad_left - a_roi.shape[2]
+        pad_right = stripe_width - pad_left - a_roi.shape[-1]
 
         # add fused part
         fused = fuse(a_roi, b_roi)
@@ -114,7 +113,7 @@ def fuse_queue(q, stripe_width=None):
 
         alayer = blayer
         fused_height_prev = fused_height
-        prev_Ys_end = Ys + blayer.shape[1]
+        prev_Ys_end = Ys + blayer.shape[-2]
         prev_Xs = Xs
 
     return output_stripe

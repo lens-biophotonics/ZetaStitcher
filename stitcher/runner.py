@@ -125,9 +125,9 @@ def main():
 
                 print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
                       '{shift}\t{score}'.format(
-                    progress=100 * (1 - q.qsize() / initial_queue_length),
-                    aname=aname, bname=bname, z_frame=z_frame, shift=shift,
-                    score=score))
+                       progress=100 * (1 - q.qsize() / initial_queue_length),
+                       aname=aname, bname=bname, z_frame=z_frame, shift=shift,
+                       score=score))
                 output_q.put([aname, bname, axis] + shift + [score])
             finally:
                 data_queue.task_done()

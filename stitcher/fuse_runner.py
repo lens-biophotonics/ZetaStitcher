@@ -141,11 +141,11 @@ class FuseRunner(object):
                 with InputFile(tile.Index) as f:
                     layer = np.copy(f.layer(rint(z_frame - tile.Zs)))
 
-                ax_from_i = rint(stripe_left_edge - tile.Xs)
-                ax_to_i = ax_from_i + stripe_width
+                x_from_i = rint(stripe_left_edge - tile.Xs)
+                x_to_i = x_from_i + stripe_width
 
                 top_left = [tile.Zs, tile.Ys, 0]
-                q.put([layer[..., ax_from_i:ax_to_i], top_left])
+                q.put([layer[..., x_from_i:x_to_i], top_left])
 
             q.put([None, None])  # close queue
 

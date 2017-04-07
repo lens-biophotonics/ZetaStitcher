@@ -42,7 +42,6 @@ def normxcorr2_fftw(alayer, blayer):
                      (0, ashape[2] - b_old_shape[2] + 2)), 'constant')
     b1_real_input = b1[..., :ashape[2]]
     b1_complex_output = b1.view('complex64')
-    bshape = blayer.shape
 
     # pad for in-place transform
     alayer = np.pad(alayer, ((0, 0), (0, 0), (0, 2)), 'constant')
@@ -84,7 +83,6 @@ def normxcorr2_fftw(alayer, blayer):
         flags=['FFTW_ESTIMATE'], direction='FFTW_BACKWARD')
     fft_object.execute()
     conv = conv[:, :out_height, :out_width] / a_frame_area
-
 
     fft_b1_conj = np.conj(b1_complex_output)
     sums_a = pyfftw.empty_aligned(ashape, dtype='float32')
