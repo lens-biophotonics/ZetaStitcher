@@ -6,7 +6,7 @@ import threading
 import numpy as np
 import pandas as pd
 
-from .core import normxcorr2_fftw
+from .normxcorr import normxcorr2_fftw
 from .filematrix import FileMatrix
 from .inputfile import InputFile
 
