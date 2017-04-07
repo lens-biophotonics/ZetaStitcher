@@ -1,4 +1,5 @@
 import numpy as np
+import skimage.external.tifffile as tiff
 
 
 def to_dtype(x, dtype):
@@ -40,51 +41,80 @@ def fuse(a_roi, b_roi):
     return fused
 
 
-def fuse_queue(q, axis=1, dest_queue=None):
-    alayer, stripe_top_Ys = q.get()
+def fuse_queue(q, stripe_width=None):
+    alayer, pos = q.get()
     q.task_done()
-    if axis == 2:
-        alayer = np.rot90(alayer, axes=(1, 2))
 
-    output_stripe = np.zeros((1, 0, alayer.shape[2]), dtype=alayer.dtype)
+    if stripe_width is None:
+        stripe_width = alayer.shape[2]
+
+    output_stripe = np.zeros((1, 0, stripe_width), dtype=alayer.dtype)
 
     fused_height_prev = 0
-    prev_Ys_end = stripe_top_Ys + alayer.shape[1]
+
+    prev_Ys_end = pos[1] + alayer.shape[1]
+    prev_Xs = pos[2]
     while True:
         # add first part
-        blayer, Ys = q.get()
+        blayer, pos = q.get()
 
-        if axis == 2:
-            blayer = np.rot90(blayer, axes=(1, 2))
-
-        if Ys is None:
+        if pos is None:
             fused_height = 0
         else:
-            fused_height = round(prev_Ys_end - Ys)
+            Ys = pos[1]
+            Xs = pos[2]
+            fused_height = int(round(prev_Ys_end - Ys))
 
         oy_height = alayer.shape[1] - fused_height_prev - fused_height
         ay_from = fused_height_prev
-        ay_to = ay_from + oy_height
+        ay_to = round(ay_from + oy_height)
 
-        output_stripe = np.append(output_stripe, alayer[:, ay_from:ay_to, :],
-                                  axis=1)
+        pad_left = int(round(prev_Xs))
+        pad_right = stripe_width - pad_left - alayer.shape[2]
+
+        first = np.pad(alayer[:, ay_from:ay_to, :],
+                       ((0, 0), (0, 0), (pad_left, pad_right)),
+                       mode='constant')
+
+        output_stripe = np.append(output_stripe, first, axis=1)
 
         if blayer is None:
             break
 
-        a_roi = alayer[:, -fused_height:, :]
-        b_roi = blayer[:, 0:fused_height, :]
+        dx = int(round(Xs - prev_Xs))
+
+        left = max(prev_Xs, Xs)
+        right = min(prev_Xs + alayer.shape[2], Xs + blayer.shape[2])
+
+        roi_width = int(round(right - left))
+
+        if dx > 0:
+            bx_from = 0
+            ax_from = dx
+        else:
+            ax_from = 0
+            bx_from = -dx
+
+        ax_to = ax_from + roi_width
+        bx_to = bx_from + roi_width
+
+        a_roi = alayer[:, -fused_height:, ax_from:ax_to]
+        b_roi = blayer[:, 0:fused_height, bx_from:bx_to]
+
+        pad_left = int(round(max(Xs, prev_Xs)))
+        pad_right = stripe_width - pad_left - a_roi.shape[2]
 
         # add fused part
-        output_stripe = np.append(output_stripe, fuse(a_roi, b_roi), axis=1)
+        fused = fuse(a_roi, b_roi)
+        fused = np.pad(fused,
+                       ((0, 0), (0, 0), (pad_left, pad_right)),
+                       mode='constant')
+        output_stripe = np.append(output_stripe, fused, axis=1)
         q.task_done()
 
         alayer = blayer
         fused_height_prev = fused_height
         prev_Ys_end = Ys + blayer.shape[1]
+        prev_Xs = Xs
 
-
-    if dest_queue is None:
-        return output_stripe
-
-    dest_queue.put(output_stripe)
+    return output_stripe

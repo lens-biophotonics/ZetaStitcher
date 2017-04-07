@@ -111,55 +111,54 @@ class FuseRunner(object):
         return T
 
     def run(self):
+        def rint(x):
+            return int(round(x))
+
         stripe_q = Queue()
 
-        for group in self.fm.tiles_along_Y:
-            if group.iloc[0]['X'] < 180000 or group.iloc[0]['X'] > 210000:
-                continue
+        df = self.fm.data_frame
+        self.fm.data_frame = df[
+            (df['X'] >= 180000) & (df['X'] < 210000) & (df.weight < 0.6)]
+        for key in ['Xs', 'Ys', 'Zs']:
+            df[key] -= df[key].min()
 
-            # skip unstitchable tiles
-            group = group[group.weight < 0.6]
+        height = self.fm.full_height
+
+        for group in self.fm.tiles_along_Y:
+            group = group.copy()
 
             m = group.min()
             M = group.max()
 
-            stripe_left_edge = round(np.asscalar(M['Xs'] - m['Xs']))
-
-            stripe_width = round(
-                np.asscalar(group.iloc[-1]['xsize']) - stripe_left_edge)
-            stripe_height = round(
-                np.asscalar(M['Ys'] - m['Ys'] + group.iloc[-1]['ysize'])) + 1
-
-            print(stripe_height, stripe_width)
+            stripe_left_edge = M['Xs']
+            stripe_width = rint(m['Xs'] + group.iloc[-1]['xsize'] - M['Xs'])
 
             tile_generator = group.itertuples()
 
             z_frame = 1500
-            prev_Zs = 0
             q = Queue()
             for tile in tile_generator:
                 with InputFile(tile.Index) as f:
-                    layer = np.copy(f.layer(z_frame))
+                    layer = np.copy(f.layer(rint(z_frame - tile.Zs)))
 
-                dz = int(round(tile.Zs - prev_Zs))
-
-                ax_from_i = round(
-                    stripe_left_edge - np.asscalar((tile.Xs - m['Xs'])))
+                ax_from_i = rint(stripe_left_edge - tile.Xs)
                 ax_to_i = ax_from_i + stripe_width
 
-                q.put([layer[..., ax_from_i:ax_to_i], np.asscalar(tile.Ys)])
+                top_left = [tile.Zs, tile.Ys, 0]
+                q.put([layer[..., ax_from_i:ax_to_i], top_left])
 
-                z_frame = z_frame - dz
-                prev_Zs = tile.Zs
+            q.put([None, None])  # close queue
 
-            q.put([None, None])
-            fuse_queue(q, dest_queue=stripe_q)
+            output_stripe = fuse_queue(q)
 
-        stripe_q.put(None)
-        i = 0
-        for s in iter(stripe_q.get, None):
-            tiff.imsave('/mnt/data/temp/stitch/output{}.tiff'.format(i), s)
-            i += 1
+            stripe_pos = [z_frame, M['Xs'] - stripe_width, m['Ys']]
+            stripe_q.put([np.rot90(output_stripe, axes=(1, 2)), stripe_pos])
+
+        stripe_q.put([None, None])
+        fused_xy = fuse_queue(stripe_q, stripe_width=height)
+        fused_xy = np.rot90(fused_xy, k=3, axes=(1, 2))
+
+        tiff.imsave('/mnt/data/temp/stitch/fused_xy.tiff', fused_xy)
 
 
 def parse_args():

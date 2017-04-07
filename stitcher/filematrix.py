@@ -2,6 +2,7 @@
 
 import os
 import re
+import math
 import logging
 
 import pandas as pd
@@ -188,3 +189,18 @@ class FileMatrix:
         next(g)
         yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_Y, 'X'))
         yield from g
+
+    @property
+    def full_height(self):
+        def rint(x):
+            return 0 if math.isnan(x) else int(round(x))
+
+        def gen():
+            for group in self.tiles_along_Y:
+                overlap_sum = (
+                    group['ysize'] - group['Ys'].diff().apply(rint)).sum()
+                overlap_sum -= group.iloc[0]['ysize']
+                yield rint(
+                    group['ysize'].sum() - overlap_sum + group.iloc[0]['Ys'])
+
+        return max(x for x in gen())
