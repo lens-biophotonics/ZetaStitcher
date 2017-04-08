@@ -61,35 +61,27 @@ class FuseRunner(object):
         for edge in nx.dfs_edges(T, source=fm_df.iloc[0].name):
             try:
                 row = df_ab.loc[edge]
+                reversed_edge = False
             except KeyError:
                 row = df_ab.loc[edge[::-1]]
+                reversed_edge = True
+
             axis = row['axis']
             if axis == 2:
                 stride_y = fm_df.ix[edge[0], 'xsize']
-                key_Y = 'X'
-
                 key_Xs = 'Ys'
                 key_Ys = 'Xs'
-
-                ascending_sign = 1 if self.fm.ascending_tiles_X else -1
             else:
                 stride_y = fm_df.ix[edge[0], 'ysize']
-                key_Y = 'Y'
-
                 key_Xs = 'Xs'
                 key_Ys = 'Ys'
 
-                ascending_sign = 1 if self.fm.ascending_tiles_Y else -1
-
-            sign_y = (1 if fm_df.ix[edge[1], key_Y] >= fm_df.ix[edge[0], key_Y]
-                    else -1) * ascending_sign
-            sign_z = (1 if fm_df.ix[edge[1], 'Z'] >= fm_df.ix[edge[0], 'Z']
-                    else -1)
+            sign = (-1 if reversed_edge else 1)
 
             # absolute stitched positions
-            Xs = (fm_df.ix[edge[0], key_Xs] + row['dx'])
-            Ys = (fm_df.ix[edge[0], key_Ys] + sign_y * (stride_y - row['dy']))
-            Zs = (fm_df.ix[edge[0], 'Zs'] + sign_z * row['dz'])
+            Xs = (fm_df.ix[edge[0], key_Xs] + sign * row['dx'])
+            Ys = (fm_df.ix[edge[0], key_Ys] + sign * (stride_y - row['dy']))
+            Zs = (fm_df.ix[edge[0], 'Zs'] + row['dz'])
 
             fm_df.ix[edge[1], key_Xs] = Xs
             fm_df.ix[edge[1], key_Ys] = Ys
@@ -99,15 +91,16 @@ class FuseRunner(object):
         for key in ['Xs', 'Ys', 'Zs']:
             fm_df[key] -= fm_df[key].min()
 
-    @property
-    def minimum_spanning_tree(self):
+    def _add_edges_from_df(self, G):
         df = self.df
-        G = nx.Graph()
-
         G.add_edges_from(((
             u, v, {'weight': w}) for u, v, w in
             np.c_[df['aname'], df['bname'], 1 - df['score']]))
 
+    @property
+    def minimum_spanning_tree(self):
+        G = nx.Graph()
+        self._add_edges_from_df(G)
         T = nx.minimum_spanning_tree(G)
         return T
 
