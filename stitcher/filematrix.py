@@ -8,7 +8,7 @@ import logging
 import pandas as pd
 import networkx as nx
 
-import dcimg
+from .inputfile import InputFile
 
 
 logger = logging.getLogger('FileMatrix')
@@ -32,7 +32,7 @@ def parse_file_name(file_name):
     if m is None:
         m = re.search('^(\d+)_(\d+)_(\d+)', file_name)
     if m is None:
-        raise ValueError('Invalid file name {}'.format(file_name))
+        raise ValueError('Invalid name {}'.format(file_name))
 
     fields = []
     for i in range(1, 4):
@@ -63,30 +63,42 @@ class FileMatrix:
         ----------
         dir : path
         """
-        if dir is None:
-            dir = self.dir
-
-        input_files = []
-        list = []
-
-        for root, dirs, files in os.walk(dir):
-            for f in files:
-                input_files.append(os.path.join(root, f))
-
-        for i, f in enumerate(input_files):
+        def parse_and_append(name, flist):
             try:
-                fields = parse_file_name(f)
-                with dcimg.DCIMGFile(f) as dc:
-                    for el in dc.shape:
-                        fields.append(el)
-                list += fields
-                list.append(f)
+                fields = parse_file_name(name)
+                with InputFile(name) as infile:
+                    fields.append(infile.nfrms)
+                    fields.append(infile.ysize)
+                    fields.append(infile.xsize)
+                flist += fields
+                flist.append(name)
             except (RuntimeError, ValueError) as e:
                 logger.error(e.args[0])
 
-        data = {'X': list[0::7], 'Y': list[1::7], 'Z': list[2::7],
-                'nfrms': list[3::7], 'ysize': list[4::7], 'xsize': list[5::7],
-                'filename': list[6::7]}
+        if dir is None:
+            dir = self.dir
+
+        flist = []
+
+        for root, dirs, files in os.walk(dir):
+            if os.path.basename(root):
+                try:
+                    parse_and_append(root, flist)
+                    continue
+                except (RuntimeError, ValueError) as e:
+                    logger.error(e.args[0])
+
+            for f in files:
+                try:
+                    parse_and_append(os.path.join(root, f), flist)
+                    continue
+                except (RuntimeError, ValueError) as e:
+                    logger.error(e.args[0])
+
+
+        data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
+                'nfrms': flist[3::7], 'ysize': flist[4::7],
+                'xsize': flist[5::7], 'filename': flist[6::7]}
         df = pd.DataFrame(data)
         df = df.sort_values(['Z', 'Y', 'X'])
         df['Z_end'] = df['Z'] + df['nfrms']
