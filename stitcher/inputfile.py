@@ -71,7 +71,7 @@ class InputFile(object):
         try:
             self.wrapper = dcimg.DCIMGFile(self.file_name)
             return
-        except (FileNotFoundError, ValueError):
+        except (FileNotFoundError, ValueError, IsADirectoryError):
             pass
 
         try:
@@ -113,14 +113,21 @@ class InputFile(object):
         -------
         :class:`numpy.ndarray`
             A numpy array of the original type or of `dtype`, if specified. The
-            shape of the array is (`end_frame` - `start_frame`, :attr:`ysize`,
-            :attr:`xsize`, :attr:`channels`) where `channels` is the number of
-            color channels in the image. If :attr:`channel` is set or if
-            there is only one channel, the `channels` dimension is squeezed.
+            shape of the array is (`end_frame` - `start_frame`,
+            :attr:`channels` :attr:`ysize`, :attr:`xsize`, :attr:`channels`)
+            where `channels` is the number of color channels in the image. If
+            :attr:`channel` is set or if there is only one channel, the
+            `channels` dimension is squeezed.
         """
         l = self.wrapper.layer(start_frame, end_frame, dtype)
         if self.channel != -1:
             l = l[..., self.channel]
+        elif self.channels > 1:
+            transposed_axes = list(range(0, len(self.shape)))
+            chs = transposed_axes.pop()
+            transposed_axes.insert(-2, chs)
+            l = np.transpose(l, axes=transposed_axes)
+
         return l
 
     def layer_idx(self, index, frames_per_layer=1, dtype=None):
