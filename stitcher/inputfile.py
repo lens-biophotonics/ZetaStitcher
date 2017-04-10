@@ -71,7 +71,7 @@ class InputFile(object):
         try:
             self.wrapper = dcimg.DCIMGFile(self.file_name)
             return
-        except ValueError:
+        except (FileNotFoundError, ValueError):
             pass
 
         try:
