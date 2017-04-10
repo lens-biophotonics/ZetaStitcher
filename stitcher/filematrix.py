@@ -28,7 +28,7 @@ def parse_file_name(file_name):
         The parsed stage coordinates.
     """
     file_name = os.path.basename(file_name)
-    m = re.search('^x_(\d+).*y_(\d+).*z_(\d+).*zstep_(\d+)', file_name)
+    m = re.search('^.*x_(\d+).*y_(\d+).*z_(\d+).*', file_name)
     if m is None:
         m = re.search('^(\d+)_(\d+)_(\d+)', file_name)
     if m is None:
