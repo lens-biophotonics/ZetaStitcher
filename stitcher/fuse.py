@@ -45,13 +45,16 @@ def fuse_queue(q, stripe_width=None):
     q.task_done()
 
     if stripe_width is None:
-        stripe_width = alayer.shape[2]
+        stripe_width = alayer.shape[-1]
 
-    output_stripe = np.zeros((1, 0, stripe_width), dtype=alayer.dtype)
+    ostripe_shape = list(alayer.shape)
+    ostripe_shape[-2] = 0
+    ostripe_shape[-1] = stripe_width
+    output_stripe = np.zeros(ostripe_shape, dtype=alayer.dtype)
 
     fused_height_prev = 0
 
-    prev_Ys_end = pos[1] + alayer.shape[1]
+    prev_Ys_end = pos[1] + alayer.shape[-2]
     prev_Xs = pos[2]
     while True:
         # add first part
@@ -64,18 +67,21 @@ def fuse_queue(q, stripe_width=None):
             Xs = pos[2]
             fused_height = int(round(prev_Ys_end - Ys))
 
-        oy_height = alayer.shape[1] - fused_height_prev - fused_height
+        oy_height = alayer.shape[-2] - fused_height_prev - fused_height
+        if oy_height <= 0:
+            raise ValueError('oy_height must be positive')
         ay_from = fused_height_prev
         ay_to = round(ay_from + oy_height)
 
         pad_left = int(round(prev_Xs))
         pad_right = stripe_width - pad_left - alayer.shape[-1]
 
-        first = np.pad(alayer[:, ay_from:ay_to, :],
-                       ((0, 0), (0, 0), (pad_left, pad_right)),
+        pad_tuple = tuple((0, 0) for i in alayer.shape)
+        pad_tuple = pad_tuple[:-1] + ((pad_left, pad_right), )
+        first = np.pad(alayer[..., ay_from:ay_to, :], pad_tuple,
                        mode='constant')
 
-        output_stripe = np.append(output_stripe, first, axis=1)
+        output_stripe = np.append(output_stripe, first, axis=-2)
 
         if blayer is None:
             break
@@ -83,7 +89,7 @@ def fuse_queue(q, stripe_width=None):
         dx = int(round(Xs - prev_Xs))
 
         left = max(prev_Xs, Xs)
-        right = min(prev_Xs + alayer.shape[2], Xs + blayer.shape[2])
+        right = min(prev_Xs + alayer.shape[-1], Xs + blayer.shape[-1])
 
         roi_width = int(round(right - left))
 
@@ -97,18 +103,18 @@ def fuse_queue(q, stripe_width=None):
         ax_to = ax_from + roi_width
         bx_to = bx_from + roi_width
 
-        a_roi = alayer[:, -fused_height:, ax_from:ax_to]
-        b_roi = blayer[:, 0:fused_height, bx_from:bx_to]
+        a_roi = alayer[..., -fused_height:, ax_from:ax_to]
+        b_roi = blayer[..., 0:fused_height, bx_from:bx_to]
 
         pad_left = int(round(max(Xs, prev_Xs)))
         pad_right = stripe_width - pad_left - a_roi.shape[-1]
 
         # add fused part
         fused = fuse(a_roi, b_roi)
-        fused = np.pad(fused,
-                       ((0, 0), (0, 0), (pad_left, pad_right)),
-                       mode='constant')
-        output_stripe = np.append(output_stripe, fused, axis=1)
+        pad_tuple = tuple((0, 0) for i in alayer.shape)
+        pad_tuple = pad_tuple[:-1] + ((pad_left, pad_right), )
+        fused = np.pad(fused, pad_tuple, mode='constant')
+        output_stripe = np.append(output_stripe, fused, axis=-2)
         q.task_done()
 
         alayer = blayer

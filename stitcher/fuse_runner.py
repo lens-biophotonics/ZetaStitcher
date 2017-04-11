@@ -144,11 +144,11 @@ class FuseRunner(object):
             output_stripe = fuse_queue(q)
 
             stripe_pos = [z_frame, M['Xs'] - stripe_width, m['Ys']]
-            stripe_q.put([np.rot90(output_stripe, axes=(1, 2)), stripe_pos])
+            stripe_q.put([np.rot90(output_stripe, axes=(-2, -1)), stripe_pos])
 
         stripe_q.put([None, None])
         fused_xy = fuse_queue(stripe_q, stripe_width=height)
-        fused_xy = np.rot90(fused_xy, k=3, axes=(1, 2))
+        fused_xy = np.rot90(fused_xy, k=3, axes=(-2, -1))
 
         tiff.imsave('fused_xy.tiff', fused_xy)
 
