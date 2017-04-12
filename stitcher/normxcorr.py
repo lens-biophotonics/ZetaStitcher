@@ -100,8 +100,9 @@ def normxcorr2_fftw(alayer, blayer):
     A = np.array(b_old_shape[1] * b_old_shape[2], dtype=np.float32)
 
     num = conv - sums_b * sums_a / A
-    denom = np.sqrt(
-        (sums_a2 - np.square(sums_a) / A) * (sums_b2 - np.square(sums_b) / A))
+    denom = np.sqrt(np.abs(
+        (sums_a2 - np.square(sums_a) / A) * (sums_b2 - np.square(sums_b) / A)))
+    denom[denom == 0] = 1
 
     normxcorr = num / denom
 
