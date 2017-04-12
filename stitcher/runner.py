@@ -156,16 +156,16 @@ def main():
 
             alayer = a.layer(z_min, z_max)
             if axis == 2:
-                alayer = np.rot90(alayer, axes=(1, 2))
-            alayer = alayer[:, -overlap:, :]
+                alayer = np.rot90(alayer, axes=(-2, -1))
+            alayer = alayer[..., -overlap:, :]
 
             blayer = b.layer_idx(z_frame)
             if axis == 2:
-                blayer = np.rot90(blayer, axes=(1, 2))
-            blayer = blayer[:, 0:overlap, :]
+                blayer = np.rot90(blayer, axes=(-2, -1))
+            blayer = blayer[..., 0:overlap, :]
 
             blayer = blayer[
-                :, :-arg.max_dy, half_max_shift_x:-half_max_shift_x]
+                ..., :-arg.max_dy, arg.max_dx:-arg.max_dx]
 
             alayer = alayer.astype(np.float32)
             blayer = blayer.astype(np.float32)
@@ -189,13 +189,12 @@ def main():
         for a in [1, 2]:
             indexes = (view['axis'] == a)
             view.loc[indexes, 'dy'] = overlap_dict[a] - view.loc[indexes, 'dy']
-        view.dx -= half_max_shift_x
+        view.dx -= arg.max_dx
 
         return view
 
     arg = parse_args()
     overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
-    half_max_shift_x = arg.max_dx // 2
 
     q = build_queue(arg.input_folder, arg.z_samples, arg.z_stride)
     initial_queue_length = q.qsize()
