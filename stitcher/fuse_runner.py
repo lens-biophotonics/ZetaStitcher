@@ -109,8 +109,6 @@ class FuseRunner(object):
         stripe_q = Queue()
 
         df = self.fm.data_frame
-        self.fm.data_frame = df[
-            (df['X'] >= 180000) & (df['X'] < 210000) & (df.weight < 0.6)]
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
 
