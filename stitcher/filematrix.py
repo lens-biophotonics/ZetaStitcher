@@ -5,6 +5,7 @@ import re
 import math
 import logging
 
+import numpy as np
 import pandas as pd
 import networkx as nx
 
@@ -43,7 +44,7 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, directory):
+    def __init__(self, directory=None):
         self.dir = directory
 
         self.data_frame = None
@@ -54,7 +55,10 @@ class FileMatrix:
         self._ascending_tiles_X = True
         self._ascending_tiles_Y = True
 
-        self.load_dir(directory)
+        if os.path.isdir(directory):
+            self.load_dir(directory)
+        elif os.path.isfile(directory):
+            self.load_json(directory)
 
     def load_dir(self, dir=None):
         """Look for files in `dir` recursively and populate data structures.
@@ -63,39 +67,63 @@ class FileMatrix:
         ----------
         dir : path
         """
-        def parse_and_append(name, flist):
-            try:
-                fields = parse_file_name(name)
-                with InputFile(name) as infile:
-                    fields.append(infile.nfrms)
-                    fields.append(infile.ysize)
-                    fields.append(infile.xsize)
-                flist += fields
-                flist.append(name)
-            except (RuntimeError, ValueError) as e:
-                logger.error(e.args[0])
-
         if dir is None:
             dir = self.dir
+
+        if dir is None:
+            return
 
         flist = []
 
         for root, dirs, files in os.walk(dir):
             if os.path.basename(root):
                 try:
-                    parse_and_append(root, flist)
+                    self.parse_and_append(root, flist)
                     continue
                 except (RuntimeError, ValueError) as e:
                     logger.error(e.args[0])
 
             for f in files:
                 try:
-                    parse_and_append(os.path.join(root, f), flist)
+                    self.parse_and_append(os.path.join(root, f), flist)
                     continue
                 except (RuntimeError, ValueError) as e:
                     logger.error(e.args[0])
 
+        self._load_from_flist(flist)
 
+    def load_json(self, fname):
+        with open(fname, 'r') as f:
+            df = pd.read_json(f.read(), orient='records')
+
+        a = np.concatenate((df['aname'].unique(), df['bname'].unique()))
+        a = np.unique(a)
+
+        flist = []
+        root, _ = os.path.split(fname)
+        for el in a:
+            f = os.path.normpath(os.path.join(root, el))
+            self.parse_and_append(f, flist)
+
+        temp = df[df['axis'] == 2]
+        a_fields = parse_file_name(temp.iloc[0].aname)
+        b_fields = parse_file_name(temp.iloc[0].bname)
+        if a_fields[0] > b_fields[0]:
+            self.ascending_tiles_X = False
+        else:
+            self.ascending_tiles_X = True
+
+        temp = df[df['axis'] == 1]
+        a_fields = parse_file_name(temp.iloc[0].aname)
+        b_fields = parse_file_name(temp.iloc[0].bname)
+        if a_fields[1] > b_fields[1]:
+            self.ascending_tiles_Y = False
+        else:
+            self.ascending_tiles_Y = True
+
+        self._load_from_flist(flist)
+
+    def _load_from_flist(self, flist):
         data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
                 'nfrms': flist[3::7], 'ysize': flist[4::7],
                 'xsize': flist[5::7], 'filename': flist[6::7]}
@@ -104,6 +132,19 @@ class FileMatrix:
         df['Z_end'] = df['Z'] + df['nfrms']
 
         self.data_frame = df
+
+    @staticmethod
+    def parse_and_append(name, flist):
+        try:
+            fields = parse_file_name(name)
+            with InputFile(name) as infile:
+                fields.append(infile.nfrms)
+                fields.append(infile.ysize)
+                fields.append(infile.xsize)
+            flist += fields
+            flist.append(name)
+        except (RuntimeError, ValueError) as e:
+            logger.error(e.args[0])
 
     @property
     def slices(self):

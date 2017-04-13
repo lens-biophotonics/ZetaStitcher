@@ -41,10 +41,8 @@ class FuseRunner(object):
         df['bname'] = df['bname'].apply(normalize_path)
 
         self.df = df
-        fm = FileMatrix(path)
+        fm = FileMatrix(input_file)
         fm.data_frame = fm.data_frame.set_index('filename')
-        fm.ascending_tiles_X = True
-        fm.ascending_tiles_Y = False
         self.fm = fm
 
     def _compute_absolute_positions(self):
