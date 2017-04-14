@@ -30,14 +30,14 @@ Unless otherwise stated, all values are expected in px.
     parser.add_argument('input_folder', help='input folder')
 
     group = parser.add_argument_group('maximum shifts')
-    group.add_argument('--mz', type=int, default=20, dest='max_dz',
+    group.add_argument('--Mz', type=int, default=20, dest='max_dz',
                        help='maximum allowed shift along Z')
 
-    group.add_argument('--my', type=int, default=150, dest='max_dy',
+    group.add_argument('--My', type=int, default=150, dest='max_dy',
                        help='maximum allowed shift along Y (the stitching '
                             'axis)')
 
-    group.add_argument('--mx', type=int, default=20, dest='max_dx',
+    group.add_argument('--Mx', type=int, default=20, dest='max_dx',
                        help='maximum allowed shift along X (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
