@@ -40,14 +40,33 @@ def fuse(a_roi, b_roi):
     return fused
 
 
-def fuse_queue(q, stripe_width=None):
+def fuse_queue(q, stripe_width=None, stripe_thickness=None):
+    def pad(layer, top_left):
+        Zs = top_left[0]
+        Xs = top_left[2]
+        pad_left = int(round(Xs))
+        pad_right = stripe_width - pad_left - layer.shape[-1]
+
+        pad_top = int(round(Zs))
+        pad_bottom = stripe_thickness - pad_top - layer.shape[0]
+
+        pad_tuples = list((0, 0) for i in layer.shape)
+        pad_tuples[0] = (pad_top, pad_bottom)
+        pad_tuples[-1] = (pad_left, pad_right)
+
+        return np.pad(layer, pad_tuples, 'constant')
+
     alayer, pos = q.get()
     q.task_done()
 
     if stripe_width is None:
         stripe_width = alayer.shape[-1]
 
+    if stripe_thickness is None:
+        stripe_thickness = alayer.shape[0]
+
     ostripe_shape = list(alayer.shape)
+    ostripe_shape[0] = stripe_thickness
     ostripe_shape[-2] = 0
     ostripe_shape[-1] = stripe_width
     output_stripe = np.zeros(ostripe_shape, dtype=alayer.dtype)
@@ -55,7 +74,7 @@ def fuse_queue(q, stripe_width=None):
     fused_height_prev = 0
 
     prev_Ys_end = pos[1] + alayer.shape[-2]
-    prev_Xs = pos[2]
+    alayer = pad(alayer, pos)
     while True:
         # add first part
         blayer, pos = q.get()
@@ -63,6 +82,7 @@ def fuse_queue(q, stripe_width=None):
         if pos is None:
             fused_height = 0
         else:
+            Zs = pos[0]
             Ys = pos[1]
             Xs = pos[2]
             fused_height = int(round(prev_Ys_end - Ys))
@@ -73,53 +93,24 @@ def fuse_queue(q, stripe_width=None):
         ay_from = fused_height_prev
         ay_to = round(ay_from + oy_height)
 
-        pad_left = int(round(prev_Xs))
-        pad_right = stripe_width - pad_left - alayer.shape[-1]
-
-        pad_tuple = tuple((0, 0) for i in alayer.shape)
-        pad_tuple = pad_tuple[:-1] + ((pad_left, pad_right), )
-        first = np.pad(alayer[..., ay_from:ay_to, :], pad_tuple,
-                       mode='constant')
-
-        output_stripe = np.append(output_stripe, first, axis=-2)
+        output_stripe = np.append(
+            output_stripe, alayer[..., ay_from:ay_to, :], axis=-2)
 
         if blayer is None:
             break
+        blayer = pad(blayer, [Zs, 0, Xs])
 
-        dx = int(round(Xs - prev_Xs))
 
-        left = max(prev_Xs, Xs)
-        right = min(prev_Xs + alayer.shape[-1], Xs + blayer.shape[-1])
-
-        roi_width = int(round(right - left))
-
-        if dx > 0:
-            bx_from = 0
-            ax_from = dx
-        else:
-            ax_from = 0
-            bx_from = -dx
-
-        ax_to = ax_from + roi_width
-        bx_to = bx_from + roi_width
-
-        a_roi = alayer[..., -fused_height:, ax_from:ax_to]
-        b_roi = blayer[..., 0:fused_height, bx_from:bx_to]
-
-        pad_left = int(round(max(Xs, prev_Xs)))
-        pad_right = stripe_width - pad_left - a_roi.shape[-1]
+        a_roi = alayer[..., -fused_height:, :]
+        b_roi = blayer[..., 0:fused_height, :]
 
         # add fused part
         fused = fuse(a_roi, b_roi)
-        pad_tuple = tuple((0, 0) for i in alayer.shape)
-        pad_tuple = pad_tuple[:-1] + ((pad_left, pad_right), )
-        fused = np.pad(fused, pad_tuple, mode='constant')
         output_stripe = np.append(output_stripe, fused, axis=-2)
         q.task_done()
 
         alayer = blayer
         fused_height_prev = fused_height
         prev_Ys_end = Ys + blayer.shape[-2]
-        prev_Xs = Xs
 
     return output_stripe

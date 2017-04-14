@@ -113,6 +113,7 @@ class FuseRunner(object):
             df[key] -= df[key].min()
 
         height = self.fm.full_height
+        thickness = self.fm.full_thickness
 
         for group in self.fm.tiles_along_Y:
             group = group.copy()
@@ -125,11 +126,10 @@ class FuseRunner(object):
 
             tile_generator = group.itertuples()
 
-            z_frame = 1500
             q = Queue()
             for tile in tile_generator:
                 with InputFile(tile.Index) as f:
-                    layer = np.copy(f.layer(rint(z_frame - tile.Zs)))
+                    layer = np.copy(f.whole())
 
                 x_from_i = rint(stripe_left_edge - tile.Xs)
                 x_to_i = x_from_i + stripe_width
@@ -139,9 +139,9 @@ class FuseRunner(object):
 
             q.put([None, None])  # close queue
 
-            output_stripe = fuse_queue(q)
+            output_stripe = fuse_queue(q, stripe_thickness=thickness)
 
-            stripe_pos = [z_frame, M['Xs'] - stripe_width, m['Ys']]
+            stripe_pos = [0, M['Xs'] - stripe_width, m['Ys']]
             stripe_q.put([np.rot90(output_stripe, axes=(-2, -1)), stripe_pos])
 
         stripe_q.put([None, None])

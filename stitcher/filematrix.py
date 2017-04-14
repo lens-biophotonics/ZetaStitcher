@@ -257,3 +257,8 @@ class FileMatrix:
                     group['ysize'].sum() - overlap_sum + group.iloc[0]['Ys'])
 
         return max(x for x in gen())
+
+    @property
+    def full_thickness(self):
+        return int(round(
+            (self.data_frame['Zs'] + self.data_frame['nfrms']).max()))
