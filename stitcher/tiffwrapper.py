@@ -67,7 +67,7 @@ class TiffWrapper(object):
             frames_per_file = self.nfrms // len(self.flist)
             start_file = start_frame // frames_per_file
             end_file = end_frame // frames_per_file
-            a = tiff.imread(self.flist[start_file:end_file])
+            a = tiff.imread(self.flist[start_file:end_file], pattern='')
 
         if end_frame - start_frame == 1:
             a = np.expand_dims(a, axis=0)
