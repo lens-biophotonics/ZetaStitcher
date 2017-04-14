@@ -46,6 +46,7 @@ intersphinx_mapping = {
     'networkx': ('https://networkx.readthedocs.io/en/stable/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+    'python': ('https://docs.python.org/3', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.

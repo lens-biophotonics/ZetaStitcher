@@ -41,6 +41,29 @@ def fuse(a_roi, b_roi):
 
 
 def fuse_queue(q, stripe_width=None, stripe_thickness=None):
+    """Fuses a queue of images along Y, optionally applying padding.
+
+    Parameters
+    ----------
+    q : :py:class:`queue.Queue`
+        A queue containing elements in the form (`layer`, `pos`) where
+        `layer` is a :class:`numpy.ndarray` and `pos` is a list specifying
+        the image position in the form [`Z`, `Y`, `X`]. If `stripe_width` is
+        not specified, the size of the last dimension should be equal for all
+        images, and `X` should be set to 0. The same applies with
+        `stripe_thickness` and `Z`.
+    stripe_width : int
+        If specified, input images can have different shapes in X and will be
+        padded according to their position `X`.
+    stripe_thickness : int
+        If specified, input images can have different shapes in Z and will be
+        padded according to their position `Z`.
+
+    Returns
+    -------
+    output_stripe : :class:`numpy.ndarray`
+        The fused stripe.
+    """
     def pad(layer, top_left):
         Zs = top_left[0]
         Xs = top_left[2]
