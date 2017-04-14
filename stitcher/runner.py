@@ -1,4 +1,3 @@
-import sys
 import queue
 import argparse
 import threading
@@ -28,6 +27,8 @@ Unless otherwise stated, all values are expected in px.
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_folder', help='input folder')
+    parser.add_argument('-c', type=str, default='g', help='color channel',
+                        choices=['r', 'g', 'b'])
 
     group = parser.add_argument_group('maximum shifts')
     group.add_argument('--Mz', type=int, default=20, dest='max_dz',
@@ -66,7 +67,17 @@ Unless otherwise stated, all values are expected in px.
     parser.add_argument('-n', type=int, default=1,
                         help='number of parallel threads to use')
 
-    return parser.parse_args(sys.argv[1:])
+    args = parser.parse_args()
+
+    channels = {
+        'r': 0,
+        'g': 1,
+        'b': 2
+    }
+
+    args.c = channels[args.c]
+
+    return args
 
 
 def build_queue(input_folder, z_samples, z_stride):
@@ -148,8 +159,8 @@ def main():
             a = InputFile(aname)
             b = InputFile(bname)
 
-            a.channel = 1
-            b.channel = 1
+            a.channel = arg.c
+            b.channel = arg.c
 
             z_min = z_frame - arg.max_dz
             z_max = z_frame + arg.max_dz + 1
