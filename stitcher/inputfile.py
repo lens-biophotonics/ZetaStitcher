@@ -123,10 +123,7 @@ class InputFile(object):
         if self.channel != -1:
             l = l[..., self.channel]
         elif self.channels > 1:
-            transposed_axes = list(range(0, len(self.shape)))
-            chs = transposed_axes.pop()
-            transposed_axes.insert(-2, chs)
-            l = np.transpose(l, axes=transposed_axes)
+            l = np.rollaxis(l, -1, -3)
 
         return l
 
