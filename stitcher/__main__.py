@@ -59,16 +59,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     alayer = a.layer(z_min, z_max)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(1, 2))
-    alayer = alayer[:, -overlap:, :]
+    alayer = alayer[..., -overlap:, :]
 
     blayer = b.layer_idx(z_frame)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(1, 2))
-    blayer = blayer[:, 0:overlap, :]
-
-    half_max_shift_x = max_shift_x // 2
-
-    blayer = blayer[:, :-max_shift_y, half_max_shift_x:-half_max_shift_x]
+    blayer = blayer[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
 
     xcorr = normxcorr2_fftw(alayer, blayer)
 
@@ -78,7 +74,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     print('shift: ' + str(shift))
     shift[0] -= max_shift_z
     shift[1] = overlap - shift[1]
-    shift[2] -= half_max_shift_x
+    shift[2] -= max_shift_x
 
     print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
 
@@ -98,12 +94,18 @@ def main():
                         required=True)
     parser.add_argument('-a', type=int, help='axis (1=Y, 2=X)', dest='axis',
                         choices=(1, 2), default=1)
-    parser.add_argument('--overlap', type=int, help='overlap', default=600)
+    parser.add_argument('--overlap', type=int, default=100, help='overlap')
+    parser.add_argument('--Mz', type=int, default=20, help='Max shift along Z')
+    parser.add_argument('--My', type=int, default=100,
+                        help='Max shift along Y')
+    parser.add_argument('--Mx', type=int, default=20,
+                        help='Max shift along X (lateral)')
 
     args = parser.parse_args(sys.argv[1:])
 
     stitch(args.input_file1, args.input_file2, z_frame=args.frame,
-           overlap=args.overlap, axis=args.axis)
+           overlap=args.overlap, axis=args.axis, max_shift_z=args.Mz,
+           max_shift_y=args.My, max_shift_x=args.Mx)
 
 
 if __name__ == '__main__':
