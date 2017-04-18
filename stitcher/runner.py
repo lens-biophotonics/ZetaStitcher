@@ -21,6 +21,8 @@ The following naming conventions are used:
 * Y is the direction along which frames are supposed to overlap,
 * X is the direction orthogonal to Y in the frame plane (X, Y).
 
+* (x, y) is the original frame plane (not rotated)
+
 Unless otherwise stated, all values are expected in px.
     ''',
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>',
@@ -31,6 +33,10 @@ Unless otherwise stated, all values are expected in px.
                         dest='channel', help='color channel')
 
     group = parser.add_argument_group('tile ordering')
+    group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
+                       help = 'invert tile ordering along x')
+    group.add_argument('--iy', action='store_false', dest='ascending_tiles_y',
+                       help = 'invert tile ordering along y')
 
     group = parser.add_argument_group('maximum shifts')
     group.add_argument('--Mz', type=int, default=20, dest='max_dz',
@@ -98,6 +104,8 @@ class Runner(object):
         self.max_dy = None
         self.max_dz = None
         self.compute_average = False
+        self.ascending_tiles_x = True
+        self.ascending_tiles_y = True
 
     @property
     def overlap_dict(self):
@@ -105,8 +113,8 @@ class Runner(object):
 
     def initialize_queue(self):
         fm = FileMatrix(self.input_folder)
-        fm.ascending_tiles_X = True
-        fm.ascending_tiles_Y = False
+        fm.ascending_tiles_x = self.ascending_tiles_x
+        fm.ascending_tiles_y = self.ascending_tiles_y
 
         group_generators = [fm.tiles_along_X, fm.tiles_along_Y]
         stitch_axis = [2, 1]
@@ -264,7 +272,7 @@ if __name__ == '__main__':
 
     keys = ['input_folder', 'channel', 'max_dx', 'max_dy', 'max_dz',
             'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
-            'compute_average']
+            'compute_average', 'ascending_tiles_x', 'ascending_tiles_y']
     for key in keys:
         setattr(r, key, getattr(arg, key))
 

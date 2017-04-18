@@ -52,8 +52,8 @@ class FileMatrix:
         columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, 'nfrms`,
         `filename`."""
 
-        self._ascending_tiles_X = True
-        self._ascending_tiles_Y = True
+        self._ascending_tiles_x = True
+        self._ascending_tiles_y = True
 
         if os.path.isdir(directory):
             self.load_dir(directory)
@@ -109,17 +109,17 @@ class FileMatrix:
         a_fields = parse_file_name(temp.iloc[0].aname)
         b_fields = parse_file_name(temp.iloc[0].bname)
         if a_fields[0] > b_fields[0]:
-            self.ascending_tiles_X = False
+            self.ascending_tiles_x = False
         else:
-            self.ascending_tiles_X = True
+            self.ascending_tiles_x = True
 
         temp = df[df['axis'] == 1]
         a_fields = parse_file_name(temp.iloc[0].aname)
         b_fields = parse_file_name(temp.iloc[0].bname)
         if a_fields[1] > b_fields[1]:
-            self.ascending_tiles_Y = False
+            self.ascending_tiles_y = False
         else:
-            self.ascending_tiles_Y = True
+            self.ascending_tiles_y = True
 
         self._load_from_flist(flist)
 
@@ -172,20 +172,20 @@ class FileMatrix:
         return nx.connected_component_subgraphs(G)
 
     @property
-    def ascending_tiles_X(self):
-        return self._ascending_tiles_X
+    def ascending_tiles_x(self):
+        return self._ascending_tiles_x
 
-    @ascending_tiles_X.setter
-    def ascending_tiles_X(self, value):
-        self._ascending_tiles_X = value
+    @ascending_tiles_x.setter
+    def ascending_tiles_x(self, value):
+        self._ascending_tiles_x = value
 
     @property
-    def ascending_tiles_Y(self):
-        return self._ascending_tiles_Y
+    def ascending_tiles_y(self):
+        return self._ascending_tiles_y
 
-    @ascending_tiles_Y.setter
-    def ascending_tiles_Y(self, value):
-        self._ascending_tiles_Y = value
+    @ascending_tiles_y.setter
+    def ascending_tiles_y(self, value):
+        self._ascending_tiles_y = value
 
     @property
     def tiles_along_dir(self):
@@ -223,7 +223,7 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'X', 'Y'], self.ascending_tiles_X, 'Y'))
+        yield g.send((['Z', 'X', 'Y'], self.ascending_tiles_x, 'Y'))
         yield from g
 
     @property
@@ -240,7 +240,7 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_Y, 'X'))
+        yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_y, 'X'))
         yield from g
 
     @property
