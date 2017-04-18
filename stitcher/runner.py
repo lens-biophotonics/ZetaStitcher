@@ -27,8 +27,10 @@ Unless otherwise stated, all values are expected in px.
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_folder', help='input folder')
-    parser.add_argument('-c', type=str, default='g', help='color channel',
-                        choices=['r', 'g', 'b'])
+    parser.add_argument('-c', type=str, default='g', choices=['r', 'g', 'b'],
+                        dest='channel', help='color channel')
+
+    group = parser.add_argument_group('tile ordering')
 
     group = parser.add_argument_group('maximum shifts')
     group.add_argument('--Mz', type=int, default=20, dest='max_dz',
@@ -56,7 +58,7 @@ Unless otherwise stated, all values are expected in px.
     group.add_argument('-a', action='store_true',
                        help='instead of maximum score, take the average '
                             'result weighted by the score',
-                       dest='average')
+                       dest='compute_average')
 
     group.add_argument('--z-samples', type=int, default=1, metavar='ZSAMP',
                        help='number of samples to take along Z')
@@ -75,50 +77,70 @@ Unless otherwise stated, all values are expected in px.
         'b': 2
     }
 
-    args.c = channels[args.c]
+    args.channel = channels[args.channel]
 
     return args
 
 
-def build_queue(input_folder, z_samples, z_stride):
-    fm = FileMatrix(input_folder)
-    fm.ascending_tiles_X = True
-    fm.ascending_tiles_Y = False
+class Runner(object):
+    def __init__(self):
+        self.channel = None
+        self.q = None
+        self.output_q = None
+        self.data_queue = None
+        self.initial_queue_length = None
+        self.input_folder = None
+        self.z_samples = None
+        self.z_stride = None
+        self.overlap_v = None
+        self.overlap_h = None
+        self.max_dx = None
+        self.max_dy = None
+        self.max_dz = None
+        self.compute_average = False
 
-    group_generators = [fm.tiles_along_X, fm.tiles_along_Y]
-    stitch_axis = [2, 1]
+    @property
+    def overlap_dict(self):
+        return {1: self.overlap_v, 2: self.overlap_h}
 
-    q = queue.Queue()
+    def initialize_queue(self):
+        fm = FileMatrix(self.input_folder)
+        fm.ascending_tiles_X = True
+        fm.ascending_tiles_Y = False
 
-    for group_generator, axis in zip(group_generators, stitch_axis):
-        for group in group_generator:
+        group_generators = [fm.tiles_along_X, fm.tiles_along_Y]
+        stitch_axis = [2, 1]
 
-            tile_generator = group.itertuples()
+        q = queue.Queue()
 
-            atile = next(tile_generator)
+        for group_generator, axis in zip(group_generators, stitch_axis):
+            for group in group_generator:
 
-            for btile in tile_generator:
-                central_frame = atile.nfrms // 2
-                start_frame = (central_frame
-                               - (z_samples // 2 * z_stride)
-                               + (0 if z_samples % 2 else z_stride // 2))
-                for i in range(0, z_samples):
-                    z_frame = start_frame + i * z_stride
-                    params_dict = {
-                        'aname': atile.filename,
-                        'bname': btile.filename,
-                        'z_frame': z_frame,
-                        'axis': axis,
-                    }
-                    q.put(params_dict)
-                atile = btile
-    return q
+                tile_generator = group.itertuples()
 
+                atile = next(tile_generator)
 
-def main():
-    def worker():
+                for btile in tile_generator:
+                    central_frame = atile.nfrms // 2
+                    start_frame = (
+                        central_frame
+                        - (self.z_samples // 2 * self.z_stride)
+                        + (0 if self.z_samples % 2 else self.z_stride // 2))
+                    for i in range(0, self.z_samples):
+                        z_frame = start_frame + i * self.z_stride
+                        params_dict = {
+                            'aname': atile.filename,
+                            'bname': btile.filename,
+                            'z_frame': z_frame,
+                            'axis': axis,
+                        }
+                        q.put(params_dict)
+                    atile = btile
+        self.q = q
+
+    def worker(self, initial_queue_length):
         while True:
-            item = data_queue.get()
+            item = self.data_queue.get()
             if item is None:
                 break
             try:
@@ -136,34 +158,35 @@ def main():
 
                 print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
                       '{shift}\t{score}'.format(
-                       progress=100 * (1 - q.qsize() / initial_queue_length),
+                       progress=(
+                           100 * (1 - self.q.qsize() / initial_queue_length)),
                        aname=aname, bname=bname, z_frame=z_frame, shift=shift,
                        score=score))
-                output_q.put([aname, bname, axis] + shift + [score])
+                self.output_q.put([aname, bname, axis] + shift + [score])
             finally:
-                data_queue.task_done()
-                q.task_done()
+                self.data_queue.task_done()
+                self.q.task_done()
 
-    def keep_filling_data_queue():
+    def keep_filling_data_queue(self):
         while True:
             try:
-                item = q.get_nowait()
+                item = self.q.get_nowait()
             except queue.Empty:
                 break
             aname = item['aname']
             bname = item['bname']
             z_frame = item['z_frame']
             axis = item['axis']
-            overlap = overlap_dict[axis]
+            overlap = self.overlap_dict[axis]
 
             a = InputFile(aname)
             b = InputFile(bname)
 
-            a.channel = arg.c
-            b.channel = arg.c
+            a.channel = self.channel
+            b.channel = self.channel
 
-            z_min = z_frame - arg.max_dz
-            z_max = z_frame + arg.max_dz + 1
+            z_min = z_frame - self.max_dz
+            z_max = z_frame + self.max_dz + 1
 
             alayer = a.layer(z_min, z_max)
             if axis == 2:
@@ -176,18 +199,18 @@ def main():
             blayer = blayer[..., 0:overlap, :]
 
             blayer = blayer[
-                ..., :-arg.max_dy, arg.max_dx:-arg.max_dx]
+                ..., :-self.max_dy, self.max_dx:-self.max_dx]
 
             alayer = alayer.astype(np.float32)
             blayer = blayer.astype(np.float32)
 
-            data_queue.put([aname, bname, axis, alayer, blayer, z_frame])
+            self.data_queue.put([aname, bname, axis, alayer, blayer, z_frame])
 
-    def aggregate_results():
-        df = pd.DataFrame(list(output_q.queue))
+    def aggregate_results(self):
+        df = pd.DataFrame(list(self.output_q.queue))
         df.columns = ['aname', 'bname', 'axis', 'dz', 'dy', 'dx', 'score']
 
-        if arg.average:
+        if self.compute_average:
             view = df.groupby(['aname', 'bname', 'axis']).agg(
                 lambda x: np.average(x, weights=df.loc[x.index, 'score']))
         else:
@@ -196,45 +219,53 @@ def main():
 
         view = view.reset_index()
 
-        view.dz -= arg.max_dz
+        view.dz -= self.max_dz
         for a in [1, 2]:
             indexes = (view['axis'] == a)
-            view.loc[indexes, 'dy'] = overlap_dict[a] - view.loc[indexes, 'dy']
-        view.dx -= arg.max_dx
+            view.loc[indexes, 'dy'] = \
+                self.overlap_dict[a] - view.loc[indexes, 'dy']
+        view.dx -= self.max_dx
 
         return view
 
-    arg = parse_args()
-    overlap_dict = {1: arg.overlap_v, 2: arg.overlap_h}
+    def run(self):
+        self.initialize_queue()
+        self.data_queue = queue.Queue(maxsize=int(arg.n * 2))
+        self.output_q = queue.Queue()
+        threads = []
+        for i in range(arg.n):
+            t = threading.Thread(target=self.worker, args=(self.q.qsize(),))
+            t.start()
+            threads.append(t)
 
-    q = build_queue(arg.input_folder, arg.z_samples, arg.z_stride)
-    initial_queue_length = q.qsize()
-    data_queue = queue.Queue(maxsize=int(arg.n * 2))
-    output_q = queue.Queue()
-    threads = []
-    for i in range(arg.n):
-        t = threading.Thread(target=worker)
-        t.start()
-        threads.append(t)
+        self.keep_filling_data_queue()
 
-    keep_filling_data_queue()
+        # block until all tasks are done
+        self.data_queue.join()
 
-    # block until all tasks are done
-    data_queue.join()
+        # stop workers
+        for i in range(arg.n):
+            self.data_queue.put(None)
+        for t in threads:
+            t.join()
 
-    # stop workers
-    for i in range(arg.n):
-        data_queue.put(None)
-    for t in threads:
-        t.join()
+        view = self.aggregate_results()
 
-    view = aggregate_results()
+        print(view)
 
-    print(view)
-
-    with open('stitch.json', 'w') as f:
-        f.write(view.to_json(orient='records'))
+        with open('stitch.json', 'w') as f:
+            f.write(view.to_json(orient='records'))
 
 
 if __name__ == '__main__':
-    main()
+    arg = parse_args()
+
+    r = Runner()
+
+    keys = ['input_folder', 'channel', 'max_dx', 'max_dy', 'max_dz',
+            'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
+            'compute_average']
+    for key in keys:
+        setattr(r, key, getattr(arg, key))
+
+    r.run()
