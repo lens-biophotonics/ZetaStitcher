@@ -10,7 +10,7 @@ class InputFile(object):
         self.file_name = file_name
         self.wrapper = None
         self._channel = -1
-        self.channels = 1
+        self.nchannels = 1
 
         if file_name is not None:
             self.open()
@@ -50,15 +50,15 @@ class InputFile(object):
         Returns
         -------
         tuple
-            (:attr:`nfrms`, :attr:`xsize`, :attr:`ysize`, `channels`) where
+            (:attr:`nfrms`, `channels`, :attr:`xsize`, :attr:`ysize`) where
             `channels` is the number of color channels in the image. If
             :attr:`channel` is set or if there is only one channel,
             the `channels` dimension is squeezed.
         """
-        s = (self.nfrms, self.xsize, self.ysize)
-        if self.channels != 1 and self.channel == -1:
-            s = s + (self.channels,)
-        return s
+        s = [self.nfrms, self.xsize, self.ysize]
+        if self.nchannels != 1 and self.channel == -1:
+            s.insert(1, self.nchannels)
+        return tuple(s)
 
     def open(self, file_name=None):
         if file_name is not None:
@@ -89,7 +89,7 @@ class InputFile(object):
             pass
 
     def _setattrs(self):
-        l = ['nfrms', 'xsize', 'ysize', 'channels', 'dtype']
+        l = ['nfrms', 'xsize', 'ysize', 'nchannels', 'dtype']
 
         for a in l:
             try:
@@ -122,7 +122,7 @@ class InputFile(object):
         l = self.wrapper.layer(start_frame, end_frame, dtype)
         if self.channel != -1:
             l = l[..., self.channel]
-        elif self.channels > 1:
+        elif self.nchannels > 1:
             l = np.rollaxis(l, -1, -3)
 
         return l

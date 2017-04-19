@@ -32,7 +32,7 @@ class TiffWrapper(object):
         return self.tfile.pages[0].image_length
 
     @property
-    def channels(self):
+    def nchannels(self):
         try:
             return self.tfile.pages[0].shape[2]
         except IndexError:

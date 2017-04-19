@@ -149,7 +149,7 @@ class FuseRunner(object):
         fused_xy = np.rot90(fused_xy, k=3, axes=(-2, -1))
 
         with InputFile(tile.Index) as f:
-            if f.channels > 1:
+            if f.nchannels > 1:
                 multi_channel = True
             else:
                 multi_channel = False
