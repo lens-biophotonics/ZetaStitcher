@@ -140,9 +140,10 @@ class FuseRunner(object):
             q.put([None, None])  # close queue
 
             output_stripe = fuse_queue(q, stripe_thickness=thickness)
+            output_stripe = np.rot90(output_stripe, axes=(-2, -1))
 
             stripe_pos = [0, M['Xs'] - stripe_width, m['Ys']]
-            stripe_q.put([np.rot90(output_stripe, axes=(-2, -1)), stripe_pos])
+            stripe_q.put([output_stripe, stripe_pos])
 
         stripe_q.put([None, None])
         fused_xy = fuse_queue(stripe_q, stripe_width=height)
