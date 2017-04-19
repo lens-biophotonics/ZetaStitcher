@@ -29,8 +29,8 @@ Unless otherwise stated, all values are expected in px.
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_folder', help='input folder')
-    parser.add_argument('-c', type=str, default='g', choices=['r', 'g', 'b'],
-                        dest='channel', help='color channel')
+    parser.add_argument('-c', type=str, default='s', dest='channel',
+                        choices=['r', 'g', 'b', 's'], help='color channel')
 
     group = parser.add_argument_group('tile ordering')
     group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
@@ -78,6 +78,7 @@ Unless otherwise stated, all values are expected in px.
     args = parser.parse_args()
 
     channels = {
+        's': -2,  # sum
         'r': 0,
         'g': 1,
         'b': 2

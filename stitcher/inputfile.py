@@ -120,7 +120,9 @@ class InputFile(object):
             `channels` dimension is squeezed.
         """
         l = self.wrapper.layer(start_frame, end_frame, dtype)
-        if self.channel != -1:
+        if self.channel == -2:
+            l = np.sum(l, axis=-1)
+        elif self.channel != -1:
             l = l[..., self.channel]
         elif self.nchannels > 1:
             l = np.rollaxis(l, -1, -3)
