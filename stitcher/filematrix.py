@@ -100,10 +100,9 @@ class FileMatrix:
         a = np.unique(a)
 
         flist = []
-        root, _ = os.path.split(fname)
+        self.dir, _ = os.path.split(fname)
         for el in a:
-            f = os.path.normpath(os.path.join(root, el))
-            self.parse_and_append(f, flist)
+            self.parse_and_append(el, flist)
 
         temp = df[df['axis'] == 2]
         a_fields = parse_file_name(temp.iloc[0].aname)
@@ -133,11 +132,10 @@ class FileMatrix:
 
         self.data_frame = df
 
-    @staticmethod
-    def parse_and_append(name, flist):
+    def parse_and_append(self, name, flist):
         try:
             fields = parse_file_name(name)
-            with InputFile(name) as infile:
+            with InputFile(os.path.join(self.dir, name)) as infile:
                 fields.append(infile.nfrms)
                 fields.append(infile.ysize)
                 fields.append(infile.xsize)

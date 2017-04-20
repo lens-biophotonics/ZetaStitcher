@@ -20,25 +20,21 @@ class FuseRunner(object):
         self.input_file = input_file  #: input file or folder
         self.fm = None  #: :class:`FileMatrix` with filename as Index
         self.df = None  #: :class:`pandas.DataFrame` of optimal shifts
+        self.path = None
 
         self._load_df()
         self._compute_absolute_positions()
 
     def _load_df(self):
-        def normalize_path(x):
-            return os.path.normpath(os.path.join(path, x))
-
         if os.path.isdir(self.input_file):
             input_file = os.path.join(self.input_file, 'stitch.json')
         else:
             input_file = self.input_file
 
-        path, file_name = os.path.split(input_file)
+        self.path, file_name = os.path.split(input_file)
 
         with open(input_file, 'r') as f:
             df = pd.read_json(f.read(), orient='records')
-        df['aname'] = df['aname'].apply(normalize_path)
-        df['bname'] = df['bname'].apply(normalize_path)
 
         self.df = df
         fm = FileMatrix(input_file)
@@ -134,7 +130,7 @@ class FuseRunner(object):
 
             q = Queue()
             for tile in tile_generator:
-                with InputFile(tile.Index) as f:
+                with InputFile(os.path.join(self.path, tile.Index)) as f:
                     layer = np.copy(f.whole())
 
                 x_from_i = rint(stripe_left_edge - tile.Xs)
