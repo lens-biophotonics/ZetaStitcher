@@ -27,14 +27,10 @@ def fuse(a_roi, b_roi):
     b_roi = b_roi.astype(np.float32, copy=False)
 
     output_height = a_roi.shape[-2]
-    output_width = a_roi.shape[-1]
 
     rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
-
     alpha = (np.cos(rad) + 1) / 2
-    alpha = np.tile(alpha, [output_width])
-    alpha = np.reshape(alpha, [output_width, output_height])
-    alpha = np.transpose(alpha)
+    alpha = alpha[:, np.newaxis]
 
     fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
     return fused
