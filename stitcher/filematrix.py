@@ -124,6 +124,7 @@ class FileMatrix:
         self._load_from_flist(flist)
         self.stitch_data_frame = df
         self._compute_absolute_positions()
+        self._compute_overlaps()
 
     def _load_from_flist(self, flist):
         data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
@@ -196,6 +197,30 @@ class FileMatrix:
         fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
         fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
         fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
+
+    def _compute_overlaps(self):
+        fm_df = self.data_frame
+
+        # tiles along Y
+        ty = fm_df.sort_values(
+            ['Z', 'Y', 'X'], ascending=self.ascending_tiles_y).groupby('X')
+        fm_df['overlap_top'] = (
+            ty['Ys_end'].shift() - ty['Ys'].shift(0)).fillna(0).astype(int)
+        fm_df['overlap_bottom'] = (
+            ty['Ys_end'].shift(0) - ty['Ys'].shift(-1)).fillna(0).astype(int)
+
+        # tiles along X
+        tx = fm_df.sort_values(
+            ['Z', 'X', 'Y'], ascending=self.ascending_tiles_x).groupby('Y')
+        fm_df['overlap_left'] = (
+            tx['Xs_end'].shift() - tx['Xs'].shift(0)).fillna(0).astype(int)
+        fm_df['overlap_right'] = (
+            tx['Xs_end'].shift(0) - tx['Xs'].shift(-1)).fillna(0).astype(int)
+
+        cols = ['overlap_top', 'overlap_bottom', 'overlap_left',
+                'overlap_right']
+
+        fm_df[cols] = fm_df[cols].applymap(lambda x: x if x > 0 else 0)
 
     @property
     def minimum_spanning_tree(self):
