@@ -86,6 +86,12 @@ class FuseRunner(object):
             fm_df.ix[edge[1], 'Zs'] = Zs
             fm_df.ix[edge[1], 'weight'] = 1 - row['score']
 
+        fm_df[['Xs', 'Ys', 'Zs']] = fm_df[['Xs', 'Ys', 'Zs']].astype(int)
+
+        fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
+        fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
+        fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
+
         for key in ['Xs', 'Ys', 'Zs']:
             fm_df[key] -= fm_df[key].min()
 
