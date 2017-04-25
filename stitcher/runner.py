@@ -138,8 +138,8 @@ class Runner(object):
                     for i in range(0, self.z_samples):
                         z_frame = start_frame + i * self.z_stride
                         params_dict = {
-                            'aname': atile.filename,
-                            'bname': btile.filename,
+                            'aname': atile.Index,
+                            'bname': btile.Index,
                             'z_frame': z_frame,
                             'axis': axis,
                         }
