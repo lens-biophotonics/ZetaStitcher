@@ -164,6 +164,8 @@ class Runner(object):
 
                 shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
                 score = xcorr[tuple(shift)]
+                if score < 0 or score > 1:
+                    score = 0
 
                 print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
                       '{shift}\t{score}'.format(
