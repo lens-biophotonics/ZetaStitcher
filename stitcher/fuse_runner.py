@@ -1,3 +1,4 @@
+import re
 import sys
 import os.path
 import argparse
@@ -11,6 +12,7 @@ import skimage.external.tifffile as tiff
 from .filematrix import FileMatrix
 from .inputfile import InputFile
 from .fuse import fuse_queue
+from .numbers import numbers
 
 
 class FuseRunner(object):
@@ -47,6 +49,25 @@ class FuseRunner(object):
             for tile in tile_generator:
                 with InputFile(os.path.join(self.path, tile.Index)) as f:
                     layer = np.copy(f.whole())
+
+                cx = layer.shape[-1] // 2
+                cy = layer.shape[-2] // 2
+                x = cx - 100
+                xstr = re.search(r'\d+', tile.Index).group()
+                for l in xstr:
+                    x_end = x + 30
+                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                    x = x_end + 5
+
+                for f in range(0, layer.shape[0]):
+                    x = cx - 120
+                    xstr = str(f)
+                    # xstr = str(z_frame)
+                    for l in xstr:
+                        x_end = x + 30
+                        layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                            numbers[int(l)]
+                        x = x_end + 5
 
                 top_left = [tile.Zs, tile.Ys, tile.Xs]
                 overlaps = [tile.overlap_top, tile.overlap_bottom,
