@@ -36,7 +36,29 @@ def fuse(a_roi, b_roi):
     return fused
 
 
-def fuse_queue(q, stripe_width=None, stripe_thickness=None):
+def pad(layer, top_left, stripe_shape):
+    Zs = top_left[0]
+    Xs = top_left[2]
+    pad_left = int(round(Xs))
+    pad_right = stripe_shape[-1] - pad_left - layer.shape[-1]
+
+    pad_top = int(round(Zs))
+    pad_bottom = stripe_shape[0] - pad_top - layer.shape[0]
+
+    pad_tuples = list((0, 0) for i in layer.shape)
+    pad_tuples[0] = (pad_top, pad_bottom)
+    pad_tuples[-1] = (pad_left, pad_right)
+
+    return np.pad(layer, pad_tuples, 'constant')
+
+
+def alpha(overlap):
+    rad = np.linspace(0.0, np.pi, overlap, dtype=np.float32)
+    alpha = (np.cos(rad) + 1) / 2
+    return alpha
+
+
+def fuse_queue(q, stripe_shape, dtype):
     """Fuses a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -57,79 +79,47 @@ def fuse_queue(q, stripe_width=None, stripe_thickness=None):
 
     Returns
     -------
-    output_stripe : :class:`numpy.ndarray`
+    stripe : :class:`numpy.ndarray`
         The fused stripe.
     """
-    def pad(layer, top_left):
-        Zs = top_left[0]
-        Xs = top_left[2]
-        pad_left = int(round(Xs))
-        pad_right = stripe_width - pad_left - layer.shape[-1]
+    stripe = np.zeros(stripe_shape, dtype=dtype)
 
-        pad_top = int(round(Zs))
-        pad_bottom = stripe_thickness - pad_top - layer.shape[0]
-
-        pad_tuples = list((0, 0) for i in layer.shape)
-        pad_tuples[0] = (pad_top, pad_bottom)
-        pad_tuples[-1] = (pad_left, pad_right)
-
-        return np.pad(layer, pad_tuples, 'constant')
-
-    alayer, pos = q.get()
-    q.task_done()
-
-    if stripe_width is None:
-        stripe_width = alayer.shape[-1]
-
-    if stripe_thickness is None:
-        stripe_thickness = alayer.shape[0]
-
-    ostripe_shape = list(alayer.shape)
-    ostripe_shape[0] = stripe_thickness
-    ostripe_shape[-2] = 0
-    ostripe_shape[-1] = stripe_width
-    output_stripe = np.zeros(ostripe_shape, dtype=alayer.dtype)
-
-    fused_height_prev = 0
-
-    prev_Ys_end = pos[1] + alayer.shape[-2]
-    alayer = pad(alayer, pos)
     while True:
-        # add first part
-        blayer, pos = q.get()
+        layer, pos, overlap = q.get()
 
-        if pos is None:
-            fused_height = 0
-        else:
-            Zs = pos[0]
-            Ys = pos[1]
-            Xs = pos[2]
-            fused_height = int(round(prev_Ys_end - Ys))
-
-        oy_height = alayer.shape[-2] - fused_height_prev - fused_height
-        if oy_height <= 0:
-            raise ValueError('oy_height must be positive')
-        ay_from = fused_height_prev
-        ay_to = round(ay_from + oy_height)
-
-        output_stripe = np.append(
-            output_stripe, alayer[..., ay_from:ay_to, :], axis=-2)
-
-        if blayer is None:
+        if layer is None:
             break
-        blayer = pad(blayer, [Zs, 0, Xs])
+
+        # apply alpha (top, bottom, left, right)
+        layer = np.swapaxes(layer, -1, -2)
+        if overlap[0]:
+            layer[..., :overlap[0]] = to_dtype(
+                layer[..., :overlap[0]] * (1 - alpha(overlap[0])), dtype)
+
+        if overlap[1]:
+            layer[..., -overlap[1]:] = to_dtype(
+                layer[..., -overlap[1]:] * alpha(overlap[1]), dtype)
+        layer = np.swapaxes(layer, -1, -2)
+
+        if overlap[2]:
+            layer[..., :overlap[2]] = to_dtype(
+                layer[..., :overlap[2]] * (1 - alpha(overlap[2])), dtype)
+        if overlap[3]:
+            layer[..., -overlap[3]:] = to_dtype(
+                layer[..., -overlap[3]:] * alpha(overlap[3]), dtype)
+
+        z_from = pos[0]
+        z_to = z_from + layer.shape[0]
+
+        y_from = pos[1]
+        y_to = y_from + layer.shape[-2]
+
+        x_from = pos[2]
+        x_to = x_from + layer.shape[-1]
+
+        stripe[z_from:z_to, ..., y_from:y_to, x_from:x_to] += layer
 
 
-        a_roi = alayer[..., -fused_height:, :]
-        b_roi = blayer[..., 0:fused_height, :]
-
-        # add fused part
-        fused = fuse(a_roi, b_roi)
-        output_stripe = np.append(output_stripe, fused, axis=-2)
         q.task_done()
 
-        alayer = blayer
-        fused_height_prev = fused_height
-        prev_Ys_end = Ys + blayer.shape[-2]
-
-    return output_stripe
+    return stripe

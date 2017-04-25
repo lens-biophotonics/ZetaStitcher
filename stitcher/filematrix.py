@@ -330,21 +330,13 @@ class FileMatrix:
         yield from g
 
     @property
+    def full_width(self):
+        return self.data_frame['Xs_end'].max()
+
+    @property
     def full_height(self):
-        def rint(x):
-            return 0 if math.isnan(x) else int(round(x))
-
-        def gen():
-            for group in self.tiles_along_Y:
-                overlap_sum = (
-                    group['ysize'] - group['Ys'].diff().apply(rint)).sum()
-                overlap_sum -= group.iloc[0]['ysize']
-                yield rint(
-                    group['ysize'].sum() - overlap_sum + group.iloc[0]['Ys'])
-
-        return max(x for x in gen())
+        return self.data_frame['Ys_end'].max()
 
     @property
     def full_thickness(self):
-        return int(round(
-            (self.data_frame['Zs'] + self.data_frame['nfrms']).max()))
+        return self.data_frame['Zs_end'].max()

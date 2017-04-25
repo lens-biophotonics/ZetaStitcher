@@ -34,48 +34,33 @@ class FuseRunner(object):
         def rint(x):
             return int(round(x))
 
-        stripe_q = Queue()
-
         df = self.fm.data_frame
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
 
-        height = self.fm.full_height
-        thickness = self.fm.full_thickness
-
+        q = Queue()
         for group in self.fm.tiles_along_Y:
             group = group.copy()
 
-            m = group.min()
-            M = group.max()
-
-            stripe_left_edge = M['Xs']
-            stripe_width = rint(m['Xs'] + group.iloc[-1]['xsize'] - M['Xs'])
-
             tile_generator = group.itertuples()
 
-            q = Queue()
             for tile in tile_generator:
                 with InputFile(os.path.join(self.path, tile.Index)) as f:
                     layer = np.copy(f.whole())
 
-                x_from_i = rint(stripe_left_edge - tile.Xs)
-                x_to_i = x_from_i + stripe_width
+                top_left = [tile.Zs, tile.Ys, tile.Xs]
+                overlaps = [tile.overlap_top, tile.overlap_bottom,
+                            tile.overlap_left, tile.overlap_right]
+                q.put([layer, top_left, overlaps])
 
-                top_left = [tile.Zs, tile.Ys, 0]
-                q.put([layer[..., x_from_i:x_to_i], top_left])
+        q.put([None, None, None])  # close queue
 
-            q.put([None, None])  # close queue
+        stripe_shape = list(layer.shape)
+        stripe_shape[0] = self.fm.full_thickness
+        stripe_shape[-2] = self.fm.full_height
+        stripe_shape[-1] = self.fm.full_width
 
-            output_stripe = fuse_queue(q, stripe_thickness=thickness)
-            output_stripe = np.rot90(output_stripe, axes=(-2, -1))
-
-            stripe_pos = [0, M['Xs'] - stripe_width, m['Ys']]
-            stripe_q.put([output_stripe, stripe_pos])
-
-        stripe_q.put([None, None])
-        fused_xy = fuse_queue(stripe_q, stripe_width=height)
-        fused_xy = np.rot90(fused_xy, k=3, axes=(-2, -1))
+        fused_xy = fuse_queue(q, stripe_shape, dtype=layer.dtype)
 
         with InputFile(tile.Index) as f:
             if f.nchannels > 1:
