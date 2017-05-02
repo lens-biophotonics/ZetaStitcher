@@ -108,6 +108,9 @@ def fuse_queue(q, stripe_shape, dtype):
             layer[..., -overlap[3]:] = to_dtype(
                 layer[..., -overlap[3]:] * alpha(overlap[3]), dtype)
 
+        layer[..., -2:, :] = 255
+        layer[..., -2:] = 255
+
         z_from = pos[0]
         z_to = z_from + layer.shape[0]
 
@@ -118,7 +121,6 @@ def fuse_queue(q, stripe_shape, dtype):
         x_to = x_from + layer.shape[-1]
 
         stripe[z_from:z_to, ..., y_from:y_to, x_from:x_to] += layer
-
 
         q.task_done()
 
