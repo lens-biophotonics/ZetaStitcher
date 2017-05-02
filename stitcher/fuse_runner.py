@@ -105,7 +105,7 @@ class FuseRunner(object):
         stripe_shape[-2] = self.fm.full_height
         stripe_shape[-1] = self.fm.full_width
 
-        fused_xy = fuse_queue(q, stripe_shape, dtype=layer.dtype)
+        fused_xy = fuse_queue(q, stripe_shape)
 
         with InputFile(tile.Index) as f:
             if f.nchannels > 1:

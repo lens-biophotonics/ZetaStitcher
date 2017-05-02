@@ -58,7 +58,7 @@ def alpha(overlap):
     return alpha
 
 
-def fuse_queue(q, stripe_shape, dtype):
+def fuse_queue(q, stripe_shape):
     """Fuses a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -82,6 +82,9 @@ def fuse_queue(q, stripe_shape, dtype):
     stripe : :class:`numpy.ndarray`
         The fused stripe.
     """
+
+    dtype = q.queue[0][0].dtype
+
     stripe = np.zeros(stripe_shape, dtype=dtype)
 
     while True:
@@ -89,6 +92,7 @@ def fuse_queue(q, stripe_shape, dtype):
 
         if layer is None:
             break
+
 
         # apply alpha (top, bottom, left, right)
         layer = np.swapaxes(layer, -1, -2)
