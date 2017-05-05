@@ -40,8 +40,6 @@ class FuseRunner(object):
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
 
-        T = self.fm.minimum_spanning_tree
-
         q = Queue()
         for group in self.fm.tiles_along_Y:
             group = group.copy()
@@ -70,28 +68,6 @@ class FuseRunner(object):
                         layer[f, ..., cy + 55:cy + 105, x:x_end] = \
                             numbers[int(l)]
                         x = x_end + 5
-
-                cy = layer.shape[-2] // 2
-                try:
-                    for node in T[tile.Index]:
-                        t = self.fm.data_frame.loc[node]  # other tile
-
-                        if t.Y == tile.Y:
-                            dy = int(t.Ys - tile.Ys)
-                            if tile.X < t.X:
-                                layer[..., cy - 3: cy + 3:, :cx] = 255
-                            else:
-                                layer[..., cy + dy - 3:cy + dy + 3:, cx:] = 255
-
-                        if t.X == tile.X:
-                            dx = int(t.Xs - tile.Xs)
-                            if tile.Y > t.Y:
-                                layer[..., :cy, cx - 3: cx + 3] = 255
-                            else:
-                                layer[..., cy:, cx + dx - 3: cx + dx + 3] = 255
-
-                except KeyError:
-                    pass
 
                 top_left = [tile.Zs, tile.Ys, tile.Xs]
                 overlaps = [tile.overlap_top, tile.overlap_bottom,
