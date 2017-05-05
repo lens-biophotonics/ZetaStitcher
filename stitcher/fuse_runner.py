@@ -100,12 +100,12 @@ class FuseRunner(object):
 
         q.put([None, None, None])  # close queue
 
-        stripe_shape = list(layer.shape)
-        stripe_shape[0] = self.fm.full_thickness
-        stripe_shape[-2] = self.fm.full_height
-        stripe_shape[-1] = self.fm.full_width
+        output_shape = list(layer.shape)
+        output_shape[0] = self.fm.full_thickness
+        output_shape[-2] = self.fm.full_height
+        output_shape[-1] = self.fm.full_width
 
-        fused_xy = fuse_queue(q, stripe_shape)
+        fused_xy = fuse_queue(q, output_shape)
 
         with InputFile(tile.Index) as f:
             if f.nchannels > 1:
