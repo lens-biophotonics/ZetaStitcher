@@ -147,6 +147,7 @@ class FileMatrix:
             flist.append(name)
         except (RuntimeError, ValueError) as e:
             logger.error(e.args[0])
+            raise
 
     def _compute_absolute_positions(self):
         fm_df = self.data_frame
