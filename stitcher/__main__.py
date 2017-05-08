@@ -50,8 +50,8 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     a = InputFile(aname)
     b = InputFile(bname)
 
-    a.channel = 1
-    b.channel = 1
+    a.channel = -2
+    b.channel = -2
 
     z_min = z_frame - max_shift_z
     z_max = z_frame + max_shift_z + 1
