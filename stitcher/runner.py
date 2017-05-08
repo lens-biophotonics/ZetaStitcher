@@ -201,12 +201,12 @@ class Runner(object):
 
             alayer = a.layer(z_min, z_max)
             if axis == 2:
-                alayer = np.rot90(alayer, axes=(-2, -1))
+                alayer = np.rot90(alayer, axes=(-1, -2))
             alayer = alayer[..., -overlap:, :]
 
             blayer = b.layer_idx(z_frame)
             if axis == 2:
-                blayer = np.rot90(blayer, axes=(-2, -1))
+                blayer = np.rot90(blayer, axes=(-1, -2))
             blayer = blayer[..., 0:overlap, :]
 
             blayer = blayer[
