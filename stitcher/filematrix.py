@@ -56,6 +56,15 @@ class FileMatrix:
         self._ascending_tiles_x = True
         self._ascending_tiles_y = True
 
+        self.overlap_n = None
+        self.overlap_s = None
+        self.overlap_e = None
+        self.overlap_w = None
+        self.overlap_nw = None
+        self.overlap_ne = None
+        self.overlap_sw = None
+        self.overlap_se = None
+
         if os.path.isdir(directory):
             self.load_dir(directory)
         elif os.path.isfile(directory):
@@ -200,28 +209,137 @@ class FileMatrix:
         fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
 
     def _compute_overlaps(self):
+        def comp_diff(dest, row_name, row, other_name):
+            temp_other_name = other_name
+            temp = row
+            if fm_df.loc[other_name, 'Z'] < temp['Z'] or fm_df.loc[
+                         other_name, 'Y'] < temp['Y'] or fm_df.loc[
+                         other_name, 'X'] < temp['X']:
+                temp_other_name = row_name
+                temp = fm_df.loc[other_name]
+
+            if fm_df.loc[temp_other_name, 'Zs'] > temp['Zs_end'] or fm_df.loc[
+                temp_other_name, 'Ys'] > temp['Ys_end'] or fm_df.loc[
+                temp_other_name, 'Xs'] > temp['Xs_end']:
+                cols_to_zero(dest, row_name)
+                return
+
+            dest.loc[row_name, 'Z_from'] = max(fm_df.loc[other_name, 'Zs'],
+                                               row['Zs']) - row['Zs']
+            dest.loc[row_name, 'Z_to'] = min(fm_df.loc[other_name, 'Zs_end'],
+                                             row['Zs_end']) - row['Zs']
+
+            dest.loc[row_name, 'Y_from'] = max(fm_df.loc[other_name, 'Ys'],
+                                               row['Ys']) - row['Ys']
+            dest.loc[row_name, 'Y_to'] = min(fm_df.loc[other_name, 'Ys_end'],
+                                             row['Ys_end']) - row['Ys']
+
+            dest.loc[row_name, 'X_from'] = max(fm_df.loc[other_name, 'Xs'],
+                                               row['Xs']) - row['Xs']
+            dest.loc[row_name, 'X_to'] = min(fm_df.loc[other_name, 'Xs_end'],
+                                             row['Xs_end']) - row['Xs']
+
+        def cols_to_zero(dest, row_name):
+            cols = ['Z_from', 'Z_to', 'Y_from', 'Y_to', 'X_from', 'X_to']
+            for c in cols:
+                dest.loc[row_name, c] = 0
+
         fm_df = self.data_frame
+        sdf = self.stitch_data_frame
 
-        # tiles along Y
-        ty = fm_df.sort_values(
-            ['Z', 'Y', 'X'], ascending=self.ascending_tiles_y).groupby('X')
-        fm_df['overlap_top'] = (
-            ty['Ys_end'].shift() - ty['Ys'].shift(0)).fillna(0).astype(int)
-        fm_df['overlap_bottom'] = (
-            ty['Ys_end'].shift(0) - ty['Ys'].shift(-1)).fillna(0).astype(int)
+        overlap_n = pd.DataFrame()
+        overlap_s = pd.DataFrame()
+        overlap_e = pd.DataFrame()
+        overlap_w = pd.DataFrame()
+        overlap_nw = pd.DataFrame()
+        overlap_ne = pd.DataFrame()
+        overlap_sw = pd.DataFrame()
+        overlap_se = pd.DataFrame()
 
-        # tiles along X
-        tx = fm_df.sort_values(
-            ['Z', 'X', 'Y'], ascending=self.ascending_tiles_x).groupby('Y')
-        fm_df['overlap_left'] = (
-            tx['Xs_end'].shift() - tx['Xs'].shift(0)).fillna(0).astype(int)
-        fm_df['overlap_right'] = (
-            tx['Xs_end'].shift(0) - tx['Xs'].shift(-1)).fillna(0).astype(int)
+        tmp_df_b = sdf.reset_index().set_index(['bname', 'axis'])
+        tmp_df_a = sdf.reset_index().set_index(['filename', 'axis'])
 
-        cols = ['overlap_top', 'overlap_bottom', 'overlap_left',
-                'overlap_right']
+        for index, row in fm_df.iterrows():
+            # north
+            try:
+                parent = tmp_df_b.loc[(row.name, 1), 'filename']
+                comp_diff(overlap_n, row.name, row, parent)
+            except KeyError:
+                cols_to_zero(overlap_n, row.name)
 
-        fm_df[cols] = fm_df[cols].applymap(lambda x: x if x > 0 else 0)
+            # south
+            try:
+                parent = tmp_df_a.loc[(row.name, 1), 'bname']
+                comp_diff(overlap_s, row.name, row, parent)
+            except KeyError:
+                cols_to_zero(overlap_s, row.name)
+
+            # east
+            try:
+                parent = tmp_df_a.loc[(row.name, 2), 'bname']
+                comp_diff(overlap_e, row.name, row, parent)
+            except KeyError:
+                cols_to_zero(overlap_e, row.name)
+
+            # west
+            try:
+                parent = tmp_df_b.loc[(row.name, 2), 'filename']
+                comp_diff(overlap_w, row.name, row, parent)
+            except KeyError:
+                cols_to_zero(overlap_w, row.name)
+
+            # north-west
+            try:
+                other_name = tmp_df_b.loc[
+                    (row.name, 2), 'filename']  # one step W
+                other_name = tmp_df_b.loc[
+                    (other_name, 1), 'filename']  # one step N
+                comp_diff(overlap_nw, row.name, row, other_name)
+            except KeyError:
+                cols_to_zero(overlap_nw, row.name)
+
+            # north-east
+            try:
+                other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
+                other_name = tmp_df_b.loc[
+                    (other_name, 1), 'filename']  # one step N
+                comp_diff(overlap_ne, row.name, row, other_name)
+            except KeyError:
+                cols_to_zero(overlap_ne, row.name)
+
+            # south-west
+            try:
+                other_name = tmp_df_b.loc[
+                    (row.name, 2), 'filename']  # one step W
+                other_name = tmp_df_a.loc[
+                    (other_name, 1), 'bname']  # one step S
+                comp_diff(overlap_sw, row.name, row, other_name)
+            except KeyError:
+                cols_to_zero(overlap_sw, row.name)
+
+            # south-east
+            try:
+                other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
+                other_name = tmp_df_a.loc[
+                    (other_name, 1), 'bname']  # one step S
+                comp_diff(overlap_se, row.name, row, other_name)
+            except KeyError:
+                cols_to_zero(overlap_se, row.name)
+
+        self.overlap_n = overlap_n.astype(int)
+        self.overlap_s = overlap_s.astype(int)
+        self.overlap_e = overlap_e.astype(int)
+        self.overlap_w = overlap_w.astype(int)
+        self.overlap_nw = overlap_nw.astype(int)
+        self.overlap_ne = overlap_ne.astype(int)
+        self.overlap_sw = overlap_sw.astype(int)
+        self.overlap_se = overlap_se.astype(int)
+
+    def overlaps(self, tile_name):
+        return [x.loc[tile_name] for x in (
+            self.overlap_n, self.overlap_s, self.overlap_w, self.overlap_e,
+            self.overlap_nw, self.overlap_ne, self.overlap_sw,
+            self.overlap_se)]
 
     @property
     def minimum_spanning_tree(self):
