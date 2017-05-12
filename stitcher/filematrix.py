@@ -131,9 +131,24 @@ class FileMatrix:
             self.ascending_tiles_y = True
 
         self._load_from_flist(flist)
-        self.stitch_data_frame = df
+
+        new_columns = df.columns.values
+        new_columns[0] = 'filename'
+        df.columns = new_columns
+        self.stitch_data_frame = df.set_index('filename')
+
+        fm_df = self.data_frame
+        keys = ['X', 'Y', 'Z']
+        fm_df[keys] -= fm_df[keys].min()
+
+        if not self.ascending_tiles_x:
+            fm_df['X'] = (fm_df['X'] - fm_df['X'].max()).abs()
+
+        if not self.ascending_tiles_y:
+            fm_df['Y'] = (fm_df['Y'] - fm_df['Y'].max()).abs()
+
         self._compute_shift_vectors()
-        self._compute_absolute_positions()
+        self._compute_absolute_positions_initial_guess()
         self._compute_overlaps()
 
     def _load_from_flist(self, flist):
@@ -180,7 +195,42 @@ class FileMatrix:
         sdf.loc[idx, 'py'] = -sdf.loc[idx, 'dx']
         sdf.loc[idx, 'pz'] = sdf.loc[idx, 'dz']
 
-    def _compute_absolute_positions(self):
+    def _compute_absolute_positions_initial_guess(self):
+        sdf = self.stitch_data_frame.reset_index()
+        fm_df = self.data_frame
+
+        G = nx.Graph()
+        G.add_edges_from(((
+            u, v, {'weight': w}) for u, v, w in
+            np.c_[sdf['filename'], sdf['bname'], 1 - sdf['score']]))
+
+        fm_df['Xs'] = 0
+        fm_df['Ys'] = 0
+        fm_df['Zs'] = 0
+
+        sdf = sdf.reset_index().set_index('bname')
+
+        cond = (fm_df['X'] == 0) & (fm_df['Y'] == 0) & (fm_df['Z'] == 0)
+        top_left_corner = fm_df[cond].index[0]
+        for edge in nx.bfs_edges(G, source=top_left_corner):
+            btile = edge[1]
+            parents = fm_df.loc[sdf.loc[[btile], 'filename']]
+            fm_df.loc[btile, 'Xs'] = (
+            parents['Xs'] + sdf.loc[[btile]].set_index('filename')['px']).mean()
+            fm_df.loc[btile, 'Ys'] = (
+            parents['Ys'] + sdf.loc[[btile]].set_index('filename')['py']).mean()
+            fm_df.loc[btile, 'Zs'] = (
+            parents['Zs'] + sdf.loc[[btile]].set_index('filename')['pz']).mean()
+
+        keys = ['Xs', 'Ys', 'Zs']
+        fm_df[keys] -= fm_df[keys].min()
+        fm_df[keys] = fm_df[keys].apply(np.round).astype(int)
+
+        fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
+        fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
+        fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
+
+    def _compute_absolute_positions_mst(self):
         fm_df = self.data_frame
         df = self.stitch_data_frame
         T = self.minimum_spanning_tree
