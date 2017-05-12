@@ -132,6 +132,7 @@ class FileMatrix:
 
         self._load_from_flist(flist)
         self.stitch_data_frame = df
+        self._compute_shift_vectors()
         self._compute_absolute_positions()
         self._compute_overlaps()
 
@@ -157,6 +158,27 @@ class FileMatrix:
         except (RuntimeError, ValueError) as e:
             logger.error(e.args[0])
             raise
+
+    def _compute_shift_vectors(self):
+        sdf = self.stitch_data_frame
+        fm_df = self.data_frame
+
+        sdf['px'] = 0
+        sdf['py'] = 0
+        sdf['pz'] = 0
+
+        idx = sdf['axis'] == 1
+        fm_df_idx = idx[idx].index
+        sdf.loc[fm_df_idx, 'px'] = sdf.loc[idx, 'dx']
+        sdf.loc[fm_df_idx, 'py'] = fm_df.loc[fm_df_idx, 'ysize'] - sdf.loc[
+            idx, 'dy']
+        sdf.loc[fm_df_idx, 'pz'] = sdf.loc[idx, 'dz']
+
+        idx = sdf['axis'] == 2
+        fm_df_idx = idx[idx].index
+        sdf.loc[idx, 'px'] = fm_df.loc[fm_df_idx, 'xsize'] - sdf.loc[idx, 'dy']
+        sdf.loc[idx, 'py'] = -sdf.loc[idx, 'dx']
+        sdf.loc[idx, 'pz'] = sdf.loc[idx, 'dz']
 
     def _compute_absolute_positions(self):
         fm_df = self.data_frame
