@@ -408,10 +408,13 @@ class FileMatrix:
         self.overlap_se = overlap_se.astype(int)
 
     def overlaps(self, tile_name):
-        return [x.loc[tile_name] for x in (
-            self.overlap_n, self.overlap_s, self.overlap_w, self.overlap_e,
-            self.overlap_nw, self.overlap_ne, self.overlap_sw,
-            self.overlap_se)]
+        df = pd.DataFrame()
+        names = ['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se']
+        for n in names:
+            name = 'overlap_' + n
+            overlap = getattr(self, name)
+            df[n] = overlap.loc[tile_name]
+        return df.transpose()
 
     @property
     def minimum_spanning_tree(self):
