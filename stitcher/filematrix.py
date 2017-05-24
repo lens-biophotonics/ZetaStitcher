@@ -282,20 +282,6 @@ class FileMatrix:
 
     def _compute_overlaps(self):
         def comp_diff(dest, row_name, row, other_name):
-            temp_other_name = other_name
-            temp = row
-            if fm_df.loc[other_name, 'Z'] < temp['Z'] or fm_df.loc[
-                         other_name, 'Y'] < temp['Y'] or fm_df.loc[
-                         other_name, 'X'] < temp['X']:
-                temp_other_name = row_name
-                temp = fm_df.loc[other_name]
-
-            if fm_df.loc[temp_other_name, 'Zs'] > temp['Zs_end'] or fm_df.loc[
-                temp_other_name, 'Ys'] > temp['Ys_end'] or fm_df.loc[
-                temp_other_name, 'Xs'] > temp['Xs_end']:
-                cols_to_zero(dest, row_name)
-                return
-
             dest.loc[row_name, 'Z_from'] = max(fm_df.loc[other_name, 'Zs'],
                                                row['Zs']) - row['Zs']
             dest.loc[row_name, 'Z_to'] = min(fm_df.loc[other_name, 'Zs_end'],
@@ -310,6 +296,12 @@ class FileMatrix:
                                                row['Xs']) - row['Xs']
             dest.loc[row_name, 'X_to'] = min(fm_df.loc[other_name, 'Xs_end'],
                                              row['Xs_end']) - row['Xs']
+
+            if dest.loc[row_name, 'Z_from'] > dest.loc[row_name, 'Z_to'] or \
+                    dest.loc[row_name, 'Y_from'] > dest.loc[row_name, 'Y_to']\
+                or dest.loc[row_name, 'X_from'] > dest.loc[row_name, 'X_to']:
+                cols_to_zero(dest, row_name)
+
 
         def cols_to_zero(dest, row_name):
             cols = ['Z_from', 'Z_to', 'Y_from', 'Y_to', 'X_from', 'X_to']
