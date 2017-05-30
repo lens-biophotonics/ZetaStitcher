@@ -69,52 +69,6 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse(a_roi, b_roi):
-    """Fuse two overlapping regions.
-
-    Fuses `a_roi` and `b_roi` along Y applying a sinusoidal smoothing. The
-    passed arrays must have equal shapes.
-
-    Parameters
-    ----------
-    a_roi : :class:`numpy.ndarray`
-    b_roi : :class:`numpy.ndarray`
-    """
-    if a_roi.shape != b_roi.shape:
-        raise ValueError(
-            'ROI shapes must be equal. a: {}, b: {}'.format(
-                a_roi.shape, b_roi.shape))
-
-    dtype = a_roi.dtype
-    a_roi = a_roi.astype(np.float32, copy=False)
-    b_roi = b_roi.astype(np.float32, copy=False)
-
-    output_height = a_roi.shape[-2]
-
-    rad = np.linspace(0.0, np.pi, output_height, dtype=np.float32)
-    alpha = (np.cos(rad) + 1) / 2
-    alpha = alpha[:, np.newaxis]
-
-    fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), dtype)
-    return fused
-
-
-def pad(layer, top_left, stripe_shape):
-    Zs = top_left[0]
-    Xs = top_left[2]
-    pad_left = int(round(Xs))
-    pad_right = stripe_shape[-1] - pad_left - layer.shape[-1]
-
-    pad_top = int(round(Zs))
-    pad_bottom = stripe_shape[0] - pad_top - layer.shape[0]
-
-    pad_tuples = list((0, 0) for i in layer.shape)
-    pad_tuples[0] = (pad_top, pad_bottom)
-    pad_tuples[-1] = (pad_left, pad_right)
-
-    return np.pad(layer, pad_tuples, 'constant')
-
-
 def fuse_queue(q, output_shape):
     """Fuses a queue of images along Y, optionally applying padding.
 
