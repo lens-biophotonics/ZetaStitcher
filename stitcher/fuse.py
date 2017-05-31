@@ -1,4 +1,7 @@
+import math
 import numpy as np
+
+from functools import lru_cache
 
 
 def flatten(my_list):
@@ -8,6 +11,62 @@ def flatten(my_list):
 def to_dtype(x, dtype):
     x = np.rint(x) if np.issubdtype(dtype, np.integer) else x
     return x.astype(dtype, copy=False)
+
+
+@lru_cache()
+def squircle_alpha(height, width):
+    squircle = np.zeros((height, width))
+    ratio = width / height
+    a = width // 2
+    b = height // 2
+    grid = np.vstack(np.meshgrid(np.linspace(0, b - 1, b),
+                                 np.linspace(0, a - 1, a))).reshape(2, -1).T
+    grid = grid.astype(np.int)
+    N = max(a, b)
+    ps = np.logspace(np.log10(2), np.log10(50), N)
+    # ps = np.ones(N) * 2
+    alpha = np.linspace(0, 1, N)
+
+    if a > b:
+        dra = a / N
+        ras = np.arange(0, a, dra) + 1
+        rbs = ras / ratio
+        drb = dra / ratio
+    else:
+        drb = b / N
+        rbs = np.arange(0, b, drb) + 1
+        ras = rbs * ratio
+        dra = drb * ratio
+
+    counter = 0
+    for y, x in grid:
+        j = x / dra
+        k = y / drb
+        i = int(max(j, k))
+        for n in range(0, N - i):
+            ii = i + n
+            try:
+                p = ps[ii]
+                ra = ras[ii]
+                rb = rbs[ii]
+            except IndexError:
+                break
+
+            constant = math.pow(x / ra, p) + math.pow(y / rb, p)
+
+            if constant < 1:
+                break
+
+        squircle[y + b, x + a] = alpha[ii] ** 2
+        counter += 1
+
+    squircle[:b, a:] = np.flipud(squircle[b:, a:])
+    squircle[:, :a] = np.fliplr(squircle[:, a:])
+
+    squircle /= np.amax(squircle)
+    squircle = 1 - squircle
+
+    return squircle
 
 
 def fuse(a_roi, b_roi):
@@ -99,15 +158,7 @@ def fuse_queue(q, output_shape):
         z = np.unique(z)
         z = np.sort(z)
 
-        height = layer.shape[-2]
-        width = layer.shape[-1]
-
-        grid = np.vstack(
-            np.meshgrid(np.linspace(1, height, height),
-                        np.linspace(1, width, width))).reshape(2, -1).T
-        xy_weights = np.array(
-            [min(x, y, width - x, height - y) ** 0.5 for y, x in grid])
-        xy_weights = xy_weights.reshape(width, -1).T
+        xy_weights = squircle_alpha(*layer.shape[-2::])
 
         for z_from, z_to in zip(z, z[1::]):
             sums = np.copy(xy_weights)
@@ -121,11 +172,8 @@ def fuse_queue(q, output_shape):
                 if not area:
                     continue
 
-                grid = np.vstack(
-                    np.meshgrid(np.linspace(1, height, height),
-                                np.linspace(1, width, width))).reshape(2, -1).T
-                distance_from_border = [min(x, y) ** 0.5 for y, x in grid]
-                w = np.array(distance_from_border).reshape(width, -1).T
+                # FIXME: pass size of overlapping tile
+                w = squircle_alpha(*layer.shape[-2::])[:height, :width]
 
                 if row.X_from == 0:
                     w = np.fliplr(w)
