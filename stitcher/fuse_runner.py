@@ -15,6 +15,11 @@ from .fuse import fuse_queue
 from .numbers import numbers
 
 
+def to_dtype(x, dtype):
+    x = np.rint(x) if np.issubdtype(dtype, np.integer) else x
+    return x.astype(dtype, copy=False)
+
+
 class FuseRunner(object):
     def __init__(self, input_file=None):
         self.input_file = input_file  #: input file or folder
@@ -44,6 +49,8 @@ class FuseRunner(object):
         for index, row in self.fm.data_frame.iterrows():
             with InputFile(os.path.join(self.path, index)) as f:
                 layer = np.copy(f.whole())
+                dtype = layer.dtype
+                layer = layer.astype(np.float32, copy=False)
 
             cx = layer.shape[-1] // 2
             cy = layer.shape[-2] // 2 + 10
@@ -86,7 +93,7 @@ class FuseRunner(object):
         if multi_channel:
             fused_xy = np.moveaxis(fused_xy, -3, -1)
 
-        tiff.imsave('fused_xy.tiff', fused_xy.astype(np.int8))
+        tiff.imsave('fused_xy.tiff', to_dtype(fused_xy, dtype))
 
 
 def parse_args():
