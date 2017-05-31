@@ -38,9 +38,6 @@ class FuseRunner(object):
         self.fm = FileMatrix(input_file)
 
     def run(self):
-        def rint(x):
-            return int(round(x))
-
         df = self.fm.data_frame
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
