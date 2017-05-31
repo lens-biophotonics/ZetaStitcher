@@ -41,38 +41,32 @@ class FuseRunner(object):
             df[key] -= df[key].min()
 
         q = Queue()
-        for group in self.fm.tiles_along_Y:
-            group = group.copy()
+        for index, row in self.fm.data_frame.iterrows():
+            with InputFile(os.path.join(self.path, index)) as f:
+                layer = np.copy(f.whole())
 
-            tile_generator = group.itertuples()
+            cx = layer.shape[-1] // 2
+            cy = layer.shape[-2] // 2 + 10
+            x = cx - 100
+            xstr = re.search(r'\d+', index).group()
+            for l in xstr:
+                x_end = x + 30
+                layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                x = x_end + 5
 
-            for tile in tile_generator:
-                with InputFile(os.path.join(self.path, tile.Index)) as f:
-                    layer = np.copy(f.whole())
-
-                cx = layer.shape[-1] // 2
-                cy = layer.shape[-2] // 2 + 10
-                x = cx - 100
-                xstr = re.search(r'\d+', tile.Index).group()
+            for f in range(0, layer.shape[0]):
+                x = cx - 120
+                xstr = str(f)
                 for l in xstr:
                     x_end = x + 30
-                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                    layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                        numbers[int(l)]
                     x = x_end + 5
 
-                for f in range(0, layer.shape[0]):
-                    x = cx - 120
-                    xstr = str(f)
-                    # xstr = str(z_frame)
-                    for l in xstr:
-                        x_end = x + 30
-                        layer[f, ..., cy + 55:cy + 105, x:x_end] = \
-                            numbers[int(l)]
-                        x = x_end + 5
+            top_left = [row.Zs, row.Ys, row.Xs]
+            overlaps = self.fm.overlaps(index)
 
-                top_left = [tile.Zs, tile.Ys, tile.Xs]
-                overlaps = [tile.overlap_top, tile.overlap_bottom,
-                            tile.overlap_left, tile.overlap_right]
-                q.put([layer, top_left, overlaps])
+            q.put([layer, top_left, overlaps])
 
         q.put([None, None, None])  # close queue
 
@@ -83,7 +77,7 @@ class FuseRunner(object):
 
         fused_xy = fuse_queue(q, output_shape)
 
-        with InputFile(tile.Index) as f:
+        with InputFile(index) as f:
             if f.nchannels > 1:
                 multi_channel = True
             else:
@@ -92,7 +86,7 @@ class FuseRunner(object):
         if multi_channel:
             fused_xy = np.moveaxis(fused_xy, -3, -1)
 
-        tiff.imsave('fused_xy.tiff', fused_xy)
+        tiff.imsave('fused_xy.tiff', fused_xy.astype(np.int8))
 
 
 def parse_args():
