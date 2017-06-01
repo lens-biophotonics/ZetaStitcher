@@ -109,10 +109,13 @@ def fuse_queue(q, output_shape):
 
         xy_weights = squircle_alpha(*layer.shape[-2::])
 
-        for z_from, z_to in zip(z, z[1::]):
+        for zfrom, zto in zip(z, z[1::]):
+            if zfrom > z_to or zto < z_from:
+                continue
+
             sums = np.copy(xy_weights)
             condition = (
-                (overlaps['Z_from'] <= z_from) & (z_to <= (overlaps['Z_to'])))
+                (overlaps['Z_from'] <= zfrom) & (zto <= (overlaps['Z_to'])))
 
             for _, row in overlaps[condition].iterrows():
                 width = row.X_to - row.X_from
@@ -133,13 +136,13 @@ def fuse_queue(q, output_shape):
                                         row.X_from:row.X_to]
                 sums[xy_index] += w
 
-            layer[:z_to - z_from, ...] *= (xy_weights / sums)
+            layer[zfrom - z_from:zto - z_to, ...] *= (xy_weights / sums)
 
         layer[..., -2:, :] = 255
         layer[..., -2:] = 255
 
-        stripe_roi_index = np.index_exp[
-                           z_from:z_to, ..., y_from:y_to, x_from:x_to]
+        stripe_roi_index = np.index_exp[:z_to - z_from, ..., y_from:y_to,
+                                        x_from:x_to]
         stripe[stripe_roi_index] += layer
 
         q.task_done()

@@ -26,6 +26,9 @@ class FuseRunner(object):
         self.fm = None  #: :class:`FileMatrix`
         self.path = None
 
+        self.zmin = 0
+        self.zmax = None
+
         self._load_df()
 
     def _load_df(self):
@@ -45,7 +48,19 @@ class FuseRunner(object):
         q = Queue()
         for index, row in self.fm.data_frame.iterrows():
             with InputFile(os.path.join(self.path, index)) as f:
-                layer = np.copy(f.whole())
+                z_from = self.zmin - row.Zs
+                if z_from < 0:
+                    z_from = 0
+
+                if self.zmax is None:
+                    z_to = row.nfrms
+                else:
+                    z_to = z_from + self.zmax - self.zmin
+
+                if z_to - z_from <= 0:
+                    continue
+
+                layer = np.copy(f.layer(z_from, z_to))
                 dtype = layer.dtype
                 layer = layer.astype(np.float32, copy=False)
 
@@ -60,14 +75,14 @@ class FuseRunner(object):
 
             for f in range(0, layer.shape[0]):
                 x = cx - 120
-                xstr = str(f)
+                xstr = str(z_from + f)
                 for l in xstr:
                     x_end = x + 30
                     layer[f, ..., cy + 55:cy + 105, x:x_end] = \
                         numbers[int(l)]
                     x = x_end + 5
 
-            top_left = [row.Zs, row.Ys, row.Xs]
+            top_left = [row.Zs + z_from, row.Ys, row.Xs]
             overlaps = self.fm.overlaps(index)
 
             q.put([layer, top_left, overlaps])
@@ -75,7 +90,11 @@ class FuseRunner(object):
         q.put([None, None, None])  # close queue
 
         output_shape = list(layer.shape)
-        output_shape[0] = self.fm.full_thickness
+        full_thickness = self.fm.full_thickness
+        if self.zmax is not None:
+            full_thickness -= (full_thickness - self.zmax)
+        full_thickness -= self.zmin
+        output_shape[0] = full_thickness
         output_shape[-2] = self.fm.full_height
         output_shape[-1] = self.fm.full_width
 
@@ -101,12 +120,20 @@ def parse_args():
 
     parser.add_argument('input_file', help='input file (.json) or folder')
 
+    parser.add_argument('--zmin', type=int, default=0)
+    parser.add_argument('--zmax', type=int, default=None, help='noninclusive')
+
     return parser.parse_args(sys.argv[1:])
 
 
 def main():
     arg = parse_args()
     fr = FuseRunner(arg.input_file)
+
+    keys = ['zmin', 'zmax']
+    for k in keys:
+        setattr(fr, k, getattr(arg, k))
+
     fr.run()
 
 
