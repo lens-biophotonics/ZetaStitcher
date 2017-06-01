@@ -2,8 +2,10 @@ import re
 import sys
 import os.path
 import argparse
+import threading
 
 from queue import Queue
+from functools import lru_cache
 
 import numpy as np
 
@@ -40,26 +42,48 @@ class FuseRunner(object):
         self.path, file_name = os.path.split(input_file)
         self.fm = FileMatrix(input_file)
 
+    @property
+    @lru_cache()
+    def output_shape(self):
+        thickness = self.fm.full_thickness
+        if self.zmax is not None:
+            thickness -= (thickness - self.zmax)
+        thickness -= self.zmin
+
+        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+            output_shape = list(f.shape)
+
+        output_shape[0] = thickness
+        output_shape[-2] = self.fm.full_height
+        output_shape[-1] = self.fm.full_width
+
+        return output_shape
+
     def run(self):
         df = self.fm.data_frame
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
 
+        fused = np.zeros(self.output_shape, dtype=np.float32)
         q = Queue()
+
+        t = threading.Thread(target=fuse_queue, args=(q, fused))
+        t.start()
+
         for index, row in self.fm.data_frame.iterrows():
+            z_from = self.zmin - row.Zs
+            if z_from < 0:
+                z_from = 0
+
+            if self.zmax is None:
+                z_to = row.nfrms
+            else:
+                z_to = z_from + self.zmax - self.zmin
+
+            if z_to - z_from <= 0:
+                continue
+
             with InputFile(os.path.join(self.path, index)) as f:
-                z_from = self.zmin - row.Zs
-                if z_from < 0:
-                    z_from = 0
-
-                if self.zmax is None:
-                    z_to = row.nfrms
-                else:
-                    z_to = z_from + self.zmax - self.zmin
-
-                if z_to - z_from <= 0:
-                    continue
-
                 layer = np.copy(f.layer(z_from, z_to))
                 dtype = layer.dtype
                 layer = layer.astype(np.float32, copy=False)
@@ -89,16 +113,7 @@ class FuseRunner(object):
 
         q.put([None, None, None])  # close queue
 
-        output_shape = list(layer.shape)
-        full_thickness = self.fm.full_thickness
-        if self.zmax is not None:
-            full_thickness -= (full_thickness - self.zmax)
-        full_thickness -= self.zmin
-        output_shape[0] = full_thickness
-        output_shape[-2] = self.fm.full_height
-        output_shape[-1] = self.fm.full_width
-
-        fused_xy = fuse_queue(q, output_shape)
+        t.join()  # wait for fuse thread to finish
 
         with InputFile(index) as f:
             if f.nchannels > 1:
@@ -107,9 +122,9 @@ class FuseRunner(object):
                 multi_channel = False
 
         if multi_channel:
-            fused_xy = np.moveaxis(fused_xy, -3, -1)
+            fused = np.moveaxis(fused, -3, -1)
 
-        tiff.imsave('fused_xy.tiff', to_dtype(fused_xy, dtype))
+        tiff.imsave('fused_xy.tiff', to_dtype(fused, dtype))
 
 
 def parse_args():

@@ -64,7 +64,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, output_shape):
+def fuse_queue(q, dest):
     """Fuses a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -73,20 +73,10 @@ def fuse_queue(q, output_shape):
         A queue containing elements in the form ``[layer, top_left, overlaps]``
         where `layer` is a :class:`numpy.ndarray`, `top_left` is a list
         specifying the image position in the form ``[Z, Y, X]``, `overlaps`
-        is a list in the form ``[top, bottom, left, right]`` specifying
-        overlaps with adjacent tiles.
-    output_shape : tuple of ints
-        Final shape of the fused queue.
-
-    Returns
-    -------
-    stripe : :class:`numpy.ndarray`
-        The fused stripe.
+        is a :class:`pandas.DataFrame` specifying overlaps with adjacent tiles.
+    dest : :class:`numpy.ndarray`
+        Destination array.
     """
-
-    dtype = q.queue[0][0].dtype
-
-    stripe = np.zeros(output_shape, dtype=dtype)
 
     while True:
         layer, pos, overlaps = q.get()
@@ -141,10 +131,8 @@ def fuse_queue(q, output_shape):
         layer[..., -2:, :] = 255
         layer[..., -2:] = 255
 
-        stripe_roi_index = np.index_exp[:z_to - z_from, ..., y_from:y_to,
+        output_roi_index = np.index_exp[:z_to - z_from, ..., y_from:y_to,
                                         x_from:x_to]
-        stripe[stripe_roi_index] += layer
+        dest[output_roi_index] += layer
 
         q.task_done()
-
-    return stripe
