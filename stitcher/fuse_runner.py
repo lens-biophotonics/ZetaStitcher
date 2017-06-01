@@ -31,6 +31,8 @@ class FuseRunner(object):
         self.zmin = 0
         self.zmax = None
 
+        self.output_filename = None
+
         self._load_df()
 
     def _load_df(self):
@@ -124,7 +126,7 @@ class FuseRunner(object):
         if multi_channel:
             fused = np.moveaxis(fused, -3, -1)
 
-        tiff.imsave('fused_xy.tiff', to_dtype(fused, dtype))
+        tiff.imsave(self.output_filename, to_dtype(fused, dtype))
 
 
 def parse_args():
@@ -134,6 +136,9 @@ def parse_args():
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_file', help='input file (.json) or folder')
+
+    parser.add_argument('-o', type=str, default='fused.tif',
+                        dest='output_filename', help='output file name')
 
     parser.add_argument('--zmin', type=int, default=0)
     parser.add_argument('--zmax', type=int, default=None, help='noninclusive')
@@ -145,7 +150,7 @@ def main():
     arg = parse_args()
     fr = FuseRunner(arg.input_file)
 
-    keys = ['zmin', 'zmax']
+    keys = ['zmin', 'zmax', 'output_filename']
     for k in keys:
         setattr(fr, k, getattr(arg, k))
 
