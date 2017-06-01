@@ -33,6 +33,8 @@ class FuseRunner(object):
 
         self.output_filename = None
 
+        self._is_multichannel = None
+
         self._load_df()
 
     def _load_df(self):
@@ -43,6 +45,16 @@ class FuseRunner(object):
 
         self.path, file_name = os.path.split(input_file)
         self.fm = FileMatrix(input_file)
+
+    @property
+    @lru_cache()
+    def is_multichannel(self):
+        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+            if f.nchannels > 1:
+                multichannel = True
+            else:
+                multichannel = False
+        return multichannel
 
     @property
     @lru_cache()
@@ -117,13 +129,7 @@ class FuseRunner(object):
 
         t.join()  # wait for fuse thread to finish
 
-        with InputFile(index) as f:
-            if f.nchannels > 1:
-                multi_channel = True
-            else:
-                multi_channel = False
-
-        if multi_channel:
+        if self.is_multichannel:
             fused = np.moveaxis(fused, -3, -1)
 
         tiff.imsave(self.output_filename, to_dtype(fused, dtype))
