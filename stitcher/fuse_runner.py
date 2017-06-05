@@ -7,8 +7,8 @@ import threading
 from queue import Queue
 from functools import lru_cache
 
+import psutil
 import numpy as np
-
 import skimage.external.tifffile as tiff
 
 from .filematrix import FileMatrix
@@ -18,7 +18,8 @@ from .numbers import numbers
 
 
 def to_dtype(x, dtype):
-    x = np.rint(x) if np.issubdtype(dtype, np.integer) else x
+    if np.issubdtype(dtype, np.integer):
+        np.rint(x, x)
     return x.astype(dtype, copy=False)
 
 
@@ -57,7 +58,6 @@ class FuseRunner(object):
         return multichannel
 
     @property
-    @lru_cache()
     def output_shape(self):
         thickness = self.fm.full_thickness
         if self.zmax is not None:
@@ -78,61 +78,85 @@ class FuseRunner(object):
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
 
-        fused = np.zeros(self.output_shape, dtype=np.float32)
-        q = Queue()
+        ram = psutil.virtual_memory().total
 
-        t = threading.Thread(target=fuse_queue, args=(q, fused))
-        t.start()
+        # size in bytes of an xy plane (including channels) (float32)
+        xy_size = np.asscalar(np.prod(self.output_shape[1::]) * 4)
+        n_frames_in_ram = int(ram / xy_size / 1.5)
 
-        for index, row in self.fm.data_frame.iterrows():
-            z_from = self.zmin - row.Zs
-            if z_from < 0:
-                z_from = 0
+        n_loops = self.output_shape[0] // n_frames_in_ram
 
-            if self.zmax is None:
-                z_to = row.nfrms
-            else:
-                z_to = z_from + self.zmax - self.zmin
+        partial_thickness = [n_frames_in_ram for i in range(0, n_loops)]
+        partial_thickness += [self.output_shape[0] % n_frames_in_ram]
 
-            if z_to - z_from <= 0:
-                continue
+        try:
+            os.remove(self.output_filename)
+        except FileNotFoundError:
+            pass
 
-            with InputFile(os.path.join(self.path, index)) as f:
-                layer = np.copy(f.layer(z_from, z_to))
-                dtype = layer.dtype
-                layer = layer.astype(np.float32, copy=False)
+        for thickness in partial_thickness:
+            self.zmax = self.zmin + thickness
+            fused = np.zeros(self.output_shape, dtype=np.float32)
+            q = Queue()
 
-            cx = layer.shape[-1] // 2
-            cy = layer.shape[-2] // 2 + 10
-            x = cx - 100
-            xstr = re.search(r'\d+', index).group()
-            for l in xstr:
-                x_end = x + 30
-                layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
-                x = x_end + 5
+            t = threading.Thread(target=fuse_queue, args=(q, fused))
+            t.start()
 
-            for f in range(0, layer.shape[0]):
-                x = cx - 120
-                xstr = str(z_from + f)
+            for index, row in self.fm.data_frame.iterrows():
+                z_from = self.zmin - row.Zs
+                if z_from < 0:
+                    z_from = 0
+
+                if self.zmax is None:
+                    z_to = row.nfrms
+                else:
+                    z_to = z_from + self.zmax - self.zmin
+
+                if z_to > row.nfrms:
+                    z_to = row.nfrms
+
+                if z_to - z_from <= 0:
+                    continue
+
+                with InputFile(os.path.join(self.path, index)) as f:
+                    layer = np.copy(f.layer(z_from, z_to))
+                    dtype = layer.dtype
+                    layer = layer.astype(np.float32, copy=False)
+
+                cx = layer.shape[-1] // 2
+                cy = layer.shape[-2] // 2 + 10
+                x = cx - 100
+                xstr = re.search(r'\d+', index).group()
                 for l in xstr:
                     x_end = x + 30
-                    layer[f, ..., cy + 55:cy + 105, x:x_end] = \
-                        numbers[int(l)]
+                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
                     x = x_end + 5
 
-            top_left = [row.Zs + z_from, row.Ys, row.Xs]
-            overlaps = self.fm.overlaps(index)
+                for f in range(0, layer.shape[0]):
+                    x = cx - 120
+                    xstr = str(z_from + f)
+                    for l in xstr:
+                        x_end = x + 30
+                        layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                            numbers[int(l)]
+                        x = x_end + 5
 
-            q.put([layer, top_left, overlaps])
+                top_left = [row.Zs + z_from, row.Ys, row.Xs]
+                overlaps = self.fm.overlaps(index)
 
-        q.put([None, None, None])  # close queue
+                q.put([layer, top_left, overlaps])
 
-        t.join()  # wait for fuse thread to finish
+            q.put([None, None, None])  # close queue
 
-        if self.is_multichannel:
-            fused = np.moveaxis(fused, -3, -1)
+            t.join()  # wait for fuse thread to finish
 
-        tiff.imsave(self.output_filename, to_dtype(fused, dtype))
+            if self.is_multichannel:
+                fused = np.moveaxis(fused, -3, -1)
+
+            fused = to_dtype(fused, dtype)
+            tiff.imsave(self.output_filename, fused, append=True, bigtiff=True)
+
+            self.zmin += thickness
 
 
 def parse_args():

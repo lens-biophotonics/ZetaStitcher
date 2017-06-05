@@ -2,6 +2,7 @@ dcimg
 networkx
 numpy
 pandas
+psutil
 pyfftw
 scipy
 scikit-image
