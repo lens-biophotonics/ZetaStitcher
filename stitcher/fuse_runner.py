@@ -114,20 +114,20 @@ class FuseRunner(object):
 
             for index, row in self.fm.data_frame.iterrows():
                 z_from = self.zmin - row.Zs
-                if z_from < 0:
-                    z_from = 0
 
                 if self.zmax is None:
                     z_to = row.nfrms
                 else:
-                    z_to = z_from + self.zmax - self.zmin
+                    z_to = self.zmax - row.Zs
 
                 if z_to > row.nfrms:
                     z_to = row.nfrms
 
-                if z_to - z_from <= 0:
+                if z_to <= 0:
                     continue
 
+                if z_from < 0:
+                    z_from = 0
                 with InputFile(os.path.join(self.path, index)) as f:
                     layer = np.copy(f.layer(z_from, z_to))
                     layer = layer.astype(np.float32, copy=False)
