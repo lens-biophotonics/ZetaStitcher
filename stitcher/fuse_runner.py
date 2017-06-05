@@ -49,6 +49,12 @@ class FuseRunner(object):
 
     @property
     @lru_cache()
+    def dtype(self):
+        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+            return np.dtype(f.dtype)
+
+    @property
+    @lru_cache()
     def is_multichannel(self):
         with InputFile(self.fm.data_frame.iloc[0].name) as f:
             if f.nchannels > 1:
@@ -77,6 +83,10 @@ class FuseRunner(object):
         df = self.fm.data_frame
         for key in ['Xs', 'Ys', 'Zs']:
             df[key] -= df[key].min()
+
+        total_byte_size = np.asscalar(np.prod(self.output_shape)
+                                      * self.dtype.itemsize)
+        bigtiff=True if total_byte_size > 2 ** 32 else False
 
         ram = psutil.virtual_memory().total
 
@@ -120,7 +130,6 @@ class FuseRunner(object):
 
                 with InputFile(os.path.join(self.path, index)) as f:
                     layer = np.copy(f.layer(z_from, z_to))
-                    dtype = layer.dtype
                     layer = layer.astype(np.float32, copy=False)
 
                 cx = layer.shape[-1] // 2
@@ -153,8 +162,9 @@ class FuseRunner(object):
             if self.is_multichannel:
                 fused = np.moveaxis(fused, -3, -1)
 
-            fused = to_dtype(fused, dtype)
-            tiff.imsave(self.output_filename, fused, append=True, bigtiff=True)
+            fused = to_dtype(fused, self.dtype)
+            tiff.imsave(self.output_filename, fused, append=True,
+                        bigtiff=bigtiff)
 
             self.zmin += thickness
 

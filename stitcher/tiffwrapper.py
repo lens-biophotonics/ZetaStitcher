@@ -38,6 +38,12 @@ class TiffWrapper(object):
         except IndexError:
             return 1
 
+    @property
+    def dtype(self):
+        if self.tfile.is_rgb:
+            return np.uint8
+        return None
+
     def open(self, file_name=None):
         if file_name is not None:
             self.file_name = file_name
