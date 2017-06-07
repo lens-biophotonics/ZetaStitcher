@@ -113,8 +113,6 @@ class FuseRunner(object):
             t.start()
 
             for index, row in self.fm.data_frame.iterrows():
-                z_from = self.zmin - row.Zs
-
                 if self.zmax is None:
                     z_to = row.nfrms
                 else:
@@ -126,8 +124,13 @@ class FuseRunner(object):
                 if z_to <= 0:
                     continue
 
+                z_from = self.zmin - row.Zs
+
                 if z_from < 0:
                     z_from = 0
+
+                if z_from >= z_to:
+                    continue
                 with InputFile(os.path.join(self.path, index)) as f:
                     layer = np.copy(f.layer(z_from, z_to))
                     layer = layer.astype(np.float32, copy=False)
@@ -150,8 +153,16 @@ class FuseRunner(object):
                             numbers[int(l)]
                         x = x_end + 5
 
-                top_left = [row.Zs + z_from, row.Ys, row.Xs]
-                overlaps = self.fm.overlaps(index)
+                top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
+                overlaps = self.fm.overlaps(index).copy()
+                overlaps = overlaps.loc[
+                    (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
+                ]
+
+                overlaps['Z_from'] -= z_from
+                overlaps['Z_to'] -= z_from
+
+                overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
                 q.put([layer, top_left, overlaps])
 

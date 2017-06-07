@@ -99,13 +99,19 @@ def fuse_queue(q, dest):
 
         xy_weights = squircle_alpha(*layer.shape[-2::])
 
-        for zfrom, zto in zip(z, z[1::]):
-            if zfrom > z_to or zto < z_from:
-                continue
+        z_list = list(zip(z, z[1::]))
+        try:
+            z_list += [(z[-1], None)]
+        except IndexError:
+            pass
 
+        for zfrom, zto in z_list:
             sums = np.copy(xy_weights)
-            condition = (
-                (overlaps['Z_from'] <= zfrom) & (zto <= (overlaps['Z_to'])))
+            condition = (overlaps['Z_from'] <= zfrom)
+            if zto is not None:
+                condition = condition & (zto <= (overlaps['Z_to']))
+            else:
+                condition = condition & (overlaps['Z_to'] >= z_to)
 
             for _, row in overlaps[condition].iterrows():
                 width = row.X_to - row.X_from
@@ -126,12 +132,16 @@ def fuse_queue(q, dest):
                                         row.X_from:row.X_to]
                 sums[xy_index] += w
 
-            layer[zfrom - z_from:zto - z_to, ...] *= (xy_weights / sums)
+            if zto is None:
+                layer_index = np.index_exp[zfrom:, ...]
+            else:
+                layer_index = np.index_exp[zfrom:zto, ...]
+            layer[layer_index] *= (xy_weights / sums)
 
         layer[..., -2:, :] = 255
         layer[..., -2:] = 255
 
-        output_roi_index = np.index_exp[:z_to - z_from, ..., y_from:y_to,
+        output_roi_index = np.index_exp[z_from:z_to, ..., y_from:y_to,
                                         x_from:x_to]
         dest[output_roi_index] += layer
 
