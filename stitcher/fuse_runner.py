@@ -107,7 +107,7 @@ class FuseRunner(object):
         for thickness in partial_thickness:
             self.zmax = self.zmin + thickness
             fused = np.zeros(self.output_shape, dtype=np.float32)
-            q = Queue()
+            q = Queue(maxsize=20)
 
             t = threading.Thread(target=fuse_queue, args=(q, fused))
             t.start()
