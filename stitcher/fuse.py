@@ -64,7 +64,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest):
+def fuse_queue(q, dest, debug=False):
     """Fuses a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -76,6 +76,8 @@ def fuse_queue(q, dest):
         is a :class:`pandas.DataFrame` specifying overlaps with adjacent tiles.
     dest : :class:`numpy.ndarray`
         Destination array.
+    debug: bool
+        Whether to overlay debug information (tile edges)
     """
 
     while True:
@@ -138,8 +140,9 @@ def fuse_queue(q, dest):
                 layer_index = np.index_exp[zfrom:zto, ...]
             layer[layer_index] *= (xy_weights / sums)
 
-        layer[..., -2:, :] = 255
-        layer[..., -2:] = 255
+        if debug:
+            layer[..., -2:, :] = 255
+            layer[..., -2:] = 255
 
         output_roi_index = np.index_exp[z_from:z_to, ..., y_from:y_to,
                                         x_from:x_to]

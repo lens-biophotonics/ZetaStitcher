@@ -31,7 +31,7 @@ class FuseRunner(object):
 
         self.zmin = 0
         self.zmax = None
-
+        self.debug = False
         self.output_filename = None
 
         self._is_multichannel = None
@@ -109,7 +109,8 @@ class FuseRunner(object):
             fused = np.zeros(self.output_shape, dtype=np.float32)
             q = Queue(maxsize=20)
 
-            t = threading.Thread(target=fuse_queue, args=(q, fused))
+            t = threading.Thread(target=fuse_queue,
+                                 args=(q, fused, self.debug))
             t.start()
 
             for index, row in self.fm.data_frame.iterrows():
@@ -135,23 +136,8 @@ class FuseRunner(object):
                     layer = np.copy(f.layer(z_from, z_to))
                     layer = layer.astype(np.float32, copy=False)
 
-                cx = layer.shape[-1] // 2
-                cy = layer.shape[-2] // 2 + 10
-                x = cx - 100
-                xstr = re.search(r'\d+', index).group()
-                for l in xstr:
-                    x_end = x + 30
-                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
-                    x = x_end + 5
-
-                for f in range(0, layer.shape[0]):
-                    x = cx - 120
-                    xstr = str(z_from + f)
-                    for l in xstr:
-                        x_end = x + 30
-                        layer[f, ..., cy + 55:cy + 105, x:x_end] = \
-                            numbers[int(l)]
-                        x = x_end + 5
+                if self.debug:
+                    self.overlay_debug(layer, index, z_from)
 
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
                 overlaps = self.fm.overlaps(index).copy()
@@ -179,6 +165,26 @@ class FuseRunner(object):
 
             self.zmin += thickness
 
+    def overlay_debug(self, layer, index, z_from):
+        cx = layer.shape[-1] // 2
+        cy = layer.shape[-2] // 2 + 10
+        x = cx - 100
+        for xstr in re.findall(r'\d+', index):
+            for l in xstr:
+                x_end = x + 30
+                layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                x = x_end + 5
+            x = x_end + 15
+
+        for f in range(0, layer.shape[0]):
+            x = cx - 120
+            xstr = str(z_from + f)
+            for l in xstr:
+                x_end = x + 30
+                layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                    numbers[int(l)]
+                x = x_end + 5
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -191,6 +197,9 @@ def parse_args():
     parser.add_argument('-o', type=str, default='fused.tif',
                         dest='output_filename', help='output file name')
 
+    parser.add_argument('-d', dest='debug', action='store_true',
+                        help='overlay debug info')
+
     parser.add_argument('--zmin', type=int, default=0)
     parser.add_argument('--zmax', type=int, default=None, help='noninclusive')
 
@@ -201,7 +210,7 @@ def main():
     arg = parse_args()
     fr = FuseRunner(arg.input_file)
 
-    keys = ['zmin', 'zmax', 'output_filename']
+    keys = ['zmin', 'zmax', 'output_filename', 'debug']
     for k in keys:
         setattr(fr, k, getattr(arg, k))
 
