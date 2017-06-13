@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
+from scipy.optimize import minimize
+from scipy.ndimage.interpolation import shift
+
 from .inputfile import InputFile
 
 
@@ -149,6 +152,7 @@ class FileMatrix:
 
         self._compute_shift_vectors()
         self._compute_absolute_positions_initial_guess()
+        self._compute_absolute_position_least_square_global_optimization()
         self._compute_overlaps()
 
     def _load_from_flist(self, flist):
@@ -229,6 +233,68 @@ class FileMatrix:
         fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
         fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
         fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
+
+    def objective_function(self, x, shape, p_ab_1, p_ab_2):
+        t = np.reshape(x, shape)
+
+        sums = 0
+
+        # add shifts along x
+        shifted = shift(t, (0, -1, 0), cval=np.NaN)
+        sums += np.sum(
+            np.linalg.norm(np.nan_to_num((shifted - t - p_ab_2)), axis=-1)**2)
+
+        # add shifts along y
+        shifted = shift(t, (-1, 0, 0), cval=np.NaN)
+        sums += np.sum(
+            np.linalg.norm(np.nan_to_num((shifted - t - p_ab_1)), axis=-1)**2)
+        return sums
+
+    def _compute_absolute_position_least_square_global_optimization(self):
+        df = self.data_frame
+        sdf = self.stitch_data_frame
+
+        # mosaic size
+        xsize = df['X'].unique().size
+        ysize = df['Y'].unique().size
+
+        idx = df.sort_values(['Z', 'Y', 'X']).index
+
+        # tile coordinates
+        t = np.array(df.loc[idx, ['Zs', 'Ys', 'Xs']])
+        t = t.astype(np.float64, copy=True)
+
+        # shifts along Y
+        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis']]
+        temp = temp[temp['axis'] == 1].loc[idx]
+        p_ab_1 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+
+        # shifts along X
+        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis']]
+        temp = temp[temp['axis'] == 2].loc[idx]
+        p_ab_2 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+
+
+        bounds = [(None, None) for _ in t.flatten()]
+        bounds[0:3] = [(0, 0) for _ in range(0, 3)]
+
+        opt = {'maxiter': 5000, 'disp': True, 'maxfun': 1000000}
+
+        ret = minimize(
+            self.objective_function, t, args=(p_ab_1.shape, p_ab_1, p_ab_2),
+            options=opt, bounds=bounds)
+
+        keys = ['Zs', 'Ys', 'Xs']
+        ret_df = pd.DataFrame(data=ret.x.reshape(-1, 3), index=idx,
+                              columns=keys)
+
+        df[keys] = ret_df
+        df[keys] -= df[keys].min()
+        df[keys] = df[keys].apply(np.round).astype(int)
+
+        df['Xs_end'] = df['Xs'] + df['xsize']
+        df['Ys_end'] = df['Ys'] + df['ysize']
+        df['Zs_end'] = df['Zs'] + df['nfrms']
 
     def _compute_absolute_positions_mst(self):
         fm_df = self.data_frame
