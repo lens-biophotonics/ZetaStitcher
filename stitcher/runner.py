@@ -223,7 +223,8 @@ class Runner(object):
 
         if self.compute_average:
             view = df.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: np.average(x, weights=df.loc[x.index, 'score']))
+                lambda x: np.average(x, weights=df.loc[x.index, 'score']) if
+                    df.loc[x.index, 'score'].sum() != 0 else np.average(x))
         else:
             view = df.groupby(['aname', 'bname', 'axis']).agg(
                 lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name])
