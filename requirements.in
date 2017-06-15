@@ -4,5 +4,6 @@ numpy
 pandas
 psutil
 pyfftw
+pyyaml
 scipy
 scikit-image

@@ -16,6 +16,7 @@ psutil==5.2.2
 pyfftw==0.10.4
 python-dateutil==2.6.0    # via pandas
 pytz==2016.10             # via pandas
+pyyaml==3.12
 scikit-image==0.12.3
 scipy==0.18.1
 six==1.10.0               # via python-dateutil, scikit-image

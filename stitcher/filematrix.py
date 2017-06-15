@@ -5,6 +5,8 @@ import re
 import math
 import logging
 
+import yaml
+
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -71,7 +73,7 @@ class FileMatrix:
         if os.path.isdir(directory):
             self.load_dir(directory)
         elif os.path.isfile(directory):
-            self.load_json(directory)
+            self.load_yaml(directory)
 
     def load_dir(self, dir=None):
         """Look for files in `dir` recursively and populate data structures.
@@ -105,9 +107,10 @@ class FileMatrix:
 
         self._load_from_flist(flist)
 
-    def load_json(self, fname):
+    def load_yaml(self, fname):
         with open(fname, 'r') as f:
-            df = pd.read_json(f.read(), orient='records')
+            y = yaml.load(f)
+        df = pd.DataFrame(y['stitch'])
 
         a = np.concatenate((df['aname'].unique(), df['bname'].unique()))
         a = np.unique(a)

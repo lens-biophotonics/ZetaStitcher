@@ -2,6 +2,9 @@ import queue
 import argparse
 import threading
 
+import json
+import yaml
+
 import numpy as np
 import pandas as pd
 
@@ -261,12 +264,13 @@ class Runner(object):
         for t in threads:
             t.join()
 
-        view = self.aggregate_results()
+        view = self.aggregate_results().reset_index()
 
-        print(view)
-
-        with open('stitch.json', 'w') as f:
-            f.write(view.to_json(orient='records'))
+        with open('stitch.yml', 'w') as f:
+            yaml.dump(
+                {
+                    'stitch': json.loads(view.to_json(orient='records'))
+                }, f, default_flow_style=False)
 
 
 if __name__ == '__main__':

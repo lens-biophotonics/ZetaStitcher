@@ -40,7 +40,7 @@ class FuseRunner(object):
 
     def _load_df(self):
         if os.path.isdir(self.input_file):
-            input_file = os.path.join(self.input_file, 'stitch.json')
+            input_file = os.path.join(self.input_file, 'stitch.yml')
         else:
             input_file = self.input_file
 
@@ -192,7 +192,7 @@ def parse_args():
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>',
         formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('input_file', help='input file (.json) or folder')
+    parser.add_argument('input_file', help='input file (.yml) or folder')
 
     parser.add_argument('-o', type=str, default='fused.tif',
                         dest='output_filename', help='output file name')
