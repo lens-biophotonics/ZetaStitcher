@@ -237,20 +237,20 @@ class FileMatrix:
         fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
         fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
 
-    def objective_function(self, x, shape, p_ab_1, p_ab_2):
-        t = np.reshape(x, shape)
+    def objective_function(self, x, shape, p_ab_1, score_1, p_ab_2, score_2):
+        t = x.reshape(shape)
 
         sums = 0
 
         # add shifts along x
         shifted = shift(t, (0, -1, 0), cval=np.NaN)
-        sums += np.sum(
-            np.linalg.norm(np.nan_to_num((shifted - t - p_ab_2)), axis=-1)**2)
+        norms = np.linalg.norm(np.nan_to_num((shifted - t - p_ab_2)), axis=-1)
+        sums += np.sum(score_2 * norms**2)
 
         # add shifts along y
         shifted = shift(t, (-1, 0, 0), cval=np.NaN)
-        sums += np.sum(
-            np.linalg.norm(np.nan_to_num((shifted - t - p_ab_1)), axis=-1)**2)
+        norms = np.linalg.norm(np.nan_to_num((shifted - t - p_ab_1)), axis=-1)
+        sums += np.sum(score_1 * norms**2)
         return sums
 
     def _compute_absolute_position_least_square_global_optimization(self):
@@ -268,14 +268,16 @@ class FileMatrix:
         t = t.astype(np.float64, copy=True)
 
         # shifts along Y
-        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis']]
+        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis', 'score']]
         temp = temp[temp['axis'] == 1].loc[idx]
         p_ab_1 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+        score_1 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
 
         # shifts along X
-        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis']]
+        temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis', 'score']]
         temp = temp[temp['axis'] == 2].loc[idx]
         p_ab_2 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+        score_2 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
 
 
         bounds = [(None, None) for _ in t.flatten()]
@@ -284,7 +286,8 @@ class FileMatrix:
         opt = {'maxiter': 5000, 'disp': True, 'maxfun': 1000000}
 
         ret = minimize(
-            self.objective_function, t, args=(p_ab_1.shape, p_ab_1, p_ab_2),
+            self.objective_function, t,
+            args=(p_ab_1.shape, p_ab_1, score_1, p_ab_2, score_2),
             options=opt, bounds=bounds)
 
         keys = ['Zs', 'Ys', 'Xs']
