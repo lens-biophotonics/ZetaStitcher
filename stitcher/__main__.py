@@ -2,9 +2,16 @@ import sys
 import argparse
 
 import numpy as np
+import skimage.external.tifffile as tiff
 
 from .normxcorr import normxcorr2_fftw
 from .inputfile import InputFile
+
+
+def to_dtype(x, dtype):
+    x = np.rint(x) if np.issubdtype(dtype, np.integer) else x
+    return x.astype(dtype, copy=False)
+
 
 def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
            max_shift_y=150, max_shift_x=20):
@@ -59,25 +66,51 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     alayer = a.layer(z_min, z_max)
     if axis == 2:
         alayer = np.rot90(alayer, axes=(-1, -2))
-    alayer = alayer[..., -overlap:, :]
+    a_roi = alayer[..., -overlap:, :]
 
     blayer = b.layer_idx(z_frame)
     if axis == 2:
         blayer = np.rot90(blayer, axes=(-1, -2))
-    blayer = blayer[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
+    b_roi = blayer[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
 
-    xcorr = normxcorr2_fftw(alayer, blayer)
+    tiff.imsave('alayer.tiff', a_roi.astype(np.float32))
+    tiff.imsave('blayer.tiff', b_roi.astype(np.float32))
+
+    xcorr = normxcorr2_fftw(a_roi, b_roi)
+    tiff.imsave('xcorr.tiff', xcorr.astype(np.float32))
 
     shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
     score = xcorr[tuple(shift)]
 
     print('shift: ' + str(shift))
-    shift[0] -= max_shift_z
+    z_a = shift[0]
+    shift[0] = max_shift_z - shift[0]
     shift[1] = overlap - shift[1]
     shift[2] -= max_shift_x
 
     print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
 
+    a_roi = alayer[z_a, -shift[1]:, ...]
+    b_roi = np.squeeze(blayer)[0:shift[1], ...]
+
+    dx = shift[2]
+    if dx > 0:
+        a_roi = np.pad(a_roi, ((0, 0), (0, dx)), mode='constant')
+        b_roi = np.pad(b_roi, ((0, 0), (dx, 0)), mode='constant')
+    else:
+        dx *= -1
+        a_roi = np.pad(a_roi, ((0, 0), (dx, 0)), mode='constant')
+        b_roi = np.pad(b_roi, ((0, 0), (0, dx)), mode='constant')
+
+    rad = np.linspace(0.0, np.pi, a_roi.shape[0], dtype=np.float32)
+    alpha = (np.cos(rad) + 1) / 2
+    alpha = alpha[:, np.newaxis]
+
+    fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), alayer.dtype)
+    if axis == 2:
+        fused = np.rot90(fused, axes=(-1, -2), k=3)
+
+    tiff.imsave('fused.tiff', fused.astype(np.float32))
     return shift + [score]
 
 
