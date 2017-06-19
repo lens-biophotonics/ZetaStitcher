@@ -14,7 +14,7 @@ import skimage.external.tifffile as tiff
 from .filematrix import FileMatrix
 from .inputfile import InputFile
 from .fuse import fuse_queue
-from .numbers import numbers
+from .lcd_numbers import numbers
 
 
 def to_dtype(x, dtype):
