@@ -132,7 +132,9 @@ class FuseRunner(object):
 
                 if z_from >= z_to:
                     continue
+
                 with InputFile(os.path.join(self.path, index)) as f:
+                    print('opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
                     layer = np.copy(f.layer(z_from, z_to))
                     layer = layer.astype(np.float32, copy=False)
 
@@ -155,6 +157,7 @@ class FuseRunner(object):
             q.put([None, None, None])  # close queue
 
             t.join()  # wait for fuse thread to finish
+            print('=================================')
 
             if self.is_multichannel:
                 fused = np.moveaxis(fused, -3, -1)
