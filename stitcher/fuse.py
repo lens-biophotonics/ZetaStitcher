@@ -141,8 +141,8 @@ def fuse_queue(q, dest, debug=False):
             layer[layer_index] *= (xy_weights / sums)
 
         if debug:
-            layer[..., -2:, :] = 255
-            layer[..., -2:] = 255
+            layer[..., -2:, :] = 65000
+            layer[..., -2:] = 65000
 
         output_roi_index = np.index_exp[z_from:z_to, ..., y_from:y_to,
                                         x_from:x_to]

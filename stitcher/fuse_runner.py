@@ -172,7 +172,10 @@ class FuseRunner(object):
         for xstr in re.findall(r'\d+', index):
             for l in xstr:
                 x_end = x + 30
-                layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                try:
+                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                except ValueError:
+                    break
                 x = x_end + 5
             x = x_end + 15
 
@@ -181,8 +184,11 @@ class FuseRunner(object):
             xstr = str(z_from + f)
             for l in xstr:
                 x_end = x + 30
-                layer[f, ..., cy + 55:cy + 105, x:x_end] = \
-                    numbers[int(l)]
+                try:
+                    layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                        numbers[int(l)]
+                except ValueError:
+                    break
                 x = x_end + 5
 
 

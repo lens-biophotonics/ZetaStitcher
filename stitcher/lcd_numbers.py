@@ -1,9 +1,9 @@
 import numpy as np
 
 numbers = []
-fill_value = 255
+fill_value = 65535
 
-canvas = np.zeros((50, 30), dtype=np.uint8)
+canvas = np.zeros((50, 30), dtype=np.uint16)
 cx = canvas.shape[1] // 2
 cy = canvas.shape[0] // 2
 
