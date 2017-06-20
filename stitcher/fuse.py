@@ -138,7 +138,8 @@ def fuse_queue(q, dest, debug=False):
                 layer_index = np.index_exp[zfrom:, ...]
             else:
                 layer_index = np.index_exp[zfrom:zto, ...]
-            layer[layer_index] *= (xy_weights / sums)
+            with np.errstate(invalid='ignore'):
+                layer[layer_index] *= (xy_weights / sums)
 
         if debug:
             layer[..., -2:, :] = 65000
