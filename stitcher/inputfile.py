@@ -97,8 +97,8 @@ class InputFile(object):
             except AttributeError:
                 pass
 
-    def layer(self, start_frame, end_frame=None, dtype=None):
-        """Return a layer, i.e a stack of frames.
+    def slice(self, start_frame, end_frame=None, dtype=None):
+        """Return a slice, i.e. a substack of frames.
 
         Parameters
         ----------
@@ -119,7 +119,7 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
-        l = self.wrapper.layer(start_frame, end_frame, dtype)
+        l = self.wrapper.slice(start_frame, end_frame, dtype)
         if self.channel == -2:
             l = np.sum(l, axis=-1)
         elif self.channel != -1:
@@ -129,31 +129,31 @@ class InputFile(object):
 
         return l
 
-    def layer_idx(self, index, frames_per_layer=1, dtype=None):
-        """Return a layer, i.e a stack of frames, by index.
+    def slice_idx(self, index, frames_per_slice=1, dtype=None):
+        """Return a slice, i.e. a substack of frames, by index.
 
         Parameters
         ----------
         index : int
-            layer index
-        frames_per_layer : int
-            number of frames per layer
+            slice index
+        frames_per_slice : int
+            number of frames per slice
         dtype
 
         Returns
         -------
         :class:`numpy.ndarray`
-            A numpy array, see :func:`layer`.
+            A numpy array, see :func:`slice`.
         """
-        start_frame = index * frames_per_layer
-        end_frame = start_frame + frames_per_layer
-        return self.layer(start_frame, end_frame, dtype)
+        start_frame = index * frames_per_slice
+        end_frame = start_frame + frames_per_slice
+        return self.slice(start_frame, end_frame, dtype)
 
     def whole(self, dtype=None):
         """Convenience function to retrieve the whole stack.
 
-        Equivalent to call :func:`layer_idx` with `index` = 0 and
-        `frames_per_layer` = :attr:`nfrms`
+        Equivalent to call :func:`slice_idx` with `index` = 0 and
+        `frames_per_slice` = :attr:`nfrms`
 
         Parameters
         ----------
@@ -162,24 +162,24 @@ class InputFile(object):
         Returns
         -------
         :class:`numpy.ndarray`
-            A numpy array, see :func:`layer`.
+            A numpy array, see :func:`slice`.
         """
-        return self.layer_idx(0, self.nfrms, dtype)
+        return self.slice_idx(0, self.nfrms, dtype)
 
     def frame(self, index, dtype=None):
-        """Convenience function to retrieve a single layer.
+        """Convenience function to retrieve a single slice.
 
-        Same as calling :func:`layer` and squeezing.
+        Same as calling :func:`slice` and squeezing.
 
         Parameters
         ----------
         index : int
-            layer index
+            slice index
         dtype
 
         Returns
         -------
         :class:`numpy.ndarray`
-            A numpy array, see :func:`layer`.
+            A numpy array, see :func:`slice`.
         """
-        return np.squeeze(self.layer_idx(index), dtype)
+        return np.squeeze(self.slice_idx(index), dtype)

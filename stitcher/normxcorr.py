@@ -2,7 +2,7 @@ import pyfftw
 import numpy as np
 
 
-def normxcorr2_fftw(alayer, blayer):
+def normxcorr2_fftw(aslice, bframe):
     """Compute normalized cross correlation using fftw.
 
     .. DANGER::
@@ -10,29 +10,29 @@ def normxcorr2_fftw(alayer, blayer):
 
     Parameters
     ----------
-    alayer : :class:`numpy.ndarray`
-    blayer : :class:`numpy.ndarray`
+    aslice : :class:`numpy.ndarray`
+    bframe : :class:`numpy.ndarray`
 
     Returns
     -------
     :class:`numpy.ndarray`
     """
-    ashape = alayer.shape
-    b_old_shape = blayer.shape
+    ashape = aslice.shape
+    b_old_shape = bframe.shape
 
-    if not (alayer.dtype == np.float32):
-        alayer = alayer.astype(np.float32)
-    if not (blayer.dtype == np.float32):
-        blayer = blayer.astype(np.float32)
+    if not (aslice.dtype == np.float32):
+        aslice = aslice.astype(np.float32)
+    if not (bframe.dtype == np.float32):
+        bframe = bframe.astype(np.float32)
 
     out_height = ashape[1] - b_old_shape[1] + 1
     out_width = ashape[2] - b_old_shape[2] + 1
 
-    sums_b = np.sum(blayer)
-    sums_b2 = np.sum(np.square(blayer))
+    sums_b = np.sum(bframe)
+    sums_b2 = np.sum(np.square(bframe))
 
-    b1 = np.ones_like(blayer)
-    blayer = np.pad(blayer, ((0, 0),
+    b1 = np.ones_like(bframe)
+    bframe = np.pad(bframe, ((0, 0),
                              (0, ashape[1] - b_old_shape[1]),
                              (0, ashape[2] - b_old_shape[2])), 'constant')
     b1 = np.pad(b1, ((0, 0),
@@ -42,27 +42,27 @@ def normxcorr2_fftw(alayer, blayer):
     b1_complex_output = b1.view('complex64')
 
     # pad for in-place transform
-    alayer = np.pad(alayer, ((0, 0), (0, 0), (0, 2)), 'constant')
+    aslice = np.pad(aslice, ((0, 0), (0, 0), (0, 2)), 'constant')
 
-    a_real_input = alayer[..., :ashape[2]]
-    a_complex_output = alayer.view('complex64')
+    a_real_input = aslice[..., :ashape[2]]
+    a_complex_output = aslice.view('complex64')
 
     fft_a2 = pyfftw.empty_aligned(a_complex_output.shape, dtype='complex64')
     fft_object = pyfftw.FFTW(np.square(a_real_input), fft_a2, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
-    # will overwrite alayer
+    # will overwrite aslice
     fft_object = pyfftw.FFTW(a_real_input, a_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
 
     # pad for in-place transform
-    blayer = np.pad(blayer, ((0, 0), (0, 0), (0, 2)), 'constant')
+    bframe = np.pad(bframe, ((0, 0), (0, 0), (0, 2)), 'constant')
 
-    b_real_input = blayer[..., :ashape[2]]
-    b_real_input[:] = blayer[..., :ashape[2]]
-    b_complex_output = blayer.view('complex64')
+    b_real_input = bframe[..., :ashape[2]]
+    b_real_input[:] = bframe[..., :ashape[2]]
+    b_complex_output = bframe.view('complex64')
     fft_object = pyfftw.FFTW(b_real_input, b_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
@@ -109,18 +109,18 @@ def normxcorr2_fftw(alayer, blayer):
     return normxcorr
 
 
-def normxcorr2(alayer, blayer):
-    ashape = alayer.shape
-    bshape = blayer.shape
+def normxcorr2(aslice, bframe):
+    ashape = aslice.shape
+    bshape = bframe.shape
 
     out_height = ashape[1] - bshape[1] + 1
     out_width = ashape[2] - bshape[2] + 1
 
-    b1 = np.ones_like(blayer)
+    b1 = np.ones_like(bframe)
 
-    fft_a = np.fft.fft2(alayer)
-    fft_a2 = np.fft.fft2(np.square(alayer))
-    fft_b = np.fft.fft2(blayer, s=[ashape[1], ashape[2]])
+    fft_a = np.fft.fft2(aslice)
+    fft_a2 = np.fft.fft2(np.square(aslice))
+    fft_b = np.fft.fft2(bframe, s=[ashape[1], ashape[2]])
     fft_b1 = np.fft.fft2(b1, s=[ashape[1], ashape[2]])
 
     conv = np.fft.ifft2(fft_a * np.conj(fft_b))
@@ -130,8 +130,8 @@ def normxcorr2(alayer, blayer):
     sums_a2 = np.fft.ifft2(fft_a2 * np.conj(fft_b1))
     sums_a2 = np.real(sums_a2[:, :out_height, :out_width])
 
-    sums_b = np.sum(blayer)
-    sums_b2 = np.sum(np.square(blayer))
+    sums_b = np.sum(bframe)
+    sums_b2 = np.sum(np.square(bframe))
 
     A = np.array(bshape[1] * bshape[2])
 

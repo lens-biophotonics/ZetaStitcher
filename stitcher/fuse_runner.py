@@ -135,11 +135,11 @@ class FuseRunner(object):
 
                 with InputFile(os.path.join(self.path, index)) as f:
                     print('opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
-                    layer = np.copy(f.layer(z_from, z_to))
-                    layer = layer.astype(np.float32, copy=False)
+                    slice = np.copy(f.slice(z_from, z_to))
+                    slice = slice.astype(np.float32, copy=False)
 
                 if self.debug:
-                    self.overlay_debug(layer, index, z_from)
+                    self.overlay_debug(slice, index, z_from)
 
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
                 overlaps = self.fm.overlaps(index).copy()
@@ -152,7 +152,7 @@ class FuseRunner(object):
 
                 overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
-                q.put([layer, top_left, overlaps])
+                q.put([slice, top_left, overlaps])
 
             q.put([None, None, None])  # close queue
 
@@ -168,27 +168,27 @@ class FuseRunner(object):
 
             self.zmin += thickness
 
-    def overlay_debug(self, layer, index, z_from):
-        cx = layer.shape[-1] // 2
-        cy = layer.shape[-2] // 2 + 10
+    def overlay_debug(self, slice, index, z_from):
+        cx = slice.shape[-1] // 2
+        cy = slice.shape[-2] // 2 + 10
         x = cx - 100
         for xstr in re.findall(r'\d+', index):
             for l in xstr:
                 x_end = x + 30
                 try:
-                    layer[..., cy:cy + 50, x:x_end] = numbers[int(l)]
+                    slice[..., cy:cy + 50, x:x_end] = numbers[int(l)]
                 except ValueError:
                     break
                 x = x_end + 5
             x = x_end + 15
 
-        for f in range(0, layer.shape[0]):
+        for f in range(0, slice.shape[0]):
             x = cx - 120
             xstr = str(z_from + f)
             for l in xstr:
                 x_end = x + 30
                 try:
-                    layer[f, ..., cy + 55:cy + 105, x:x_end] = \
+                    slice[f, ..., cy + 55:cy + 105, x:x_end] = \
                         numbers[int(l)]
                 except ValueError:
                     break

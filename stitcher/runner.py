@@ -159,11 +159,11 @@ class Runner(object):
                 aname = item[0]
                 bname = item[1]
                 axis = item[2]
-                alayer = item[3]
-                blayer = item[4]
+                aslice = item[3]
+                bframe = item[4]
                 z_frame = item[5]
 
-                xcorr = normxcorr2_fftw(alayer, blayer)
+                xcorr = normxcorr2_fftw(aslice, bframe)
 
                 shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
                 score = xcorr[tuple(shift)]
@@ -202,23 +202,23 @@ class Runner(object):
             z_min = z_frame - self.max_dz
             z_max = z_frame + self.max_dz + 1
 
-            alayer = a.layer(z_min, z_max)
+            aslice = a.slice(z_min, z_max)
             if axis == 2:
-                alayer = np.rot90(alayer, axes=(-1, -2))
-            alayer = alayer[..., -overlap:, :]
+                aslice = np.rot90(aslice, axes=(-1, -2))
+            aslice = aslice[..., -overlap:, :]
 
-            blayer = b.layer_idx(z_frame)
+            bframe = b.slice_idx(z_frame)
             if axis == 2:
-                blayer = np.rot90(blayer, axes=(-1, -2))
-            blayer = blayer[..., 0:overlap, :]
+                bframe = np.rot90(bframe, axes=(-1, -2))
+            bframe = bframe[..., 0:overlap, :]
 
-            blayer = blayer[
+            bframe = bframe[
                 ..., :-self.max_dy, self.max_dx:-self.max_dx]
 
-            alayer = alayer.astype(np.float32)
-            blayer = blayer.astype(np.float32)
+            aslice = aslice.astype(np.float32)
+            bframe = bframe.astype(np.float32)
 
-            self.data_queue.put([aname, bname, axis, alayer, blayer, z_frame])
+            self.data_queue.put([aname, bname, axis, aslice, bframe, z_frame])
 
     def aggregate_results(self):
         df = pd.DataFrame(list(self.output_q.queue))

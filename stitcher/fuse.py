@@ -70,8 +70,8 @@ def fuse_queue(q, dest, debug=False):
     Parameters
     ----------
     q : :py:class:`queue.Queue`
-        A queue containing elements in the form ``[layer, top_left, overlaps]``
-        where `layer` is a :class:`numpy.ndarray`, `top_left` is a list
+        A queue containing elements in the form ``[slice, top_left, overlaps]``
+        where `slice` is a :class:`numpy.ndarray`, `top_left` is a list
         specifying the image position in the form ``[Z, Y, X]``, `overlaps`
         is a :class:`pandas.DataFrame` specifying overlaps with adjacent tiles.
     dest : :class:`numpy.ndarray`
@@ -81,25 +81,25 @@ def fuse_queue(q, dest, debug=False):
     """
 
     while True:
-        layer, pos, overlaps = q.get()
+        slice, pos, overlaps = q.get()
 
-        if layer is None:
+        if slice is None:
             break
 
         z_from = pos[0]
-        z_to = z_from + layer.shape[0]
+        z_to = z_from + slice.shape[0]
 
         y_from = pos[1]
-        y_to = y_from + layer.shape[-2]
+        y_to = y_from + slice.shape[-2]
 
         x_from = pos[2]
-        x_to = x_from + layer.shape[-1]
+        x_to = x_from + slice.shape[-1]
 
         z = np.array(flatten(overlaps[['Z_from', 'Z_to']].values))
         z = np.unique(z)
         z = np.sort(z)
 
-        xy_weights = squircle_alpha(*layer.shape[-2::])
+        xy_weights = squircle_alpha(*slice.shape[-2::])
 
         z_list = list(zip(z, z[1::]))
         try:
@@ -123,7 +123,7 @@ def fuse_queue(q, dest, debug=False):
                     continue
 
                 # FIXME: pass size of overlapping tile
-                w = squircle_alpha(*layer.shape[-2::])[:height, :width]
+                w = squircle_alpha(*slice.shape[-2::])[:height, :width]
 
                 if row.X_from == 0:
                     w = np.fliplr(w)
@@ -135,18 +135,18 @@ def fuse_queue(q, dest, debug=False):
                 sums[xy_index] += w
 
             if zto is None:
-                layer_index = np.index_exp[zfrom:, ...]
+                slice_index = np.index_exp[zfrom:, ...]
             else:
-                layer_index = np.index_exp[zfrom:zto, ...]
+                slice_index = np.index_exp[zfrom:zto, ...]
             with np.errstate(invalid='ignore'):
-                layer[layer_index] *= (xy_weights / sums)
+                slice[slice_index] *= (xy_weights / sums)
 
         if debug:
-            layer[..., -2:, :] = 65000
-            layer[..., -2:] = 65000
+            slice[..., -2:, :] = 65000
+            slice[..., -2:] = 65000
 
         output_roi_index = np.index_exp[z_from:z_to, ..., y_from:y_to,
                                         x_from:x_to]
-        dest[output_roi_index] += layer
+        dest[output_roi_index] += slice
 
         q.task_done()

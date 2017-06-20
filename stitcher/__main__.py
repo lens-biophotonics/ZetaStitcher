@@ -63,18 +63,18 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     z_min = z_frame - max_shift_z
     z_max = z_frame + max_shift_z + 1
 
-    alayer = a.layer(z_min, z_max)
+    aslice = a.slice(z_min, z_max)
     if axis == 2:
-        alayer = np.rot90(alayer, axes=(-1, -2))
-    a_roi = alayer[..., -overlap:, :]
+        aslice = np.rot90(aslice, axes=(-1, -2))
+    a_roi = aslice[..., -overlap:, :]
 
-    blayer = b.layer_idx(z_frame)
+    bframe = b.slice_idx(z_frame)
     if axis == 2:
-        blayer = np.rot90(blayer, axes=(-1, -2))
-    b_roi = blayer[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
+        bframe = np.rot90(bframe, axes=(-1, -2))
+    b_roi = bframe[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
 
-    tiff.imsave('alayer.tiff', a_roi.astype(np.float32))
-    tiff.imsave('blayer.tiff', b_roi.astype(np.float32))
+    tiff.imsave('aslice.tiff', a_roi.astype(np.float32))
+    tiff.imsave('bframe.tiff', b_roi.astype(np.float32))
 
     xcorr = normxcorr2_fftw(a_roi, b_roi)
     tiff.imsave('xcorr.tiff', xcorr.astype(np.float32))
@@ -90,8 +90,8 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
 
     print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
 
-    a_roi = alayer[z_a, -shift[1]:, ...]
-    b_roi = np.squeeze(blayer)[0:shift[1], ...]
+    a_roi = aslice[z_a, -shift[1]:, ...]
+    b_roi = np.squeeze(bframe)[0:shift[1], ...]
 
     dx = shift[2]
     if dx > 0:
@@ -106,7 +106,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     alpha = (np.cos(rad) + 1) / 2
     alpha = alpha[:, np.newaxis]
 
-    fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), alayer.dtype)
+    fused = to_dtype(a_roi * alpha + b_roi * (1 - alpha), aslice.dtype)
     if axis == 2:
         fused = np.rot90(fused, axes=(-1, -2), k=3)
 
