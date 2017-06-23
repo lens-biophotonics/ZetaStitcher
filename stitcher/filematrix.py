@@ -5,6 +5,7 @@ import re
 import math
 import logging
 
+import json
 import yaml
 
 import numpy as np
@@ -154,8 +155,20 @@ class FileMatrix:
             fm_df['Y'] = (fm_df['Y'] - fm_df['Y'].max()).abs()
 
         self._compute_shift_vectors()
-        self._compute_absolute_positions_initial_guess()
-        self._compute_absolute_position_least_square_global_optimization()
+        abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
+        abs_yaml_key = 'absolute_positions'
+        if abs_yaml_key in y:
+            df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
+            fm_df[abs_keys] = df[abs_keys]
+        else:
+            self._compute_absolute_positions_initial_guess()
+            self._compute_absolute_position_least_square_global_optimization()
+            with open(fname, 'a') as f:
+                df = fm_df[abs_keys].reset_index()
+                yaml.dump(
+                    {
+                        abs_yaml_key: json.loads(df.to_json(orient='records'))
+                    }, f, default_flow_style=False)
         self._compute_overlaps()
 
     def _load_from_flist(self, flist):
