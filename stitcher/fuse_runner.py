@@ -86,7 +86,7 @@ class FuseRunner(object):
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
                                       * self.dtype.itemsize)
-        bigtiff=True if total_byte_size > 2 ** 32 else False
+        bigtiff = True if total_byte_size > 0.95 * 2**32 else False
 
         ram = psutil.virtual_memory().total
 
