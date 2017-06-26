@@ -120,34 +120,50 @@ class Runner(object):
         fm.ascending_tiles_x = self.ascending_tiles_x
         fm.ascending_tiles_y = self.ascending_tiles_y
 
-        group_generators = [fm.tiles_along_X, fm.tiles_along_Y]
-        stitch_axis = [2, 1]
+        stitch_X = {
+            'axis': 2,
+            'ascending': self.ascending_tiles_x,
+            'sort': ['Z', 'X', 'Y'],
+            'groupby': 'Y'
+        }
+
+        stitch_Y = {
+            'axis': 1,
+            'ascending': self.ascending_tiles_y,
+            'sort': ['Z', 'Y', 'X'],
+            'groupby': 'X'
+        }
 
         q = queue.Queue()
 
-        for group_generator, axis in zip(group_generators, stitch_axis):
-            for group in group_generator:
+        for s in fm.slices:
+            df = fm.data_frame.loc[s.nodes()]
+            for stitch_config in [stitch_X, stitch_Y]:
+                view = df.sort_values(stitch_config['sort'],
+                                      ascending=stitch_config['ascending'])
+                view = view.groupby(stitch_config['groupby'])
 
-                tile_generator = group.itertuples()
-
-                atile = next(tile_generator)
-
-                for btile in tile_generator:
-                    central_frame = atile.nfrms // 2
-                    start_frame = (
-                        central_frame
-                        - (self.z_samples // 2 * self.z_stride)
-                        + (0 if self.z_samples % 2 else self.z_stride // 2))
-                    for i in range(0, self.z_samples):
-                        z_frame = start_frame + i * self.z_stride
-                        params_dict = {
-                            'aname': atile.Index,
-                            'bname': btile.Index,
-                            'z_frame': z_frame,
-                            'axis': axis,
-                        }
-                        q.put(params_dict)
-                    atile = btile
+                for name, group in view:
+                    Z_from = max(group['Z'])
+                    Z_to = min(group['Z_end'])
+                    tiles = list(group.itertuples())
+                    atile = tiles[0]
+                    for btile in tiles[1::]:
+                        central_frame = (Z_to - Z_from) // 2
+                        start_frame = (
+                            central_frame
+                            - (self.z_samples // 2 * self.z_stride)
+                            + (0 if self.z_samples % 2 else self.z_stride // 2))
+                        for i in range(0, self.z_samples):
+                            z_frame = start_frame + i * self.z_stride
+                            params_dict = {
+                                'aname': atile.Index,
+                                'bname': btile.Index,
+                                'z_frame': z_frame,
+                                'axis': stitch_config['axis'],
+                            }
+                            q.put(params_dict)
+                        atile = btile
         self.q = q
 
     def worker(self, initial_queue_length):
