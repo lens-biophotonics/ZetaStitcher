@@ -282,10 +282,18 @@ class Runner(object):
 
         view = self.aggregate_results().reset_index()
 
+        attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
+                 'ascending_tiles_x', 'ascending_tiles_y']
+
+        options = {}
+        for attr in attrs:
+            options[attr] = getattr(self, attr)
+
         with open('stitch.yml', 'w') as f:
             yaml.dump(
                 {
-                    'stitch': json.loads(view.to_json(orient='records'))
+                    'xcorr-options': options,
+                    'xcorr': json.loads(view.to_json(orient='records'))
                 }, f, default_flow_style=False)
 
 
