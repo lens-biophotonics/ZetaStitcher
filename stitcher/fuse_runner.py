@@ -97,7 +97,9 @@ class FuseRunner(object):
         n_loops = self.output_shape[0] // n_frames_in_ram
 
         partial_thickness = [n_frames_in_ram for i in range(0, n_loops)]
-        partial_thickness += [self.output_shape[0] % n_frames_in_ram]
+        remainder = self.output_shape[0] % n_frames_in_ram
+        if remainder:
+            partial_thickness += [remainder]
 
         try:
             os.remove(self.output_filename)
