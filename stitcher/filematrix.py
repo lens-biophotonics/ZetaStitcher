@@ -238,56 +238,6 @@ class FileMatrix:
         fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
         fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
 
-    def _compute_absolute_positions_mst(self):
-        fm_df = self.data_frame
-        df = self.stitch_data_frame
-        T = self.minimum_spanning_tree
-
-        df_ab = df.set_index(['aname', 'bname'])
-
-        fm_df['Xs'] = 0
-        fm_df['Ys'] = 0
-        fm_df['Zs'] = 0
-        fm_df['weight'] = 0
-        for edge in nx.dfs_edges(T, source=fm_df.iloc[0].name):
-            try:
-                row = df_ab.loc[edge]
-                reversed_edge = False
-            except KeyError:
-                row = df_ab.loc[edge[::-1]]
-                reversed_edge = True
-
-            axis = row['axis']
-            if axis == 2:
-                stride_y = fm_df.ix[edge[0], 'xsize']
-                key_Xs = 'Ys'
-                key_Ys = 'Xs'
-            else:
-                stride_y = fm_df.ix[edge[0], 'ysize']
-                key_Xs = 'Xs'
-                key_Ys = 'Ys'
-
-            sign = (-1 if reversed_edge else 1)
-
-            # absolute stitched positions
-            Xs = (fm_df.ix[edge[0], key_Xs] + sign * row['dx'])
-            Ys = (fm_df.ix[edge[0], key_Ys] + sign * (stride_y - row['dy']))
-            Zs = (fm_df.ix[edge[0], 'Zs'] + row['dz'])
-
-            fm_df.ix[edge[1], key_Xs] = Xs
-            fm_df.ix[edge[1], key_Ys] = Ys
-            fm_df.ix[edge[1], 'Zs'] = Zs
-            fm_df.ix[edge[1], 'weight'] = 1 - row['score']
-
-        for key in ['Xs', 'Ys', 'Zs']:
-            fm_df[key] -= fm_df[key].min()
-
-        fm_df[['Xs', 'Ys', 'Zs']] = fm_df[['Xs', 'Ys', 'Zs']].astype(int)
-
-        fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
-        fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
-        fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
-
     def _compute_overlaps(self):
         def comp_diff(dest, row_name, row, other_name):
             dest.loc[row_name, 'Z_from'] = max(fm_df.loc[other_name, 'Zs'],
@@ -415,16 +365,6 @@ class FileMatrix:
             overlap = getattr(self, name)
             df[n] = overlap.loc[tile_name]
         return df.transpose()
-
-    @property
-    def minimum_spanning_tree(self):
-        G = nx.Graph()
-        df = self.stitch_data_frame
-        G.add_edges_from(((
-            u, v, {'weight': w}) for u, v, w in
-            np.c_[df['aname'], df['bname'], 1 - df['score']]))
-        T = nx.minimum_spanning_tree(G)
-        return T
 
     @property
     def slices(self):
