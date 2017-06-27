@@ -6,8 +6,8 @@ from scipy.ndimage.interpolation import shift
 
 
 class TileDisplacementLeastSquares:
-    def __init__(self, shape, p_ab_1, score_1, p_ab_2, score_2):
-        self.shape = shape
+    def __init__(self, p_ab_1, score_1, p_ab_2, score_2):
+        self.shape = p_ab_1.shape
         self.p_ab_1 = p_ab_1
         self.score_1 = score_1
         self.p_ab_2 = p_ab_2
@@ -108,8 +108,7 @@ def absolute_position_global_optimization(df, sdf):
     x0 = np.roll(p_ab_1, 1, axis=0)
     x0[0, ...] = np.nan_to_num(np.roll(p_ab_2[0, ...], 1, axis=0))
 
-    prob = TileDisplacementLeastSquares(shape,
-                                        p_ab_1, score_1, p_ab_2, score_2)
+    prob = TileDisplacementLeastSquares(p_ab_1, score_1, p_ab_2, score_2)
 
     archi = pg.archipelago(n=0)
 
