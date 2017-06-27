@@ -52,7 +52,7 @@ class FileMatrix:
 
         self.data_frame = None
         """A :class:`pandas.DataFrame` object. Contains the following
-        columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, 'nfrms`,
+        columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, `nfrms`,
         `filename`."""
         self.stitch_data_frame = None
 
