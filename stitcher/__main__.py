@@ -123,8 +123,8 @@ def main():
     parser.add_argument('input_file1', help='input file (.dcimg)')
     parser.add_argument('input_file2', help='input file (.dcimg)')
 
-    parser.add_argument('-f', type=int, help='frame', dest='frame',
-                        required=True)
+    parser.add_argument('-f', type=int, dest='frame', required=True,
+                        help='frame of input_file2')
     parser.add_argument('-a', type=int, help='axis (1=Y, 2=X)', dest='axis',
                         choices=(1, 2), default=1)
     parser.add_argument('--overlap', type=int, default=100, help='overlap')
