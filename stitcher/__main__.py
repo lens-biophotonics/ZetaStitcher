@@ -84,7 +84,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
 
     print('shift: ' + str(shift))
     z_a = shift[0]
-    shift[0] = max_shift_z - shift[0]
+    shift[0] -= max_shift_z
     shift[1] = overlap - shift[1]
     shift[2] -= max_shift_x
 
