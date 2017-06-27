@@ -47,7 +47,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['dcimg', 'networkx', 'numpy', 'pandas', 'psutil',
-                      'pyfftw', 'pyyaml', 'scipy', 'scikit-image'],
+                      'pyfftw', 'pygmo>=2', 'pyyaml', 'scipy', 'scikit-image'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

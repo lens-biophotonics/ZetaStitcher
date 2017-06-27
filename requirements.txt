@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
+cloudpickle==0.3.1        # via pygmo
 dask[array]==0.14.0       # via scikit-image
 dcimg==0.2
 decorator==4.0.11         # via networkx
@@ -14,6 +15,7 @@ pandas==0.19.2
 pillow==4.0.0             # via scikit-image
 psutil==5.2.2
 pyfftw==0.10.4
+pygmo==2.4
 python-dateutil==2.6.0    # via pandas
 pytz==2016.10             # via pandas
 pyyaml==3.12
