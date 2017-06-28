@@ -32,6 +32,8 @@ Unless otherwise stated, all values are expected in px.
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_folder', help='input folder')
+    parser.add_argument('-o', type=str, default='stitch.yml',
+                        dest='output_file', help='output file')
     parser.add_argument('-c', type=str, default='s', dest='channel',
                         choices=['r', 'g', 'b', 's'], help='color channel')
 
@@ -100,6 +102,7 @@ class Runner(object):
         self.data_queue = None
         self.initial_queue_length = None
         self.input_folder = None
+        self.output_file = None
         self.z_samples = None
         self.z_stride = None
         self.overlap_v = None
@@ -290,7 +293,7 @@ class Runner(object):
         for attr in attrs:
             options[attr] = getattr(self, attr)
 
-        with open('stitch.yml', 'w') as f:
+        with open(self.output_file, 'w') as f:
             yaml.dump(
                 {
                     'xcorr-options': options,
@@ -303,8 +306,8 @@ if __name__ == '__main__':
 
     r = Runner()
 
-    keys = ['input_folder', 'channel', 'max_dx', 'max_dy', 'max_dz',
-            'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
+    keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
+            'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
             'compute_average', 'ascending_tiles_x', 'ascending_tiles_y']
     for key in keys:
         setattr(r, key, getattr(arg, key))
