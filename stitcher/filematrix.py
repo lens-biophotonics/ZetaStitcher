@@ -242,26 +242,24 @@ class FileMatrix:
 
     def _compute_overlaps(self):
         def comp_diff(dest, row_name, row, other_name):
-            dest.loc[row_name, 'Z_from'] = max(fm_df.loc[other_name, 'Zs'],
-                                               row['Zs']) - row['Zs']
-            dest.loc[row_name, 'Z_to'] = min(fm_df.loc[other_name, 'Zs_end'],
-                                             row['Zs_end']) - row['Zs']
+            other = fm_df.loc[other_name]
+            temp = pd.Series()
+            temp['Z_from'] = max(other['Zs'], row['Zs']) - row['Zs']
+            temp['Z_to'] = min(other['Zs_end'], row['Zs_end']) - row['Zs']
 
-            dest.loc[row_name, 'Y_from'] = max(fm_df.loc[other_name, 'Ys'],
-                                               row['Ys']) - row['Ys']
-            dest.loc[row_name, 'Y_to'] = min(fm_df.loc[other_name, 'Ys_end'],
-                                             row['Ys_end']) - row['Ys']
+            temp['Y_from'] = max(other['Ys'], row['Ys']) - row['Ys']
+            temp['Y_to'] = min(other['Ys_end'], row['Ys_end']) - row['Ys']
 
-            dest.loc[row_name, 'X_from'] = max(fm_df.loc[other_name, 'Xs'],
-                                               row['Xs']) - row['Xs']
-            dest.loc[row_name, 'X_to'] = min(fm_df.loc[other_name, 'Xs_end'],
-                                             row['Xs_end']) - row['Xs']
+            temp['X_from'] = max(other['Xs'], row['Xs']) - row['Xs']
+            temp['X_to'] = min(other['Xs_end'], row['Xs_end']) - row['Xs']
 
-            if dest.loc[row_name, 'Z_from'] > dest.loc[row_name, 'Z_to'] or \
-                    dest.loc[row_name, 'Y_from'] > dest.loc[row_name, 'Y_to']\
-                or dest.loc[row_name, 'X_from'] > dest.loc[row_name, 'X_to']:
-                cols_to_zero(dest, row_name)
+            cols_to_zero(dest, row_name)
 
+            if temp['Z_from'] > temp['Z_to'] or temp['Y_from'] > temp['Y_to'] \
+                    or temp['X_from'] > temp['X_to']:
+                pass
+            else:
+                dest.loc[row_name] = temp
 
         def cols_to_zero(dest, row_name):
             cols = ['Z_from', 'Z_to', 'Y_from', 'Y_to', 'X_from', 'X_to']
