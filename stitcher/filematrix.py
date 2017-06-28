@@ -212,9 +212,9 @@ class FileMatrix:
             u, v, {'weight': w}) for u, v, w in
             np.c_[sdf['filename'], sdf['bname'], 1 - sdf['score']]))
 
-        fm_df['Xs'] = 0
-        fm_df['Ys'] = 0
-        fm_df['Zs'] = 0
+        keys = ['Xs', 'Ys', 'Zs']
+        for k in keys:
+            fm_df[k] = 0
 
         sdf = sdf.reset_index().set_index('bname')
 
@@ -223,14 +223,15 @@ class FileMatrix:
         for edge in nx.bfs_edges(G, source=top_left_corner):
             btile = edge[1]
             parents = fm_df.loc[sdf.loc[[btile], 'filename']]
-            fm_df.loc[btile, 'Xs'] = (
-            parents['Xs'] + sdf.loc[[btile]].set_index('filename')['px']).mean()
-            fm_df.loc[btile, 'Ys'] = (
-            parents['Ys'] + sdf.loc[[btile]].set_index('filename')['py']).mean()
-            fm_df.loc[btile, 'Zs'] = (
-            parents['Zs'] + sdf.loc[[btile]].set_index('filename')['pz']).mean()
+            temp_sdf = sdf.loc[[btile]].set_index('filename')
+            temp = pd.DataFrame()
+            temp['Xs'] = parents['Xs'] + temp_sdf['px']
+            temp['Ys'] = parents['Ys'] + temp_sdf['py']
+            temp['Zs'] = parents['Zs'] + temp_sdf['pz']
+            temp['score'] = temp_sdf['score']
+            fm_df.loc[btile, keys] = temp.apply(
+                lambda x: np.average(x, weights=temp.loc[x.index, 'score']))
 
-        keys = ['Xs', 'Ys', 'Zs']
         fm_df[keys] -= fm_df[keys].min()
         fm_df[keys] = fm_df[keys].apply(np.round).astype(int)
 
