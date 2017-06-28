@@ -218,12 +218,12 @@ class Runner(object):
             z_min = z_frame - self.max_dz
             z_max = z_frame + self.max_dz + 1
 
-            aslice = a.slice(z_min, z_max)
+            aslice = a.slice(z_min, z_max, copy=True)
             if axis == 2:
                 aslice = np.rot90(aslice, axes=(-1, -2))
             aslice = aslice[..., -overlap:, :]
 
-            bframe = b.slice_idx(z_frame)
+            bframe = b.slice_idx(z_frame, copy=True)
             if axis == 2:
                 bframe = np.rot90(bframe, axes=(-1, -2))
             bframe = bframe[..., 0:overlap, :]

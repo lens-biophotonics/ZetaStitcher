@@ -63,7 +63,7 @@ class TiffWrapper(object):
         self.tfile = tiff.TiffFile(fname)
         setattr(self, 'close', getattr(self.tfile, 'close'))
 
-    def slice(self, start_frame, end_frame=None, dtype=None):
+    def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
         if end_frame is None:
             end_frame = start_frame + 1
 
@@ -77,6 +77,9 @@ class TiffWrapper(object):
 
         if end_frame - start_frame == 1:
             a = np.expand_dims(a, axis=0)
+
+        if copy:
+            a = np.copy(a)
 
         if dtype is None:
             return a

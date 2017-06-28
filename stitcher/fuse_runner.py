@@ -137,8 +137,7 @@ class FuseRunner(object):
 
                 with InputFile(os.path.join(self.path, index)) as f:
                     print('opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
-                    slice = np.copy(f.slice(z_from, z_to))
-                    slice = slice.astype(np.float32, copy=False)
+                    slice = f.slice(z_from, z_to, dtype=np.float32, copy=True)
 
                 if self.debug:
                     self.overlay_debug(slice, index, z_from)
