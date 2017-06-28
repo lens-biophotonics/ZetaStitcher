@@ -150,7 +150,8 @@ class FileMatrix:
         else:
             self._compute_absolute_positions_initial_guess()
             absolute_position_global_optimization(self.data_frame,
-                                                  self.stitch_data_frame)
+                                                  self.stitch_data_frame,
+                                                  y['xcorr-options'])
             with open(fname, 'a') as f:
                 df = fm_df[abs_keys].reset_index()
                 yaml.dump(

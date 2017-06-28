@@ -6,7 +6,10 @@ from scipy.ndimage.interpolation import shift
 
 
 class TileDisplacementLeastSquares:
-    def __init__(self, p_ab_1, score_1, p_ab_2, score_2):
+    def __init__(self, xcorr_options, frame_shapes,
+                 p_ab_1, score_1, p_ab_2, score_2):
+        self.xcorr_options = xcorr_options
+        self.frame_shapes = frame_shapes
         self.shape = p_ab_1.shape
         self.p_ab_1 = p_ab_1
         self.score_1 = score_1
@@ -17,13 +20,45 @@ class TileDisplacementLeastSquares:
         n_of_tiles = np.prod(self.shape[0:2])
         xsize = self.shape[1]
 
-        mins = [-10, 400, -30] * n_of_tiles
-        mins[:3] = [0, 0, 0]
-        mins[3:3 * xsize] = [-10, -30, 400] * (xsize - 1)
+        mins = [0, 0, 0]
+        mins[0] = -self.xcorr_options['max_dz']
+        mins[1] = None
+        mins[2] = -self.xcorr_options['max_dx']
+        mins = mins * n_of_tiles
+        # overwrite None
+        mins[1::3] = self.frame_shapes[:, 0] - self.xcorr_options['overlap_v']
+        mins[:3] = [0, 0, 0]  # first tile is fixed
+        # overwrite first row with horizontal shifts
+        temp = [0, 0, 0]
+        temp[0] = -self.xcorr_options['max_dz']
+        temp[1] = -self.xcorr_options['max_dx']
+        temp[2] = None
+        mins[3:3 * xsize] = temp * (xsize - 1)
+        # overwrite None
+        mins[5:3 * xsize:3] = (self.frame_shapes[1:xsize, 1]
+                               - self.xcorr_options['overlap_h'])
 
-        maxs = [10, 512, 30] * n_of_tiles
-        maxs[:3] = [0, 0, 0]
-        maxs[3:3 * xsize] = [10, 30, 512] * (xsize - 1)
+        maxs = [0, 0, 0]
+        maxs[0] = self.xcorr_options['max_dz']
+        maxs[1] = None
+        maxs[2] = self.xcorr_options['max_dx']
+        maxs = maxs * n_of_tiles
+        # overwrite None
+        maxs[1::3] = (self.frame_shapes[:, 0] - self.xcorr_options['overlap_v']
+                      + self.xcorr_options['max_dy'])
+        maxs[:3] = [0, 0, 0]  # first tile is fixed
+        # overwrite first row with horizontal shifts
+        temp[0] = self.xcorr_options['max_dz']
+        temp[1] = self.xcorr_options['max_dx']
+        temp[2] = None
+        maxs[3:3 * xsize] = temp * (xsize - 1)
+        # overwrite None
+        maxs[5:3 * xsize:3] = (self.frame_shapes[1:xsize, 1]
+                               - self.xcorr_options['overlap_h']
+                               + self.xcorr_options['max_dy'])
+
+        mins = [int(x) for x in mins]
+        maxs = [int(x) for x in maxs]
 
         bounds = (mins, maxs)
         return bounds
@@ -72,7 +107,7 @@ def decision_vector_to_tile_coords(x, shape):
     return t
 
 
-def absolute_position_global_optimization(df, sdf):
+def absolute_position_global_optimization(df, sdf, xcorr_options):
     """Perform global optimization to adjust tile absolute positions.
 
     The passed dataframe must come with an initial guess of absolute positions.
@@ -87,6 +122,7 @@ def absolute_position_global_optimization(df, sdf):
     ysize = df['Y'].unique().size
 
     idx = df.sort_values(['Z', 'Y', 'X']).index
+    frame_shapes = np.array(df.loc[idx, ['ysize', 'xsize']])
 
     # shifts along Y
     temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis', 'score']]
@@ -108,7 +144,8 @@ def absolute_position_global_optimization(df, sdf):
     x0 = np.roll(p_ab_1, 1, axis=0)
     x0[0, ...] = np.nan_to_num(np.roll(p_ab_2[0, ...], 1, axis=0))
 
-    prob = TileDisplacementLeastSquares(p_ab_1, score_1, p_ab_2, score_2)
+    prob = TileDisplacementLeastSquares(xcorr_options, frame_shapes,
+                                        p_ab_1, score_1, p_ab_2, score_2)
 
     archi = pg.archipelago(n=0)
 
