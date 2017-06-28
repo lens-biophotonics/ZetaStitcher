@@ -281,6 +281,7 @@ class Runner(object):
             t.join()
 
         view = self.aggregate_results().reset_index()
+        print(view[['dx', 'dy', 'dz', 'score']].describe())
 
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
                  'ascending_tiles_x', 'ascending_tiles_y']
