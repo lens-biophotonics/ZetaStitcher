@@ -5,21 +5,23 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 cloudpickle==0.3.1        # via pygmo
-dask[array]==0.14.0       # via scikit-image
+cycler==0.10.0            # via matplotlib
 dcimg==0.2
 decorator==4.0.11         # via networkx
+matplotlib==2.0.2         # via scikit-image
 networkx==1.11
-numpy==1.12.0
+numpy==1.13.0
 olefile==0.44             # via pillow
-pandas==0.19.2
-pillow==4.0.0             # via scikit-image
+pandas==0.20.2
+pillow==4.1.1             # via scikit-image
 psutil==5.2.2
 pyfftw==0.10.4
 pygmo==2.4
-python-dateutil==2.6.0    # via pandas
-pytz==2016.10             # via pandas
+pyparsing==2.2.0          # via matplotlib
+python-dateutil==2.6.0    # via matplotlib, pandas
+pytz==2017.2              # via matplotlib, pandas
+PyWavelets==0.5.2         # via scikit-image
 pyyaml==3.12
-scikit-image==0.12.3
-scipy==0.18.1
-six==1.10.0               # via python-dateutil, scikit-image
-toolz==0.8.2              # via dask
+scikit-image==0.13.0
+scipy==0.19.1
+six==1.10.0               # via cycler, matplotlib, python-dateutil, scikit-image
