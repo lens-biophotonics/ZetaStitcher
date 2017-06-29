@@ -59,6 +59,9 @@ class FileMatrix:
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
 
+        self.compute_average = False
+        self.xcorr_options = None
+
         self.overlap_n = None
         self.overlap_s = None
         self.overlap_e = None
@@ -68,6 +71,8 @@ class FileMatrix:
         self.overlap_sw = None
         self.overlap_se = None
 
+        if directory is None:
+            return
         if os.path.isdir(directory):
             self.load_dir(directory)
         elif os.path.isfile(directory):
@@ -103,7 +108,14 @@ class FileMatrix:
                 except (RuntimeError, ValueError) as e:
                     logger.error(e.args[0])
 
-        self._load_from_flist(flist)
+        data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
+                'nfrms': flist[3::7], 'ysize': flist[4::7],
+                'xsize': flist[5::7], 'filename': flist[6::7]}
+        df = pd.DataFrame(data)
+        df = df.sort_values(['Z', 'Y', 'X'])
+        df['Z_end'] = df['Z'] + df['nfrms']
+
+        self.data_frame = df.set_index('filename')
 
     def load_yaml(self, fname):
         with open(fname, 'r') as f:
@@ -114,61 +126,50 @@ class FileMatrix:
         for attr in attrs:
             setattr(self, attr, y['xcorr-options'][attr])
 
-        df = pd.DataFrame(y['xcorr'])
+        self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
+        self.stitch_data_frame = pd.DataFrame(y['xcorr'])
+        self.xcorr_options = y['xcorr-options']
 
-        a = np.concatenate((df['aname'].unique(), df['bname'].unique()))
-        a = np.unique(a)
-
-        flist = []
-        self.dir, _ = os.path.split(fname)
-        for el in a:
-            self.parse_and_append(el, flist)
-
-        self._load_from_flist(flist)
-
-        new_columns = df.columns.values
-        new_columns[0] = 'filename'
-        df.columns = new_columns
-        self.stitch_data_frame = df.set_index('filename')
-
-        fm_df = self.data_frame
-        keys = ['X', 'Y', 'Z']
-        fm_df[keys] -= fm_df[keys].min()
-
-        if not self.ascending_tiles_x:
-            fm_df['X'] = (fm_df['X'] - fm_df['X'].max()).abs()
-
-        if not self.ascending_tiles_y:
-            fm_df['Y'] = (fm_df['Y'] - fm_df['Y'].max()).abs()
-
-        self._compute_shift_vectors()
-        abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
         abs_yaml_key = 'absolute_positions'
         if abs_yaml_key in y:
+            abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
             df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
-            fm_df[abs_keys] = df[abs_keys]
+            self.data_frame[abs_keys] = df[abs_keys]
+
+        self.dir = fname
+
+    def process_data(self):
+        df = self.data_frame
+
+        keys = ['X', 'Y', 'Z']
+        df[keys] -= df[keys].min()
+
+        if not self.ascending_tiles_x:
+            df['X'] = (df['X'] - df['X'].max()).abs()
+
+        if not self.ascending_tiles_y:
+            df['Y'] = (df['Y'] - df['Y'].max()).abs()
+
+        self._aggregate_results()
+
+        self._compute_shift_vectors()
+
+        cols = self.data_frame.columns
+        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+            pass
         else:
+            abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
             self._compute_absolute_positions_initial_guess()
             absolute_position_global_optimization(self.data_frame,
                                                   self.stitch_data_frame,
-                                                  y['xcorr-options'])
-            with open(fname, 'a') as f:
-                df = fm_df[abs_keys].reset_index()
-                yaml.dump(
-                    {
-                        abs_yaml_key: json.loads(df.to_json(orient='records'))
-                    }, f, default_flow_style=False)
+                                                  self.xcorr_options)
+            with open(self.dir, 'a') as f:
+                df = df[abs_keys].reset_index()
+                j = json.loads(df.to_json(orient='records'))
+                yaml.dump({'absolute_positions': j}, f,
+                          default_flow_style=False)
+
         self._compute_overlaps()
-
-    def _load_from_flist(self, flist):
-        data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
-                'nfrms': flist[3::7], 'ysize': flist[4::7],
-                'xsize': flist[5::7], 'filename': flist[6::7]}
-        df = pd.DataFrame(data)
-        df = df.sort_values(['Z', 'Y', 'X'])
-        df['Z_end'] = df['Z'] + df['nfrms']
-
-        self.data_frame = df.set_index('filename')
 
     def parse_and_append(self, name, flist):
         try:
@@ -187,6 +188,31 @@ class FileMatrix:
         j = json.loads(self.data_frame.reset_index().to_json(orient='records'))
         with open(filename, mode) as f:
             yaml.dump({'filematrix': j}, f, default_flow_style=False)
+
+    def _aggregate_results(self):
+        sdf = self.stitch_data_frame
+
+        if self.compute_average:
+            view = sdf.groupby(['aname', 'bname', 'axis']).agg(
+                lambda x: np.average(x, weights=sdf.loc[x.index, 'score']) if
+                    sdf.loc[x.index, 'score'].sum() != 0 else np.average(x))
+        else:
+            view = sdf.groupby(['aname', 'bname', 'axis']).agg(
+                lambda x: sdf.loc[np.argmax(sdf.loc[x.index, 'score']), x.name])
+
+        view = view.reset_index()
+        overlap_dict = {1: self.xcorr_options['overlap_v'],
+                        2: self.xcorr_options['overlap_h']}
+
+        view.dz -= self.xcorr_options['max_dz']
+        for a in [1, 2]:
+            indexes = (view['axis'] == a)
+            view.loc[indexes, 'dy'] = overlap_dict[a] - view.loc[indexes, 'dy']
+        view.dx -= self.xcorr_options['max_dx']
+
+        view = view.rename(columns={'aname': 'filename'})
+
+        self.stitch_data_frame = view.set_index('filename')
 
     def _compute_shift_vectors(self):
         sdf = self.stitch_data_frame

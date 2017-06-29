@@ -32,6 +32,7 @@ class FuseRunner(object):
         self.zmin = 0
         self.zmax = None
         self.debug = False
+        self.compute_average = False
         self.output_filename = None
 
         self._is_multichannel = None
@@ -45,7 +46,10 @@ class FuseRunner(object):
             input_file = self.input_file
 
         self.path, file_name = os.path.split(input_file)
-        self.fm = FileMatrix(input_file)
+        self.fm = FileMatrix()
+        self.fm.compute_average = self.compute_average
+        self.fm.load_yaml(input_file)
+        self.fm.process_data()
 
     @property
     @lru_cache()
@@ -207,6 +211,10 @@ def parse_args():
     parser.add_argument('-o', type=str, default='fused.tif',
                         dest='output_filename', help='output file name')
 
+    parser.add_argument('-a', action='store_true', dest='compute_average',
+                        help='instead of maximum score, take the average '
+                             'result weighted by the score')
+
     parser.add_argument('-d', dest='debug', action='store_true',
                         help='overlay debug info')
 
@@ -220,7 +228,7 @@ def main():
     arg = parse_args()
     fr = FuseRunner(arg.input_file)
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug']
+    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
     for k in keys:
         setattr(fr, k, getattr(arg, k))
 
