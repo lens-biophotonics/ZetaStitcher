@@ -228,8 +228,7 @@ class Runner(object):
                 bframe = np.rot90(bframe, axes=(-1, -2))
             bframe = bframe[..., 0:overlap, :]
 
-            bframe = bframe[
-                ..., :-self.max_dy, self.max_dx:-self.max_dx]
+            bframe = bframe[..., :-self.max_dy, self.max_dx:-self.max_dx]
 
             aslice = aslice.astype(np.float32)
             bframe = bframe.astype(np.float32)
