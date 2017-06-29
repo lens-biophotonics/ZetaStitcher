@@ -109,6 +109,7 @@ class Runner(object):
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
         self.df = None
+        self.fm = None
 
     @property
     def overlap_dict(self):
@@ -118,6 +119,7 @@ class Runner(object):
         fm = FileMatrix(self.input_folder)
         fm.ascending_tiles_x = self.ascending_tiles_x
         fm.ascending_tiles_y = self.ascending_tiles_y
+        self.fm = fm
 
         stitch_X = {
             'axis': 2,
@@ -266,6 +268,8 @@ class Runner(object):
         print(df[['dx', 'dy', 'dz', 'score']].describe())
 
     def save_results_to_file(self):
+        self.fm.save_to_yaml(self.output_file, 'w')
+
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
                  'ascending_tiles_x', 'ascending_tiles_y']
 
@@ -273,7 +277,7 @@ class Runner(object):
         for attr in attrs:
             options[attr] = getattr(self, attr)
 
-        with open(self.output_file, 'w') as f:
+        with open(self.output_file, 'a') as f:
             yaml.dump(
                 {
                     'xcorr-options': options,

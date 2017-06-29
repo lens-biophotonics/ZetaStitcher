@@ -183,6 +183,11 @@ class FileMatrix:
             logger.error(e.args[0])
             raise
 
+    def save_to_yaml(self, filename, mode):
+        j = json.loads(self.data_frame.reset_index().to_json(orient='records'))
+        with open(filename, mode) as f:
+            yaml.dump({'filematrix': j}, f, default_flow_style=False)
+
     def _compute_shift_vectors(self):
         sdf = self.stitch_data_frame
         fm_df = self.data_frame
