@@ -64,12 +64,7 @@ Unless otherwise stated, all values are expected in px.
     group = parser.add_argument_group(
         'multiple sampling along Z',
         description='Measure the optimal shift at different heights around '
-                    'the center of the stack, then take the result with the '
-                    'maximum score')
-    group.add_argument('-a', action='store_true',
-                       help='instead of maximum score, take the average '
-                            'result weighted by the score',
-                       dest='compute_average')
+                    'the center of the stack')
 
     group.add_argument('--z-samples', type=int, default=1, metavar='ZSAMP',
                        help='number of samples to take along Z')
@@ -113,6 +108,7 @@ class Runner(object):
         self.compute_average = False
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
+        self.df = None
 
     @property
     def overlap_dict(self):
@@ -195,7 +191,8 @@ class Runner(object):
                            100 * (1 - self.q.qsize() / initial_queue_length)),
                        aname=aname, bname=bname, z_frame=z_frame, shift=shift,
                        score=score))
-                self.output_q.put([aname, bname, axis] + shift + [score])
+                self.output_q.put(
+                    [aname, bname, axis, z_frame] + shift + [score])
             finally:
                 self.data_queue.task_done()
                 self.q.task_done()
@@ -239,29 +236,6 @@ class Runner(object):
 
             self.data_queue.put([aname, bname, axis, aslice, bframe, z_frame])
 
-    def aggregate_results(self):
-        df = pd.DataFrame(list(self.output_q.queue))
-        df.columns = ['aname', 'bname', 'axis', 'dz', 'dy', 'dx', 'score']
-
-        if self.compute_average:
-            view = df.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: np.average(x, weights=df.loc[x.index, 'score']) if
-                    df.loc[x.index, 'score'].sum() != 0 else np.average(x))
-        else:
-            view = df.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: df.loc[np.argmax(df.loc[x.index, 'score']), x.name])
-
-        view = view.reset_index()
-
-        view.dz -= self.max_dz
-        for a in [1, 2]:
-            indexes = (view['axis'] == a)
-            view.loc[indexes, 'dy'] = \
-                self.overlap_dict[a] - view.loc[indexes, 'dy']
-        view.dx -= self.max_dx
-
-        return view
-
     def run(self):
         self.initialize_queue()
         self.data_queue = queue.Queue(maxsize=int(arg.n * 2))
@@ -283,9 +257,16 @@ class Runner(object):
         for t in threads:
             t.join()
 
-        view = self.aggregate_results().reset_index()
-        print(view[['dx', 'dy', 'dz', 'score']].describe())
+        df = pd.DataFrame(list(self.output_q.queue))
+        df.columns = ['aname', 'bname', 'axis', 'z_frame', 'dz', 'dy', 'dx',
+                      'score']
+        self.df = df
 
+        self.save_results_to_file()
+
+        print(df[['dx', 'dy', 'dz', 'score']].describe())
+
+    def save_results_to_file(self):
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
                  'ascending_tiles_x', 'ascending_tiles_y']
 
@@ -297,7 +278,7 @@ class Runner(object):
             yaml.dump(
                 {
                     'xcorr-options': options,
-                    'xcorr': json.loads(view.to_json(orient='records'))
+                    'xcorr': json.loads(self.df.to_json(orient='records'))
                 }, f, default_flow_style=False)
 
 
@@ -308,7 +289,7 @@ if __name__ == '__main__':
 
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
-            'compute_average', 'ascending_tiles_x', 'ascending_tiles_y']
+            'ascending_tiles_x', 'ascending_tiles_y']
     for key in keys:
         setattr(r, key, getattr(arg, key))
 
