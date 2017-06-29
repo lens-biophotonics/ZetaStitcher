@@ -71,6 +71,8 @@ class FileMatrix:
         self.overlap_sw = None
         self.overlap_se = None
 
+        self.y = None
+
         if directory is None:
             return
         if os.path.isdir(directory):
@@ -117,7 +119,7 @@ class FileMatrix:
 
         self.data_frame = df.set_index('filename')
 
-    def load_yaml(self, fname):
+    def load_yaml(self, fname, load_absolute_positions=True):
         with open(fname, 'r') as f:
             y = yaml.load(f)
 
@@ -132,11 +134,15 @@ class FileMatrix:
 
         abs_yaml_key = 'absolute_positions'
         if abs_yaml_key in y:
-            abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
-            df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
-            self.data_frame[abs_keys] = df[abs_keys]
+            if load_absolute_positions:
+                abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
+                df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
+                self.data_frame[abs_keys] = df[abs_keys]
+            else:
+                del y[abs_yaml_key]
 
         self.dir = fname
+        self.y = y
 
     def process_data(self):
         df = self.data_frame
@@ -163,11 +169,12 @@ class FileMatrix:
             absolute_position_global_optimization(self.data_frame,
                                                   self.stitch_data_frame,
                                                   self.xcorr_options)
-            with open(self.dir, 'a') as f:
-                df = df[abs_keys].reset_index()
-                j = json.loads(df.to_json(orient='records'))
-                yaml.dump({'absolute_positions': j}, f,
-                          default_flow_style=False)
+
+            df = df[abs_keys].reset_index()
+            j = json.loads(df.to_json(orient='records'))
+            self.y['absolute_positions'] = j
+            with open(self.dir, 'w') as f:
+                yaml.dump(self.y, f, default_flow_style=False)
 
         self._compute_overlaps()
 

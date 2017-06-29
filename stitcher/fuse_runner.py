@@ -7,6 +7,7 @@ import threading
 from queue import Queue
 from functools import lru_cache
 
+import yaml
 import psutil
 import numpy as np
 import skimage.external.tifffile as tiff
@@ -24,7 +25,7 @@ def to_dtype(x, dtype):
 
 
 class FuseRunner(object):
-    def __init__(self, input_file=None):
+    def __init__(self, input_file=None, old_options=None):
         self.input_file = input_file  #: input file or folder
         self.fm = None  #: :class:`FileMatrix`
         self.path = None
@@ -34,21 +35,21 @@ class FuseRunner(object):
         self.debug = False
         self.compute_average = False
         self.output_filename = None
+        self.old_options = old_options
 
         self._is_multichannel = None
 
-        self._load_df()
+        # self._load_df()
 
     def _load_df(self):
-        if os.path.isdir(self.input_file):
-            input_file = os.path.join(self.input_file, 'stitch.yml')
-        else:
-            input_file = self.input_file
-
-        self.path, file_name = os.path.split(input_file)
+        self.path, file_name = os.path.split(self.input_file)
         self.fm = FileMatrix()
         self.fm.compute_average = self.compute_average
-        self.fm.load_yaml(input_file)
+        load_abs_positions = True
+        if self.old_options and self.compute_average != \
+            self.old_options['compute_average']:
+            load_abs_positions = False
+        self.fm.load_yaml(self.input_file, load_abs_positions)
         self.fm.process_data()
 
     @property
@@ -226,13 +227,39 @@ def parse_args():
 
 def main():
     arg = parse_args()
-    fr = FuseRunner(arg.input_file)
+
+    if os.path.isdir(arg.input_file):
+        input_file = os.path.join(arg.input_file, 'stitch.yml')
+    else:
+        input_file = arg.input_file
+
+    with open(input_file, 'r') as f:
+        y = yaml.load(f)
+
+    try:
+        old_options = y['fuse_runner_options']
+    except KeyError:
+        old_options = None
+
+    fr = FuseRunner(input_file, old_options)
 
     keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
     for k in keys:
         setattr(fr, k, getattr(arg, k))
 
+    fr._load_df()
     fr.run()
+
+    with open(input_file, 'r') as f:
+        y = yaml.load(f)
+    fr_options = {}
+    keys = ['compute_average']
+    for k in keys:
+        fr_options[k] = getattr(arg, k)
+    y['fuse_runner_options'] = fr_options
+
+    with open(input_file, 'w') as f:
+        yaml.dump(y, f, default_flow_style=False)
 
 
 if __name__ == '__main__':
