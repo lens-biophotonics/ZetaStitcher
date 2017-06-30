@@ -1,11 +1,13 @@
-from setuptools import setup, find_packages
 from os import path
+from setuptools import setup, find_packages
+
+from stitcher.version import full_version
 
 here = path.abspath(path.dirname(__file__))
 
 setup(
     name='stitcher',
-    version='0.0.0',
+    version=full_version,
     description='Stitch 3D tiles',
     long_description='Stitch 3D tiles',
     author='Giacomo Mazzamuto',

@@ -8,9 +8,11 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from .normxcorr import normxcorr2_fftw
-from .filematrix import FileMatrix
 from .inputfile import InputFile
+from .filematrix import FileMatrix
+from .normxcorr import normxcorr2_fftw
+
+from .version import full_version
 
 
 def parse_args():
@@ -26,7 +28,8 @@ The following naming conventions are used:
 
 Unless otherwise stated, all values are expected in px.
     ''',
-        epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>',
+        epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
+               'Version: {}'.format(full_version),
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_folder', help='input folder')

@@ -12,10 +12,12 @@ import psutil
 import numpy as np
 import skimage.external.tifffile as tiff
 
-from .filematrix import FileMatrix
-from .inputfile import InputFile
 from .fuse import fuse_queue
 from .lcd_numbers import numbers
+from .inputfile import InputFile
+from .filematrix import FileMatrix
+
+from .version import full_version
 
 
 def to_dtype(x, dtype):
@@ -204,7 +206,8 @@ class FuseRunner(object):
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Fuse stitched tiles in a folder.',
-        epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>',
+        epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
+               'Version: {}'.format(full_version),
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('input_file', help='input file (.yml) or folder')
