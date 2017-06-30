@@ -44,21 +44,21 @@ Unless otherwise stated, all values are expected in px.
                        help = 'invert tile ordering along y')
 
     group = parser.add_argument_group('maximum shifts')
-    group.add_argument('--Mz', type=int, default=20, dest='max_dz',
+    group.add_argument('--Mz', type=int, required=True, dest='max_dz',
                        help='maximum allowed shift along Z')
 
-    group.add_argument('--My', type=int, default=150, dest='max_dy',
+    group.add_argument('--My', type=int, required=True, dest='max_dy',
                        help='maximum allowed shift along Y (the stitching '
                             'axis)')
 
-    group.add_argument('--Mx', type=int, default=20, dest='max_dx',
+    group.add_argument('--Mx', type=int, required=True, dest='max_dx',
                        help='maximum allowed shift along X (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
-    group.add_argument('--overlap-h', type=int, default=600, metavar='OH',
+    group.add_argument('--overlap-h', type=int, required=True, metavar='OH',
                        help='overlap along the horizontal axis')
 
-    group.add_argument('--overlap-v', type=int, default=600, metavar='OV',
+    group.add_argument('--overlap-v', type=int, required=True, metavar='OV',
                        help='overlap along the vertical axis')
 
     group = parser.add_argument_group(
