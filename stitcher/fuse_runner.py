@@ -203,12 +203,17 @@ class FuseRunner(object):
                 x = x_end + 5
 
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Fuse stitched tiles in a folder.',
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
                'Version: {}'.format(full_version),
-        formatter_class=argparse.RawTextHelpFormatter)
+        formatter_class=CustomFormatter)
 
     parser.add_argument('input_file', help='input file (.yml) or folder')
 

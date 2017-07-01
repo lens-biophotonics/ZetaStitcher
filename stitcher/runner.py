@@ -15,6 +15,11 @@ from .normxcorr import normxcorr2_fftw
 from .version import full_version
 
 
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='''
@@ -30,7 +35,7 @@ Unless otherwise stated, all values are expected in px.
     ''',
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
                'Version: {}'.format(full_version),
-        formatter_class=argparse.RawTextHelpFormatter)
+        formatter_class=CustomFormatter)
 
     parser.add_argument('input_folder', help='input folder')
     parser.add_argument('-o', type=str, default='stitch.yml',
