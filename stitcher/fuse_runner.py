@@ -212,7 +212,7 @@ def parse_args():
 
     parser.add_argument('input_file', help='input file (.yml) or folder')
 
-    parser.add_argument('-o', type=str, default='fused.tif',
+    parser.add_argument('-o', type=str, default='fused.tiff',
                         dest='output_filename', help='output file name')
 
     parser.add_argument('-a', action='store_true', dest='compute_average',
