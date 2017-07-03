@@ -40,9 +40,7 @@ class TiffWrapper(object):
 
     @property
     def dtype(self):
-        if self.tfile.is_rgb:
-            return np.uint8
-        return None
+        return np.dtype(self.tfile.pages[0].dtype)
 
     def open(self, file_name=None):
         if file_name is not None:
