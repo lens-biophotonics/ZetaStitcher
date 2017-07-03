@@ -272,7 +272,8 @@ class FileMatrix:
             temp['Zs'] = parents['Zs'] + temp_sdf['pz']
             temp['score'] = temp_sdf['score']
             fm_df.loc[btile, keys] = temp.apply(
-                lambda x: np.average(x, weights=temp.loc[x.index, 'score']))
+                lambda x: np.average(x, weights=temp.loc[x.index, 'score']) if
+                temp.loc[x.index, 'score'].sum() != 0 else np.average(x))
 
         fm_df[keys] -= fm_df[keys].min()
         fm_df[keys] = fm_df[keys].apply(np.round).astype(int)
