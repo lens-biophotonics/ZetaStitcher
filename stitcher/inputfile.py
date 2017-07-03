@@ -30,7 +30,7 @@ class InputFile(object):
 
     @channel.setter
     def channel(self, value):
-        if isinstance(self.wrapper, dcimg.DCIMGFile):
+        if not self.nchannels > 1:
             return
         self._channel = value
 
