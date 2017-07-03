@@ -13,7 +13,7 @@ import numpy as np
 import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
-from .lcd_numbers import numbers
+from .lcd_numbers import numbers, canvas_shape
 from .inputfile import InputFile
 from .filematrix import FileMatrix
 
@@ -179,28 +179,30 @@ class FuseRunner(object):
     def overlay_debug(self, slice, index, z_from):
         cx = slice.shape[-1] // 2
         cy = slice.shape[-2] // 2 + 10
-        x = cx - 100
+        x = cx - cx // 2
         for xstr in re.findall(r'\d+', index):
             for l in xstr:
-                x_end = x + 30
+                x_end = x + canvas_shape[1]
                 try:
-                    slice[..., cy:cy + 50, x:x_end] = numbers[int(l)]
-                except ValueError:
-                    break
-                x = x_end + 5
-            x = x_end + 15
-
-        for f in range(0, slice.shape[0]):
-            x = cx - 120
-            xstr = str(z_from + f)
-            for l in xstr:
-                x_end = x + 30
-                try:
-                    slice[f, ..., cy + 55:cy + 105, x:x_end] = \
+                    slice[..., cy:cy + canvas_shape[0], x:x_end] = \
                         numbers[int(l)]
                 except ValueError:
                     break
-                x = x_end + 5
+                x = x_end + canvas_shape[1] // 2
+            x = x_end + canvas_shape[1]
+
+        cy += int(canvas_shape[0] * 1.4)
+        for f in range(0, slice.shape[0]):
+            x = cx
+            xstr = str(z_from + f)
+            for l in xstr:
+                x_end = x + canvas_shape[1]
+                try:
+                    slice[f, ..., cy:cy + canvas_shape[0], x:x_end] = \
+                        numbers[int(l)]
+                except ValueError:
+                    break
+                x = x_end + canvas_shape[1] // 2
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,

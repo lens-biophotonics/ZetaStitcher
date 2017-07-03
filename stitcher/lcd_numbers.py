@@ -2,8 +2,9 @@ import numpy as np
 
 numbers = []
 fill_value = 65535
+canvas_shape = (50, 30)
 
-canvas = np.zeros((50, 30), dtype=np.uint16)
+canvas = np.zeros(canvas_shape, dtype=np.uint16)
 cx = canvas.shape[1] // 2
 cy = canvas.shape[0] // 2
 
