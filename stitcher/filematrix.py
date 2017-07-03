@@ -42,6 +42,7 @@ def parse_file_name(file_name):
     for i in range(1, 4):
         fields.append(int(m.group(i)))
 
+    print('{} \tX={} Y={} Z={}'.format(file_name, *fields))
     return fields
 
 
@@ -100,15 +101,15 @@ class FileMatrix:
                 try:
                     self.parse_and_append(root, flist)
                     continue
-                except (RuntimeError, ValueError) as e:
-                    logger.error(e.args[0])
+                except (RuntimeError, ValueError):
+                    pass
 
             for f in files:
                 try:
                     self.parse_and_append(os.path.join(root, f), flist)
                     continue
-                except (RuntimeError, ValueError) as e:
-                    logger.error(e.args[0])
+                except (RuntimeError, ValueError):
+                    pass
 
         data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
                 'nfrms': flist[3::7], 'ysize': flist[4::7],
@@ -187,8 +188,7 @@ class FileMatrix:
                 fields.append(infile.xsize)
             flist += fields
             flist.append(name)
-        except (RuntimeError, ValueError) as e:
-            logger.error(e.args[0])
+        except (RuntimeError, ValueError):
             raise
 
     def save_to_yaml(self, filename, mode):
