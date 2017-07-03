@@ -36,6 +36,8 @@ Unless otherwise stated, all values are expected in px.
                         dest='output_file', help='output file')
     parser.add_argument('-c', type=str, default='s', dest='channel',
                         choices=['r', 'g', 'b', 's'], help='color channel')
+    parser.add_argument('-n', type=int, default=1,
+                        help='number of parallel threads to use')
 
     group = parser.add_argument_group('tile ordering')
     group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
@@ -71,9 +73,6 @@ Unless otherwise stated, all values are expected in px.
 
     group.add_argument('--z-stride', type=int, default=200,
                        help='stride used for multiple Z sampling')
-
-    parser.add_argument('-n', type=int, default=1,
-                        help='number of parallel threads to use')
 
     args = parser.parse_args()
 
