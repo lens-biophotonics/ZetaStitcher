@@ -161,7 +161,7 @@ def absolute_position_global_optimization(df, sdf, xcorr_options):
             algo.set_verbosity(500)
         archi.push_back(algo=algo, pop=pop)
 
-    archi.evolve(4)
+    archi.evolve(2)
     archi.wait_check()
 
     fs = archi.get_champions_f()
