@@ -71,7 +71,9 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'stitcher = stitcher.runner:main',
+            'stitch-align = stitcher.runner:main',
+            'stitch-fuse = stitcher.fuse_runner:main',
         ],
+
     },
 )

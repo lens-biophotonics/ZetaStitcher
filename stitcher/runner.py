@@ -322,7 +322,7 @@ class Runner(object):
                 }, f, default_flow_style=False)
 
 
-if __name__ == '__main__':
+def main():
     arg = parse_args()
 
     r = Runner()
@@ -336,3 +336,7 @@ if __name__ == '__main__':
         setattr(r, key, getattr(arg, key))
 
     r.run()
+
+
+if __name__ == '__main__':
+    main()
