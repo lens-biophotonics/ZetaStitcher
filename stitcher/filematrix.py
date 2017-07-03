@@ -215,7 +215,9 @@ class FileMatrix:
         view.dz -= self.xcorr_options['max_dz']
         for a in [1, 2]:
             indexes = (view['axis'] == a)
-            view.loc[indexes, 'dy'] = overlap_dict[a] - view.loc[indexes, 'dy']
+            view.loc[indexes, 'dy'] = (overlap_dict[a]
+                                       + self.xcorr_options['max_dy']
+                                       - view.loc[indexes, 'dy'])
         view.dx -= self.xcorr_options['max_dx']
 
         view = view.rename(columns={'aname': 'filename'})

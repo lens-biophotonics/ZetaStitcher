@@ -51,17 +51,17 @@ Unless otherwise stated, all values are expected in px.
 
     group.add_argument('--dy', type=int, required=True, dest='max_dy',
                        help='maximum allowed shift along y (the stitching '
-                            'axis)')
+                            'axis) relative to the nominal overlap')
 
     group.add_argument('--dx', type=int, required=True, dest='max_dx',
                        help='maximum allowed shift along x (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
     group.add_argument('--overlap-h', type=int, required=True, metavar='OH',
-                       help='overlap along the horizontal axis')
+                       help='nominal overlap along the horizontal axis')
 
     group.add_argument('--overlap-v', type=int, required=True, metavar='OV',
-                       help='overlap along the vertical axis')
+                       help='nominal overlap along the vertical axis')
 
     group = parser.add_argument_group(
         'multiple sampling along Z',
@@ -231,14 +231,13 @@ class Runner(object):
             aslice = a.slice(z_min, z_max, copy=True)
             if axis == 2:
                 aslice = np.rot90(aslice, axes=(-1, -2))
-            aslice = aslice[..., -overlap:, :]
+            aslice = aslice[..., -(overlap + self.max_dy):, :]
 
             bframe = b.slice_idx(z_frame, copy=True)
             if axis == 2:
                 bframe = np.rot90(bframe, axes=(-1, -2))
-            bframe = bframe[..., 0:overlap, :]
-
-            bframe = bframe[..., :-self.max_dy, self.max_dx:-self.max_dx]
+            bframe = bframe[..., :overlap - self.max_dy,
+                            self.max_dx:-self.max_dx]
 
             aslice = aslice.astype(np.float32)
             bframe = bframe.astype(np.float32)

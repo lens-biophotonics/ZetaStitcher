@@ -66,12 +66,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     aslice = a.slice(z_min, z_max)
     if axis == 2:
         aslice = np.rot90(aslice, axes=(-1, -2))
-    a_roi = aslice[..., -overlap:, :]
+    a_roi = aslice[..., -(overlap + max_shift_y):, :]
 
     bframe = b.slice_idx(z_frame)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
-    b_roi = bframe[..., 0:overlap - max_shift_y, max_shift_x:-max_shift_x]
+    b_roi = bframe[..., :overlap - max_shift_y, max_shift_x:-max_shift_x]
 
     tiff.imsave('aslice.tiff', a_roi.astype(np.float32))
     tiff.imsave('bframe.tiff', b_roi.astype(np.float32))
@@ -85,7 +85,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     print('shift: ' + str(shift))
     z_a = shift[0]
     shift[0] -= max_shift_z
-    shift[1] = overlap - shift[1]
+    shift[1] = overlap + max_shift_y - shift[1]
     shift[2] -= max_shift_x
 
     print('max @ {}: {}, score: {:.3}'.format(z_frame, shift, score))
