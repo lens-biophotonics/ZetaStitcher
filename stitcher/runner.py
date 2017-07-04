@@ -67,10 +67,10 @@ Unless otherwise stated, all values are expected in px.
                        help='stride used for multiple Z sampling')
 
     group = parser.add_argument_group('tile ordering')
-    group.add_argument('--iX', action='store_false', dest='ascending_tiles_x',
-                       help = 'invert tile ordering along X')
-    group.add_argument('--iY', action='store_false', dest='ascending_tiles_y',
-                       help = 'invert tile ordering along Y')
+    group.add_argument('--iX', action='store_true', dest='invert_x',
+                       help='invert tile ordering along X')
+    group.add_argument('--iY', action='store_true', dest='invert_y',
+                       help='invert tile ordering along Y')
 
     args = parser.parse_args()
 
@@ -82,6 +82,9 @@ Unless otherwise stated, all values are expected in px.
     }
 
     args.channel = channels[args.channel]
+
+    setattr(args, 'ascending_tiles_x', not args.invert_x)
+    setattr(args, 'ascending_tiles_y', not args.invert_y)
 
     return args
 
