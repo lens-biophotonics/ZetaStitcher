@@ -148,6 +148,15 @@ class FileMatrix:
     def process_data(self):
         df = self.data_frame
 
+        xsize = df['X'].unique().size
+        ysize = df['Y'].unique().size
+        n_of_files = len(df.index)
+
+        if xsize * ysize != n_of_files:
+            msg = 'Mosaic is {}x{} tiles, but there are {} files!'.format(
+                xsize, ysize, n_of_files)
+            raise ValueError(msg)
+
         keys = ['X', 'Y', 'Z']
         df[keys] -= df[keys].min()
 
