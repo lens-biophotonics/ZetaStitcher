@@ -39,12 +39,6 @@ Unless otherwise stated, all values are expected in px.
     parser.add_argument('-n', type=int, default=1,
                         help='number of parallel threads to use')
 
-    group = parser.add_argument_group('tile ordering')
-    group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
-                       help = 'invert tile ordering along x')
-    group.add_argument('--iy', action='store_false', dest='ascending_tiles_y',
-                       help = 'invert tile ordering along y')
-
     group = parser.add_argument_group('maximum shifts')
     group.add_argument('--Mz', type=int, required=True, dest='max_dz',
                        help='maximum allowed shift along Z')
@@ -73,6 +67,12 @@ Unless otherwise stated, all values are expected in px.
 
     group.add_argument('--z-stride', type=int, default=200,
                        help='stride used for multiple Z sampling')
+
+    group = parser.add_argument_group('tile ordering')
+    group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
+                       help='invert tile ordering along x')
+    group.add_argument('--iy', action='store_false', dest='ascending_tiles_y',
+                       help='invert tile ordering along y')
 
     args = parser.parse_args()
 
