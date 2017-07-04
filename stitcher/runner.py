@@ -42,7 +42,7 @@ Unless otherwise stated, all values are expected in px.
                         dest='output_file', help='output file')
     parser.add_argument('-c', type=str, default='s', dest='channel',
                         choices=['r', 'g', 'b', 's'], help='color channel')
-    parser.add_argument('-n', type=int, default=1,
+    parser.add_argument('-n', type=int, default=8, dest='n_of_threads',
                         help='number of parallel threads to use')
 
     group = parser.add_argument_group(
@@ -142,6 +142,7 @@ class Runner(object):
         self.fm = None
         self.px_size_xy = 1
         self.px_size_z = 1
+        self.n_of_threads = 1
 
     @property
     def overlap_dict(self):
@@ -274,10 +275,10 @@ class Runner(object):
 
     def run(self):
         self.initialize_queue()
-        self.data_queue = queue.Queue(maxsize=int(arg.n * 2))
+        self.data_queue = queue.Queue(maxsize=int(self.n_of_threads * 2))
         self.output_q = queue.Queue()
         threads = []
-        for i in range(arg.n):
+        for i in range(self.n_of_threads):
             t = threading.Thread(target=self.worker, args=(self.q.qsize(),))
             t.start()
             threads.append(t)
@@ -288,7 +289,7 @@ class Runner(object):
         self.data_queue.join()
 
         # stop workers
-        for i in range(arg.n):
+        for i in range(self.n_of_threads):
             self.data_queue.put(None)
         for t in threads:
             t.join()
@@ -334,7 +335,7 @@ def main():
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
             'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
-            'px_size_z']
+            'px_size_z', 'n_of_threads']
 
     for key in keys:
         setattr(r, key, getattr(arg, key))
