@@ -48,8 +48,8 @@ class FuseRunner(object):
         self.fm = FileMatrix()
         self.fm.compute_average = self.compute_average
         load_abs_positions = True
-        if self.old_options and self.compute_average != \
-            self.old_options['compute_average']:
+        if self.old_options and \
+                self.compute_average != self.old_options['compute_average']:
             load_abs_positions = False
         self.fm.load_yaml(self.input_file, load_abs_positions)
         self.fm.process_data()

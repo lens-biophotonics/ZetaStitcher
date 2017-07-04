@@ -202,10 +202,11 @@ class FileMatrix:
         if self.compute_average:
             view = sdf.groupby(['aname', 'bname', 'axis']).agg(
                 lambda x: np.average(x, weights=sdf.loc[x.index, 'score']) if
-                    sdf.loc[x.index, 'score'].sum() != 0 else np.average(x))
+                sdf.loc[x.index, 'score'].sum() != 0 else np.average(x))
         else:
             view = sdf.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: sdf.loc[np.argmax(sdf.loc[x.index, 'score']), x.name])
+                lambda x: sdf.loc[np.argmax(sdf.loc[x.index, 'score']), x.name]
+            )
 
         view = view.reset_index()
         overlap_dict = {1: self.xcorr_options['overlap_v'],

@@ -162,7 +162,8 @@ class Runner(object):
                         start_frame = (
                             central_frame
                             - (self.z_samples // 2 * self.z_stride)
-                            + (0 if self.z_samples % 2 else self.z_stride // 2))
+                            + (0 if self.z_samples % 2 else self.z_stride // 2)
+                        )
                         for i in range(0, self.z_samples):
                             z_frame = start_frame + i * self.z_stride
                             params_dict = {
@@ -195,12 +196,11 @@ class Runner(object):
                 if score < 0 or score > 1:
                     score = 0
 
+                progress = 100 * (1 - self.q.qsize() / initial_queue_length)
                 print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
                       '{shift}\t{score}'.format(
-                       progress=(
-                           100 * (1 - self.q.qsize() / initial_queue_length)),
-                       aname=aname, bname=bname, z_frame=z_frame, shift=shift,
-                       score=score))
+                          progress=progress, aname=aname, bname=bname,
+                          z_frame=z_frame, shift=shift, score=score))
                 self.output_q.put(
                     [aname, bname, axis, z_frame] + shift + [score])
             finally:

@@ -23,8 +23,8 @@ numbers.append(a)
 # 2
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
-a[:cy,-2:] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[:cy, -2:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[cy:, :2] = fill_value
 a[-2:, :] = fill_value
 numbers.append(a)
@@ -32,7 +32,7 @@ numbers.append(a)
 # 3
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[-2:, :] = fill_value
 a[:, -2:] = fill_value
 numbers.append(a)
@@ -40,15 +40,15 @@ numbers.append(a)
 # 4
 a = np.zeros_like(canvas)
 a[:cy, :2] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[:, -2:] = fill_value
 numbers.append(a)
 
 # 5
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
-a[:cy,:2] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[:cy, :2] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[cy:, -2:] = fill_value
 a[-2:, :] = fill_value
 numbers.append(a)
@@ -56,7 +56,7 @@ numbers.append(a)
 # 6
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[-2:, :] = fill_value
 a[cy:, -2:] = fill_value
 a[:, :2] = fill_value
@@ -72,7 +72,7 @@ numbers.append(a)
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
 a[-2:, :] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[:, -2:] = fill_value
 a[:, :2] = fill_value
 numbers.append(a)
@@ -81,7 +81,7 @@ numbers.append(a)
 a = np.zeros_like(canvas)
 a[:2, :] = fill_value
 a[-2:, :] = fill_value
-a[cy - 1:cy + 1,:] = fill_value
+a[cy - 1:cy + 1, :] = fill_value
 a[:, -2:] = fill_value
 a[:cy, :2] = fill_value
 numbers.append(a)
