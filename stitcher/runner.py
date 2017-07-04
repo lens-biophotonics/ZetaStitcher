@@ -188,15 +188,16 @@ class Runner(object):
                             - (self.z_samples // 2 * self.z_stride)
                             + (0 if self.z_samples % 2 else self.z_stride // 2)
                         )
+                        z_frames = []
                         for i in range(0, self.z_samples):
-                            z_frame = start_frame + i * self.z_stride
-                            params_dict = {
-                                'aname': atile.Index,
-                                'bname': btile.Index,
-                                'z_frame': z_frame,
-                                'axis': stitch_config['axis'],
-                            }
-                            q.put(params_dict)
+                            z_frames.append(start_frame + i * self.z_stride)
+                        params_dict = {
+                            'aname': atile.Index,
+                            'bname': btile.Index,
+                            'z_frames': z_frames,
+                            'axis': stitch_config['axis'],
+                        }
+                        q.put(params_dict)
                         atile = btile
         self.q = q
 
@@ -229,7 +230,6 @@ class Runner(object):
                     [aname, bname, axis, z_frame] + shift + [score])
             finally:
                 self.data_queue.task_done()
-                self.q.task_done()
 
     def keep_filling_data_queue(self):
         while True:
@@ -239,7 +239,7 @@ class Runner(object):
                 break
             aname = item['aname']
             bname = item['bname']
-            z_frame = item['z_frame']
+            z_frames = item['z_frames']
             axis = item['axis']
             overlap = self.overlap_dict[axis]
 
@@ -249,24 +249,28 @@ class Runner(object):
             a.channel = self.channel
             b.channel = self.channel
 
-            z_min = z_frame - self.max_dz
-            z_max = z_frame + self.max_dz + 1
+            for z_frame in z_frames:
+                z_min = z_frame - self.max_dz
+                z_max = z_frame + self.max_dz + 1
 
-            aslice = a.slice(z_min, z_max, copy=True)
-            if axis == 2:
-                aslice = np.rot90(aslice, axes=(-1, -2))
-            aslice = aslice[..., -(overlap + self.max_dy):, :]
+                aslice = a.slice(z_min, z_max, copy=True)
+                if axis == 2:
+                    aslice = np.rot90(aslice, axes=(-1, -2))
+                aslice = aslice[..., -(overlap + self.max_dy):, :]
 
-            bframe = b.slice_idx(z_frame, copy=True)
-            if axis == 2:
-                bframe = np.rot90(bframe, axes=(-1, -2))
-            bframe = bframe[..., :overlap - self.max_dy,
-                            self.max_dx:-self.max_dx]
+                bframe = b.slice_idx(z_frame, copy=True)
+                if axis == 2:
+                    bframe = np.rot90(bframe, axes=(-1, -2))
+                bframe = bframe[..., :overlap - self.max_dy,
+                                self.max_dx:-self.max_dx]
 
-            aslice = aslice.astype(np.float32)
-            bframe = bframe.astype(np.float32)
+                aslice = aslice.astype(np.float32)
+                bframe = bframe.astype(np.float32)
 
-            self.data_queue.put([aname, bname, axis, aslice, bframe, z_frame])
+                self.data_queue.put(
+                    [aname, bname, axis, aslice, bframe, z_frame])
+
+            self.q.task_done()
 
     def run(self):
         self.initialize_queue()
