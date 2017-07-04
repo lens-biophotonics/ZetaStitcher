@@ -21,10 +21,8 @@ Stitch tiles in a folder.
 The following naming conventions are used:
 * Z is the direction along the stack height,
 * (X, Y) is the frame plane,
-* Y is the direction along which frames are supposed to overlap,
-* X is the direction orthogonal to Y in the frame plane (X, Y).
-
-* (x, y) is the original frame plane (not rotated)
+* y is the direction along which frames are supposed to overlap,
+* x is the direction orthogonal to y in the frame plane (X, Y).
 
 Unless otherwise stated, all values are expected in px.
     ''',
@@ -40,15 +38,15 @@ Unless otherwise stated, all values are expected in px.
                         help='number of parallel threads to use')
 
     group = parser.add_argument_group('maximum shifts')
-    group.add_argument('--Mz', type=int, required=True, dest='max_dz',
+    group.add_argument('--dz', type=int, required=True, dest='max_dz',
                        help='maximum allowed shift along Z')
 
-    group.add_argument('--My', type=int, required=True, dest='max_dy',
-                       help='maximum allowed shift along Y (the stitching '
+    group.add_argument('--dy', type=int, required=True, dest='max_dy',
+                       help='maximum allowed shift along y (the stitching '
                             'axis)')
 
-    group.add_argument('--Mx', type=int, required=True, dest='max_dx',
-                       help='maximum allowed shift along X (lateral shift)')
+    group.add_argument('--dx', type=int, required=True, dest='max_dx',
+                       help='maximum allowed shift along x (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
     group.add_argument('--overlap-h', type=int, required=True, metavar='OH',
@@ -69,10 +67,10 @@ Unless otherwise stated, all values are expected in px.
                        help='stride used for multiple Z sampling')
 
     group = parser.add_argument_group('tile ordering')
-    group.add_argument('--ix', action='store_false', dest='ascending_tiles_x',
-                       help='invert tile ordering along x')
-    group.add_argument('--iy', action='store_false', dest='ascending_tiles_y',
-                       help='invert tile ordering along y')
+    group.add_argument('--iX', action='store_false', dest='ascending_tiles_x',
+                       help = 'invert tile ordering along X')
+    group.add_argument('--iY', action='store_false', dest='ascending_tiles_y',
+                       help = 'invert tile ordering along Y')
 
     args = parser.parse_args()
 
