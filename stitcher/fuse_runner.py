@@ -229,10 +229,22 @@ def parse_args():
     parser.add_argument('-d', dest='debug', action='store_true',
                         help='overlay debug info')
 
-    parser.add_argument('--zmin', type=int, default=0)
-    parser.add_argument('--zmax', type=int, default=None, help='noninclusive')
+    parser.add_argument('--px-size-z', type=float, default=1,
+                        help='pixel size in the Z direction. If specified, '
+                             'the corresponding options can be expressed in '
+                             'your custom untis.')
 
-    return parser.parse_args(sys.argv[1:])
+    parser.add_argument('--zmin', type=float, default=0)
+    parser.add_argument('--zmax', type=float, default=None,
+                        help='noninclusive')
+
+    args = parser.parse_args()
+
+    args.zmin = int(round(args.zmin / args.px_size_z))
+    if args.zmax is not None:
+        args.zmax = int(round(args.zmax / args.px_size_z))
+
+    return args
 
 
 def main():

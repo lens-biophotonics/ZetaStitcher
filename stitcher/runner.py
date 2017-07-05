@@ -45,22 +45,30 @@ Unless otherwise stated, all values are expected in px.
     parser.add_argument('-n', type=int, default=1,
                         help='number of parallel threads to use')
 
+    group = parser.add_argument_group(
+        'pixel size', 'If specified, the corresponding options can be '
+                      'expressed in your custom units.')
+    group.add_argument('--px-size-xy', type=float, default=1,
+                       help='pixel size in the (X, Y) plane')
+    group.add_argument('--px-size-z', type=float, default=1,
+                       help='pixel size in the Z direction')
+
     group = parser.add_argument_group('maximum shifts')
-    group.add_argument('--dz', type=int, required=True, dest='max_dz',
+    group.add_argument('--dz', type=float, required=True, dest='max_dz',
                        help='maximum allowed shift along Z')
 
-    group.add_argument('--dy', type=int, required=True, dest='max_dy',
+    group.add_argument('--dy', type=float, required=True, dest='max_dy',
                        help='maximum allowed shift along y (the stitching '
                             'axis) relative to the nominal overlap')
 
-    group.add_argument('--dx', type=int, required=True, dest='max_dx',
+    group.add_argument('--dx', type=float, required=True, dest='max_dx',
                        help='maximum allowed shift along x (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
-    group.add_argument('--overlap-h', type=int, required=True, metavar='OH',
+    group.add_argument('--overlap-h', type=float, required=True, metavar='OH',
                        help='nominal overlap along the horizontal axis')
 
-    group.add_argument('--overlap-v', type=int, required=True, metavar='OV',
+    group.add_argument('--overlap-v', type=float, required=True, metavar='OV',
                        help='nominal overlap along the vertical axis')
 
     group = parser.add_argument_group(
@@ -71,7 +79,7 @@ Unless otherwise stated, all values are expected in px.
     group.add_argument('--z-samples', type=int, default=1, metavar='ZSAMP',
                        help='number of samples to take along Z')
 
-    group.add_argument('--z-stride', type=int, default=200,
+    group.add_argument('--z-stride', type=float, default=None,
                        help='stride used for multiple Z sampling')
 
     group = parser.add_argument_group('tile ordering')
@@ -90,6 +98,20 @@ Unless otherwise stated, all values are expected in px.
     }
 
     args.channel = channels[args.channel]
+
+    if args.z_samples > 1 and args.z_stride is None:
+        args.z_stride = args.dz * 1.2
+
+    args.max_dx = int(round(args.max_dx / args.px_size_xy))
+    args.max_dy = int(round(args.max_dy / args.px_size_xy))
+    args.max_dz = int(round(args.max_dz / args.px_size_z))
+    if args.z_stride is not None:
+        args.z_stride = int(round(args.z_stride / args.px_size_z))
+    else:
+        args.z_stride = 0
+
+    args.overlap_v = int(round(args.overlap_v / args.px_size_xy))
+    args.overlap_h = int(round(args.overlap_h / args.px_size_xy))
 
     setattr(args, 'ascending_tiles_x', not args.invert_x)
     setattr(args, 'ascending_tiles_y', not args.invert_y)
@@ -118,6 +140,8 @@ class Runner(object):
         self.ascending_tiles_y = True
         self.df = None
         self.fm = None
+        self.px_size_xy = 1
+        self.px_size_z = 1
 
     @property
     def overlap_dict(self):
@@ -272,13 +296,19 @@ class Runner(object):
 
         self.save_results_to_file()
 
-        print(df[['dx', 'dy', 'dz', 'score']].describe())
+        df[['dx_px', 'dy_px', 'dz_px']] = df[['dx', 'dy', 'dz']]
+        df[['dx', 'dy']] *= self.px_size_xy
+        df['dz'] *= self.px_size_z
+
+        cols = ['dx', 'dy', 'dz', 'score', 'dx_px', 'dy_px', 'dz_px']
+        print(df[cols].describe())
 
     def save_results_to_file(self):
         self.fm.save_to_yaml(self.output_file, 'w')
 
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
-                 'ascending_tiles_x', 'ascending_tiles_y']
+                 'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
+                 'px_size_z']
 
         options = {}
         for attr in attrs:
@@ -299,7 +329,9 @@ if __name__ == '__main__':
 
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
-            'ascending_tiles_x', 'ascending_tiles_y']
+            'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
+            'px_size_z']
+
     for key in keys:
         setattr(r, key, getattr(arg, key))
 
