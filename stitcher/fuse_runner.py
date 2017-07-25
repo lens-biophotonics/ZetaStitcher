@@ -1,5 +1,4 @@
 import re
-import sys
 import os.path
 import argparse
 import threading
