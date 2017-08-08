@@ -56,13 +56,15 @@ class FuseRunner(object):
     @property
     @lru_cache()
     def dtype(self):
-        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
+        with InputFile(infile) as f:
             return np.dtype(f.dtype)
 
     @property
     @lru_cache()
     def is_multichannel(self):
-        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
+        with InputFile(infile) as f:
             if f.nchannels > 1:
                 multichannel = True
             else:
@@ -76,7 +78,8 @@ class FuseRunner(object):
             thickness -= (thickness - self.zmax)
         thickness -= self.zmin
 
-        with InputFile(self.fm.data_frame.iloc[0].name) as f:
+        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
+        with InputFile(infile) as f:
             output_shape = list(f.shape)
 
         output_shape[0] = thickness
