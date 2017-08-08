@@ -20,8 +20,9 @@ pygmo==2.4
 pyparsing==2.2.0          # via matplotlib
 python-dateutil==2.6.0    # via matplotlib, pandas
 pytz==2017.2              # via matplotlib, pandas
-PyWavelets==0.5.2         # via scikit-image
+pywavelets==0.5.2         # via scikit-image
 pyyaml==3.12
 scikit-image==0.13.0
 scipy==0.19.1
+semver==2.7.7
 six==1.10.0               # via cycler, matplotlib, python-dateutil, scikit-image

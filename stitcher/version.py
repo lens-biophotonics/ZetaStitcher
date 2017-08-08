@@ -1,7 +1,10 @@
+import semver
+
 major = 0
 minor = 1
 patch = 0
 
-full_version = '{}.{}'.format(major, minor)
-if patch:
-    full_version = '{}.{}'.format(full_version, patch)
+prerelease = 'dev'
+build = None
+
+full_version = semver.format_version(major, minor, patch, prerelease, build)
