@@ -128,17 +128,25 @@ def absolute_position_global_optimization(df, sdf, xcorr_options):
 
     # shifts along Y
     temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis', 'score']]
-    temp = temp[temp['axis'] == 1].loc[idx]
-    p_ab_1 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
-    score_1 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
+    try:
+        temp = temp[temp['axis'] == 1].loc[idx]
+        p_ab_1 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+        score_1 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
+    except KeyError:
+        p_ab_1 = np.zeros((ysize, xsize, 3))
+        score_1 = np.zeros((ysize, xsize))
 
     shape = p_ab_1.shape
 
     # shifts along X
     temp = sdf.loc[idx, ['pz', 'py', 'px', 'axis', 'score']]
-    temp = temp[temp['axis'] == 2].loc[idx]
-    p_ab_2 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
-    score_2 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
+    try:
+        temp = temp[temp['axis'] == 2].loc[idx]
+        p_ab_2 = np.array(temp[['pz', 'py', 'px']]).reshape(ysize, xsize, 3)
+        score_2 = np.nan_to_num(np.array(temp['score']).reshape(ysize, xsize))
+    except KeyError:
+        p_ab_2 = np.zeros((ysize, xsize, 3))
+        score_2 = np.zeros((ysize, xsize))
 
     # initial decision vector
     # first row: displacement vector from adjacent left tile
