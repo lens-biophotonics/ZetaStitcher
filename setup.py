@@ -48,7 +48,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['dcimg>=0.2.1', 'networkx', 'numpy', 'pandas', 'psutil',
+    install_requires=['dcimg>=0.3.0', 'networkx', 'numpy', 'pandas', 'psutil',
                       'pyfftw', 'pygmo>=2', 'pyyaml', 'scipy', 'scikit-image',
                       'semver'],
 
