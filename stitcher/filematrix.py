@@ -136,7 +136,7 @@ class FileMatrix:
         abs_yaml_key = 'absolute_positions'
         if abs_yaml_key in y:
             if load_absolute_positions:
-                abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
+                abs_keys = ['Xs', 'Ys', 'Zs']
                 df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
                 self.data_frame[abs_keys] = df[abs_keys]
             else:
@@ -172,14 +172,19 @@ class FileMatrix:
 
         cols = self.data_frame.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
-            pass
+            self.data_frame['Xs_end'] = \
+                self.data_frame['Xs'] + self.data_frame['xsize']
+            self.data_frame['Ys_end'] = \
+                self.data_frame['Ys'] + self.data_frame['ysize']
+            self.data_frame['Zs_end'] = \
+                self.data_frame['Zs'] + self.data_frame['nfrms']
         else:
-            abs_keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
             self._compute_absolute_positions_initial_guess()
             absolute_position_global_optimization(self.data_frame,
                                                   self.stitch_data_frame,
                                                   self.xcorr_options)
 
+            abs_keys = ['Xs', 'Ys', 'Zs']
             df = df[abs_keys].reset_index()
             j = json.loads(df.to_json(orient='records'))
             self.y['absolute_positions'] = j
