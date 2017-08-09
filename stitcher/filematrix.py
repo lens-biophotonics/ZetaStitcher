@@ -201,7 +201,9 @@ class FileMatrix:
             raise
 
     def save_to_yaml(self, filename, mode):
-        j = json.loads(self.data_frame.reset_index().to_json(orient='records'))
+        keys = ['X', 'Y', 'Z', 'nfrms', 'xsize', 'ysize']
+        df = self.data_frame[keys].reset_index()
+        j = json.loads(df.to_json(orient='records'))
         with open(filename, mode) as f:
             yaml.dump({'filematrix': j}, f, default_flow_style=False)
 
