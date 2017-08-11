@@ -12,7 +12,6 @@ import pandas as pd
 import networkx as nx
 
 from .inputfile import InputFile
-from .fuser.global_optimization import absolute_position_global_optimization
 
 
 logger = logging.getLogger('FileMatrix')
@@ -110,6 +109,7 @@ class FileMatrix:
         df['Z_end'] = df['Z'] + df['nfrms']
 
         self.data_frame = df.set_index('filename')
+        self.process_data_frame()
 
     def load_yaml(self, fname, load_absolute_positions=True):
         with open(fname, 'r') as f:
@@ -123,6 +123,7 @@ class FileMatrix:
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
         self.stitch_data_frame = pd.DataFrame(y['xcorr'])
         self.xcorr_options = y['xcorr-options']
+        self._aggregate_results()
 
         abs_yaml_key = 'absolute_positions'
         if abs_yaml_key in y:
@@ -133,10 +134,11 @@ class FileMatrix:
             else:
                 del y[abs_yaml_key]
 
+        self.process_data_frame()
         self.dir = fname
         self.y = y
 
-    def process_data(self):
+    def process_data_frame(self):
         df = self.data_frame
 
         xsize = df['X'].unique().size
@@ -157,30 +159,13 @@ class FileMatrix:
         if not self.ascending_tiles_y:
             df['Y'] = (df['Y'] - df['Y'].max()).abs()
 
-        self._aggregate_results()
-
-        self._compute_shift_vectors()
-
-        cols = self.data_frame.columns
+        cols = df.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
-            self.data_frame['Xs_end'] = \
-                self.data_frame['Xs'] + self.data_frame['xsize']
-            self.data_frame['Ys_end'] = \
-                self.data_frame['Ys'] + self.data_frame['ysize']
-            self.data_frame['Zs_end'] = \
-                self.data_frame['Zs'] + self.data_frame['nfrms']
-        else:
-            self._compute_absolute_positions_initial_guess()
-            absolute_position_global_optimization(self.data_frame,
-                                                  self.stitch_data_frame,
-                                                  self.xcorr_options)
-
-            abs_keys = ['Xs', 'Ys', 'Zs']
-            df = df[abs_keys].reset_index()
-            j = json.loads(df.to_json(orient='records'))
-            self.y['absolute_positions'] = j
-            with open(self.dir, 'w') as f:
-                yaml.dump(self.y, f, default_flow_style=False)
+            for key in ['Xs', 'Ys', 'Zs']:
+                df[key] -= df[key].min()
+            df['Xs_end'] = df['Xs'] + df['xsize']
+            df['Ys_end'] = df['Ys'] + df['ysize']
+            df['Zs_end'] = df['Zs'] + df['nfrms']
 
     def parse_and_append(self, name, flist):
         try:
@@ -228,64 +213,6 @@ class FileMatrix:
         view = view.rename(columns={'aname': 'filename'})
 
         self.stitch_data_frame = view.set_index('filename')
-
-    def _compute_shift_vectors(self):
-        sdf = self.stitch_data_frame
-        fm_df = self.data_frame
-
-        sdf['px'] = 0
-        sdf['py'] = 0
-        sdf['pz'] = 0
-
-        idx = sdf['axis'] == 1
-        fm_df_idx = idx[idx].index
-        sdf.loc[fm_df_idx, 'px'] = sdf.loc[idx, 'dx']
-        sdf.loc[fm_df_idx, 'py'] = fm_df.loc[fm_df_idx, 'ysize'] - sdf.loc[
-            idx, 'dy']
-        sdf.loc[fm_df_idx, 'pz'] = sdf.loc[idx, 'dz']
-
-        idx = sdf['axis'] == 2
-        fm_df_idx = idx[idx].index
-        sdf.loc[idx, 'px'] = fm_df.loc[fm_df_idx, 'xsize'] - sdf.loc[idx, 'dy']
-        sdf.loc[idx, 'py'] = -sdf.loc[idx, 'dx']
-        sdf.loc[idx, 'pz'] = sdf.loc[idx, 'dz']
-
-    def _compute_absolute_positions_initial_guess(self):
-        sdf = self.stitch_data_frame.reset_index()
-        fm_df = self.data_frame
-
-        G = nx.Graph()
-        G.add_edges_from(((
-            u, v, {'weight': w}) for u, v, w in
-            np.c_[sdf['filename'], sdf['bname'], 1 - sdf['score']]))
-
-        keys = ['Xs', 'Ys', 'Zs']
-        for k in keys:
-            fm_df[k] = 0
-
-        sdf = sdf.reset_index().set_index('bname')
-
-        cond = (fm_df['X'] == 0) & (fm_df['Y'] == 0) & (fm_df['Z'] == 0)
-        top_left_corner = fm_df[cond].index[0]
-        for edge in nx.bfs_edges(G, source=top_left_corner):
-            btile = edge[1]
-            parents = fm_df.loc[sdf.loc[[btile], 'filename']]
-            temp_sdf = sdf.loc[[btile]].set_index('filename')
-            temp = pd.DataFrame()
-            temp['Xs'] = parents['Xs'] + temp_sdf['px']
-            temp['Ys'] = parents['Ys'] + temp_sdf['py']
-            temp['Zs'] = parents['Zs'] + temp_sdf['pz']
-            temp['score'] = temp_sdf['score']
-            fm_df.loc[btile, keys] = temp.apply(
-                lambda x: np.average(x, weights=temp.loc[x.index, 'score']) if
-                temp.loc[x.index, 'score'].sum() != 0 else np.average(x))
-
-        fm_df[keys] -= fm_df[keys].min()
-        fm_df[keys] = fm_df[keys].apply(np.round).astype(int)
-
-        fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
-        fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
-        fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
 
     @property
     def slices(self):

@@ -11,9 +11,12 @@ import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
 from .overlaps import Overlaps
+from . import absolute_positions
+from .lcd_numbers import numbers, canvas_shape
+from .global_optimization import absolute_position_global_optimization
+
 from ..inputfile import InputFile
 from ..filematrix import FileMatrix
-from .lcd_numbers import numbers, canvas_shape
 
 
 def to_dtype(x, dtype):
@@ -48,7 +51,7 @@ class FuseRunner(object):
                 self.compute_average != self.old_options['compute_average']:
             load_abs_positions = False
         self.fm.load_yaml(self.input_file, load_abs_positions)
-        self.fm.process_data()
+        # self.fm.process_data()
 
     @property
     @lru_cache()
@@ -86,9 +89,20 @@ class FuseRunner(object):
         return output_shape
 
     def run(self):
-        df = self.fm.data_frame
-        for key in ['Xs', 'Ys', 'Zs']:
-            df[key] -= df[key].min()
+        fm_df = self.fm.data_frame
+        sdf = self.fm.stitch_data_frame
+
+        # process dataframes
+        absolute_positions.compute_shift_vectors(fm_df, sdf)
+        cols = self.fm.data_frame.columns
+        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+            pass
+        else:
+            absolute_positions.compute_initial_guess(fm_df, sdf)
+            absolute_position_global_optimization(fm_df, sdf,
+                                                  self.fm.xcorr_options)
+
+        ov = Overlaps(fm_df, sdf)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
                                       * self.dtype.itemsize)
@@ -111,8 +125,6 @@ class FuseRunner(object):
             os.remove(self.output_filename)
         except FileNotFoundError:
             pass
-
-        ov = Overlaps(self.fm.data_frame, self.fm.stitch_data_frame)
 
         for thickness in partial_thickness:
             self.zmax = self.zmin + thickness
