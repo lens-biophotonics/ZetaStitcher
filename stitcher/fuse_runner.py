@@ -12,11 +12,11 @@ import numpy as np
 import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
-from .lcd_numbers import numbers, canvas_shape
+from .overlaps import Overlaps
 from .inputfile import InputFile
-from .filematrix import FileMatrix
-
 from .version import full_version
+from .filematrix import FileMatrix
+from .lcd_numbers import numbers, canvas_shape
 
 
 def to_dtype(x, dtype):
@@ -115,6 +115,8 @@ class FuseRunner(object):
         except FileNotFoundError:
             pass
 
+        ov = Overlaps(self.fm.data_frame, self.fm.stitch_data_frame)
+
         for thickness in partial_thickness:
             self.zmax = self.zmin + thickness
             fused = np.zeros(self.output_shape, dtype=np.float32)
@@ -152,7 +154,7 @@ class FuseRunner(object):
                     self.overlay_debug(slice, index, z_from)
 
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
-                overlaps = self.fm.overlaps(index).copy()
+                overlaps = ov.overlaps(index).copy()
                 overlaps = overlaps.loc[
                     (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
                 ]
