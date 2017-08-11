@@ -12,7 +12,7 @@ import pandas as pd
 import networkx as nx
 
 from .inputfile import InputFile
-from .global_optimization import absolute_position_global_optimization
+from .fuser.global_optimization import absolute_position_global_optimization
 
 
 logger = logging.getLogger('FileMatrix')
