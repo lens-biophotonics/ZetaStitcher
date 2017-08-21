@@ -106,7 +106,6 @@ class FileMatrix:
                 'xsize': flist[5::7], 'filename': flist[6::7]}
         df = pd.DataFrame(data)
         df = df.sort_values(['Z', 'Y', 'X'])
-        df['Z_end'] = df['Z'] + df['nfrms']
 
         self.data_frame = df.set_index('filename')
         self.process_data_frame()
@@ -152,6 +151,8 @@ class FileMatrix:
 
         keys = ['X', 'Y', 'Z']
         df[keys] -= df[keys].min()
+
+        df['Z_end'] = df['Z'] + df['nfrms']
 
         if not self.ascending_tiles_x:
             df['X'] = (df['X'] - df['X'].max()).abs()
