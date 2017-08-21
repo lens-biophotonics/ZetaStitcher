@@ -310,7 +310,7 @@ class Runner(object):
 
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
                  'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
-                 'px_size_z']
+                 'px_size_z', 'z_samples', 'z_stride']
 
         options = {}
         for attr in attrs:
