@@ -149,21 +149,18 @@ class Runner(object):
         return {1: self.overlap_v, 2: self.overlap_h}
 
     def initialize_queue(self):
-        fm = FileMatrix(self.input_folder)
-        fm.ascending_tiles_x = self.ascending_tiles_x
-        fm.ascending_tiles_y = self.ascending_tiles_y
+        fm = FileMatrix(
+            self.input_folder, self.ascending_tiles_x, self.ascending_tiles_y)
         self.fm = fm
 
         stitch_X = {
             'axis': 2,
-            'ascending': self.ascending_tiles_x,
             'sort': ['Z', 'X', 'Y'],
             'groupby': 'Y'
         }
 
         stitch_Y = {
             'axis': 1,
-            'ascending': self.ascending_tiles_y,
             'sort': ['Z', 'Y', 'X'],
             'groupby': 'X'
         }
@@ -174,7 +171,7 @@ class Runner(object):
             df = fm.data_frame.loc[s.nodes()]
             for stitch_config in [stitch_X, stitch_Y]:
                 view = df.sort_values(stitch_config['sort'],
-                                      ascending=stitch_config['ascending'])
+                                      ascending=True)
                 view = view.groupby(stitch_config['groupby'])
 
                 for name, group in view:

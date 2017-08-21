@@ -73,7 +73,7 @@ setup(
     entry_points={
         'console_scripts': [
             'stitch-align = stitcher.runner:main',
-            'stitch-fuse = stitcher.fuse_runner:main',
+            'stitch-fuse = stitcher.fuser.__main__:main',
         ],
 
     },

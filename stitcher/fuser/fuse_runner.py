@@ -1,22 +1,23 @@
 import re
 import os.path
-import argparse
 import threading
 
 from queue import Queue
 from functools import lru_cache
 
-import yaml
 import psutil
 import numpy as np
 import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
+from .overlaps import Overlaps
+from . import absolute_positions
 from .lcd_numbers import numbers, canvas_shape
-from .inputfile import InputFile
-from .filematrix import FileMatrix
+from .global_optimization import absolute_position_global_optimization
 
-from .version import full_version
+from ..inputfile import InputFile
+from ..filematrix import FileMatrix
+from .xcorr_filematrix import XcorrFileMatrix
 
 
 def to_dtype(x, dtype):
@@ -26,8 +27,8 @@ def to_dtype(x, dtype):
 
 
 class FuseRunner(object):
-    def __init__(self, input_file=None, old_options=None):
-        self.input_file = input_file  #: input file or folder
+    def __init__(self, input_file=None):
+        self.input_file = input_file  #: input file
         self.fm = None  #: :class:`FileMatrix`
         self.path = None
 
@@ -36,22 +37,14 @@ class FuseRunner(object):
         self.debug = False
         self.compute_average = False
         self.output_filename = None
-        self.old_options = old_options
 
         self._is_multichannel = None
-
-        # self._load_df()
 
     def _load_df(self):
         self.path, file_name = os.path.split(self.input_file)
         self.fm = FileMatrix()
         self.fm.compute_average = self.compute_average
-        load_abs_positions = True
-        if self.old_options and \
-                self.compute_average != self.old_options['compute_average']:
-            load_abs_positions = False
-        self.fm.load_yaml(self.input_file, load_abs_positions)
-        self.fm.process_data()
+        self.fm.load_yaml(self.input_file)
 
     @property
     @lru_cache()
@@ -88,10 +81,34 @@ class FuseRunner(object):
 
         return output_shape
 
+    def clear_absolute_positions(self):
+        keys = ['Xs', 'Ys', 'Zs']
+        for k in keys:
+            try:
+                del self.fm.data_frame[k]
+            except KeyError:
+                pass
+
     def run(self):
-        df = self.fm.data_frame
-        for key in ['Xs', 'Ys', 'Zs']:
-            df[key] -= df[key].min()
+        fm_df = self.fm.data_frame
+
+        xcorr_fm = XcorrFileMatrix()
+        xcorr_fm.load_yaml(self.input_file)
+        xcorr_fm.aggregate_results(self.compute_average)
+
+        sdf = xcorr_fm.stitch_data_frame
+
+        # process dataframes
+        cols = self.fm.data_frame.columns
+        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+            pass
+        else:
+            absolute_positions.compute_shift_vectors(fm_df, sdf)
+            absolute_positions.compute_initial_guess(fm_df, sdf)
+            absolute_position_global_optimization(fm_df, sdf,
+                                                  xcorr_fm.xcorr_options)
+
+        ov = Overlaps(fm_df, sdf)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
                                       * self.dtype.itemsize)
@@ -152,7 +169,7 @@ class FuseRunner(object):
                     self.overlay_debug(slice, index, z_from)
 
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
-                overlaps = self.fm.overlaps(index).copy()
+                overlaps = ov.overlaps(index).copy()
                 overlaps = overlaps.loc[
                     (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
                 ]
@@ -205,86 +222,3 @@ class FuseRunner(object):
                 except ValueError:
                     break
                 x = x_end + canvas_shape[1] // 2
-
-
-class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
-                      argparse.RawDescriptionHelpFormatter):
-    pass
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Fuse stitched tiles in a folder.',
-        epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
-               'Version: {}'.format(full_version),
-        formatter_class=CustomFormatter)
-
-    parser.add_argument('input_file', help='input file (.yml) or folder')
-
-    parser.add_argument('-o', type=str, default='fused.tiff',
-                        dest='output_filename', help='output file name')
-
-    parser.add_argument('-a', action='store_true', dest='compute_average',
-                        help='instead of maximum score, take the average '
-                             'result weighted by the score')
-
-    parser.add_argument('-d', dest='debug', action='store_true',
-                        help='overlay debug info')
-
-    parser.add_argument('--px-size-z', type=float, default=1,
-                        help='pixel size in the Z direction. If specified, '
-                             'the corresponding options can be expressed in '
-                             'your custom untis.')
-
-    parser.add_argument('--zmin', type=float, default=0)
-    parser.add_argument('--zmax', type=float, default=None,
-                        help='noninclusive')
-
-    args = parser.parse_args()
-
-    args.zmin = int(round(args.zmin / args.px_size_z))
-    if args.zmax is not None:
-        args.zmax = int(round(args.zmax / args.px_size_z))
-
-    return args
-
-
-def main():
-    arg = parse_args()
-
-    if os.path.isdir(arg.input_file):
-        input_file = os.path.join(arg.input_file, 'stitch.yml')
-    else:
-        input_file = arg.input_file
-
-    with open(input_file, 'r') as f:
-        y = yaml.load(f)
-
-    try:
-        old_options = y['fuse_runner_options']
-    except KeyError:
-        old_options = None
-
-    fr = FuseRunner(input_file, old_options)
-
-    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
-    for k in keys:
-        setattr(fr, k, getattr(arg, k))
-
-    fr._load_df()
-    fr.run()
-
-    with open(input_file, 'r') as f:
-        y = yaml.load(f)
-    fr_options = {}
-    keys = ['compute_average']
-    for k in keys:
-        fr_options[k] = getattr(arg, k)
-    y['fuse_runner_options'] = fr_options
-
-    with open(input_file, 'w') as f:
-        yaml.dump(y, f, default_flow_style=False)
-
-
-if __name__ == '__main__':
-    main()
