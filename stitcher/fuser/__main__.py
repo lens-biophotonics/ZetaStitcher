@@ -66,13 +66,16 @@ def main():
     except KeyError:
         old_options = None
 
-    fr = FuseRunner(input_file, old_options)
+    fr = FuseRunner(input_file)
 
     keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
     for k in keys:
         setattr(fr, k, getattr(arg, k))
 
     fr._load_df()
+    if old_options and old_options['compute_average'] != arg.compute_average:
+        fr.clear_absolute_positions()
+
     fr.run()
 
     with open(input_file, 'r') as f:

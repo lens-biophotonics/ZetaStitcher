@@ -7,7 +7,6 @@ import logging
 import json
 import yaml
 
-import numpy as np
 import pandas as pd
 import networkx as nx
 
@@ -54,15 +53,9 @@ class FileMatrix:
         """A :class:`pandas.DataFrame` object. Contains the following
         columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, `nfrms`,
         `filename`."""
-        self.stitch_data_frame = None
 
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
-
-        self.compute_average = False
-        self.xcorr_options = None
-
-        self.y = None
 
         if directory is None:
             return
@@ -110,7 +103,7 @@ class FileMatrix:
         self.data_frame = df.set_index('filename')
         self.process_data_frame()
 
-    def load_yaml(self, fname, load_absolute_positions=True):
+    def load_yaml(self, fname):
         with open(fname, 'r') as f:
             y = yaml.load(f)
 
@@ -120,22 +113,9 @@ class FileMatrix:
             setattr(self, attr, y['xcorr-options'][attr])
 
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
-        self.stitch_data_frame = pd.DataFrame(y['xcorr'])
-        self.xcorr_options = y['xcorr-options']
-        self._aggregate_results()
-
-        abs_yaml_key = 'absolute_positions'
-        if abs_yaml_key in y:
-            if load_absolute_positions:
-                abs_keys = ['Xs', 'Ys', 'Zs']
-                df = pd.DataFrame(y[abs_yaml_key]).set_index('filename')
-                self.data_frame[abs_keys] = df[abs_keys]
-            else:
-                del y[abs_yaml_key]
 
         self.process_data_frame()
         self.dir = fname
-        self.y = y
 
     def process_data_frame(self):
         df = self.data_frame
@@ -182,38 +162,14 @@ class FileMatrix:
 
     def save_to_yaml(self, filename, mode):
         keys = ['X', 'Y', 'Z', 'nfrms', 'xsize', 'ysize']
+        abs_keys = ['Xs', 'Ys', 'Zs']
+        for k in abs_keys:
+            if k in self.data_frame.columns:
+                keys.append(k)
         df = self.data_frame[keys].reset_index()
         j = json.loads(df.to_json(orient='records'))
         with open(filename, mode) as f:
             yaml.dump({'filematrix': j}, f, default_flow_style=False)
-
-    def _aggregate_results(self):
-        sdf = self.stitch_data_frame
-
-        if self.compute_average:
-            view = sdf.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: np.average(x, weights=sdf.loc[x.index, 'score']) if
-                sdf.loc[x.index, 'score'].sum() != 0 else np.average(x))
-        else:
-            view = sdf.groupby(['aname', 'bname', 'axis']).agg(
-                lambda x: sdf.loc[np.argmax(sdf.loc[x.index, 'score']), x.name]
-            )
-
-        view = view.reset_index()
-        overlap_dict = {1: self.xcorr_options['overlap_v'],
-                        2: self.xcorr_options['overlap_h']}
-
-        view.dz -= self.xcorr_options['max_dz']
-        for a in [1, 2]:
-            indexes = (view['axis'] == a)
-            view.loc[indexes, 'dy'] = (overlap_dict[a]
-                                       + self.xcorr_options['max_dy']
-                                       - view.loc[indexes, 'dy'])
-        view.dx -= self.xcorr_options['max_dx']
-
-        view = view.rename(columns={'aname': 'filename'})
-
-        self.stitch_data_frame = view.set_index('filename')
 
     @property
     def slices(self):

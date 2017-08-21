@@ -17,6 +17,7 @@ from .global_optimization import absolute_position_global_optimization
 
 from ..inputfile import InputFile
 from ..filematrix import FileMatrix
+from .xcorr_filematrix import XcorrFileMatrix
 
 
 def to_dtype(x, dtype):
@@ -26,8 +27,8 @@ def to_dtype(x, dtype):
 
 
 class FuseRunner(object):
-    def __init__(self, input_file=None, old_options=None):
-        self.input_file = input_file  #: input file or folder
+    def __init__(self, input_file=None):
+        self.input_file = input_file  #: input file
         self.fm = None  #: :class:`FileMatrix`
         self.path = None
 
@@ -36,22 +37,14 @@ class FuseRunner(object):
         self.debug = False
         self.compute_average = False
         self.output_filename = None
-        self.old_options = old_options
 
         self._is_multichannel = None
-
-        # self._load_df()
 
     def _load_df(self):
         self.path, file_name = os.path.split(self.input_file)
         self.fm = FileMatrix()
         self.fm.compute_average = self.compute_average
-        load_abs_positions = True
-        if self.old_options and \
-                self.compute_average != self.old_options['compute_average']:
-            load_abs_positions = False
-        self.fm.load_yaml(self.input_file, load_abs_positions)
-        # self.fm.process_data()
+        self.fm.load_yaml(self.input_file)
 
     @property
     @lru_cache()
@@ -88,19 +81,32 @@ class FuseRunner(object):
 
         return output_shape
 
+    def clear_absolute_positions(self):
+        keys = ['Xs', 'Ys', 'Zs']
+        for k in keys:
+            try:
+                del self.fm.data_frame[k]
+            except KeyError:
+                pass
+
     def run(self):
         fm_df = self.fm.data_frame
-        sdf = self.fm.stitch_data_frame
+
+        xcorr_fm = XcorrFileMatrix()
+        xcorr_fm.load_yaml(self.input_file)
+        xcorr_fm.aggregate_results(self.compute_average)
+
+        sdf = xcorr_fm.stitch_data_frame
 
         # process dataframes
-        absolute_positions.compute_shift_vectors(fm_df, sdf)
         cols = self.fm.data_frame.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
             pass
         else:
+            absolute_positions.compute_shift_vectors(fm_df, sdf)
             absolute_positions.compute_initial_guess(fm_df, sdf)
             absolute_position_global_optimization(fm_df, sdf,
-                                                  self.fm.xcorr_options)
+                                                  xcorr_fm.xcorr_options)
 
         ov = Overlaps(fm_df, sdf)
 
@@ -216,5 +222,3 @@ class FuseRunner(object):
                 except ValueError:
                     break
                 x = x_end + canvas_shape[1] // 2
-
-
