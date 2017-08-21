@@ -46,7 +46,8 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, directory=None):
+    def __init__(self, directory=None, ascending_tiles_x=True,
+                 ascending_tiles_y=True):
         self.dir = directory
 
         self.data_frame = None
@@ -54,8 +55,8 @@ class FileMatrix:
         columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, `nfrms`,
         `filename`."""
 
-        self.ascending_tiles_x = True
-        self.ascending_tiles_y = True
+        self.ascending_tiles_x = ascending_tiles_x
+        self.ascending_tiles_y = ascending_tiles_y
 
         if directory is None:
             return
@@ -100,6 +101,12 @@ class FileMatrix:
         df = pd.DataFrame(data)
         df = df.sort_values(['Z', 'Y', 'X'])
 
+        if not self.ascending_tiles_x:
+            df['X'] = (df['X'] - df['X'].max()).abs()
+
+        if not self.ascending_tiles_y:
+            df['Y'] = (df['Y'] - df['Y'].max()).abs()
+
         self.data_frame = df.set_index('filename')
         self.process_data_frame()
 
@@ -133,12 +140,6 @@ class FileMatrix:
         df[keys] -= df[keys].min()
 
         df['Z_end'] = df['Z'] + df['nfrms']
-
-        if not self.ascending_tiles_x:
-            df['X'] = (df['X'] - df['X'].max()).abs()
-
-        if not self.ascending_tiles_y:
-            df['Y'] = (df['Y'] - df['Y'].max()).abs()
 
         cols = df.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
@@ -199,7 +200,7 @@ class FileMatrix:
             view = self.data_frame[
                 (self.data_frame['Z'] <= row['Z'])
                 & (self.data_frame['Z_end'] >= row['Z_end'])
-            ]
+                ]
             pairs = zip(view.index.values[::1], view.index.values[1::1])
             G.add_edges_from(pairs)
             G.add_edge((view.index.values[0]), view.index.values[-1])
@@ -224,7 +225,7 @@ class FileMatrix:
         for s in self.slices:
             got = yield
             view = self.data_frame.loc[s.nodes()].sort_values(
-                got[0], ascending=got[1]).groupby(got[2])
+                got[0], ascending=True).groupby(got[1])
             for name, group in view:
                 yield group
 
@@ -242,7 +243,7 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'X', 'Y'], self.ascending_tiles_x, 'Y'))
+        yield g.send((['Z', 'X', 'Y'], 'Y'))
         yield from g
 
     @property
@@ -259,7 +260,7 @@ class FileMatrix:
         """
         g = self.tiles_along_dir
         next(g)
-        yield g.send((['Z', 'Y', 'X'], self.ascending_tiles_y, 'X'))
+        yield g.send((['Z', 'Y', 'X'], 'X'))
         yield from g
 
     @property
