@@ -77,6 +77,7 @@ def main():
         fr.clear_absolute_positions()
 
     fr.run()
+    fr.fm.save_to_yaml(input_file, 'update')
 
     with open(input_file, 'r') as f:
         y = yaml.load(f)

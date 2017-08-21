@@ -168,8 +168,18 @@ class FileMatrix:
                 keys.append(k)
         df = self.data_frame[keys].reset_index()
         j = json.loads(df.to_json(orient='records'))
-        with open(filename, mode) as f:
-            yaml.dump({'filematrix': j}, f, default_flow_style=False)
+
+        if mode == 'update':
+            with open(filename, 'r') as f:
+                y = yaml.load(f)
+
+            y['filematrix'] = j
+
+            with open(filename, 'w') as f:
+                yaml.dump(y, f, default_flow_style=False)
+        else:
+            with open(filename, mode) as f:
+                yaml.dump({'filematrix': j}, f, default_flow_style=False)
 
     @property
     def slices(self):
