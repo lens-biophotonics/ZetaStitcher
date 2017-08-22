@@ -46,8 +46,8 @@ class TileDisplacementLeastSquares:
         maxs[2] = self.xcorr_options['max_dx']
         maxs = maxs * n_of_tiles
         # overwrite None
-        maxs[1::3] = (self.frame_shapes[:, 0] - self.xcorr_options['overlap_v']
-                      + self.xcorr_options['max_dy'])
+        maxs[1::3] = (self.frame_shapes[:, 0]
+                      - 2 * self.xcorr_options['max_dy'])
         maxs[:3] = [0, 0, 0]  # first tile is fixed
         # overwrite first row with horizontal shifts
         temp[0] = self.xcorr_options['max_dz']
@@ -56,8 +56,7 @@ class TileDisplacementLeastSquares:
         maxs[3:3 * xsize] = temp * (xsize - 1)
         # overwrite None
         maxs[5:3 * xsize:3] = (self.frame_shapes[1:xsize, 1]
-                               - self.xcorr_options['overlap_h']
-                               + self.xcorr_options['max_dy'])
+                               - 2 * self.xcorr_options['max_dy'])
 
         mins = [int(x) for x in mins]
         maxs = [int(x) for x in maxs]
