@@ -150,7 +150,7 @@ def absolute_position_global_optimization(df, sdf, xcorr_options):
     # initial decision vector
     # first row: displacement vector from adjacent left tile
     # other rows: displacement vector from adjacent top tile
-    x0 = np.roll(p_ab_1, 1, axis=0)
+    x0 = np.nan_to_num(np.roll(p_ab_1, 1, axis=0))
     x0[0, ...] = np.nan_to_num(np.roll(p_ab_2[0, ...], 1, axis=0))
 
     prob = TileDisplacementLeastSquares(xcorr_options, frame_shapes,
