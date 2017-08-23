@@ -57,12 +57,12 @@ def parse_args():
 
 
 def main():
-    arg = parse_args()
+    args = parse_args()
 
-    if os.path.isdir(arg.input_file):
-        input_file = os.path.join(arg.input_file, 'stitch.yml')
+    if os.path.isdir(args.input_file):
+        input_file = os.path.join(args.input_file, 'stitch.yml')
     else:
-        input_file = arg.input_file
+        input_file = args.input_file
 
     with open(input_file, 'r') as f:
         y = yaml.load(f)
@@ -76,11 +76,11 @@ def main():
 
     keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
     for k in keys:
-        setattr(fr, k, getattr(arg, k))
+        setattr(fr, k, getattr(args, k))
 
     fr._load_df()
-    if old_options and old_options['compute_average'] != arg.compute_average \
-            or arg.force_recomputation:
+    if old_options and old_options['compute_average'] != args.compute_average \
+            or args.force_recomputation:
         fr.clear_absolute_positions()
 
     fr.run()
@@ -91,7 +91,7 @@ def main():
     fr_options = {}
     keys = ['compute_average']
     for k in keys:
-        fr_options[k] = getattr(arg, k)
+        fr_options[k] = getattr(args, k)
     y['fuse_runner_options'] = fr_options
 
     with open(input_file, 'w') as f:
