@@ -31,6 +31,10 @@ def parse_args():
                           help='instead of maximum score, take the average '
                                'result weighted by the score')
 
+    me_group.add_argument('-n', action='store_true',
+                          dest='use_nominal_positions',
+                          help='use nominal stage positions')
+
     me_group.add_argument('-f', action='store_true',
                           dest='force_recomputation',
                           help='force recomputation of absolute positions')
@@ -92,7 +96,8 @@ def main():
     if args.zmax is not None:
         args.zmax = int(round(args.zmax / args.px_size_z))
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
+    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average',
+            'use_nominal_positions']
     for k in keys:
         setattr(fr, k, getattr(args, k))
 

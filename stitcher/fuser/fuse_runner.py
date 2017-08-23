@@ -36,6 +36,9 @@ class FuseRunner(object):
         self.zmax = None
         self.debug = False
         self.compute_average = False
+        self.use_nominal_positions = False
+        self.px_size_z = None
+        self.px_size_xy = None
         self.output_filename = None
 
         self._is_multichannel = None
@@ -105,6 +108,9 @@ class FuseRunner(object):
         cols = self.fm.data_frame.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
             pass
+        elif self.use_nominal_positions:
+            absolute_positions.compute_nominal_positions(
+                fm_df, self.px_size_z, self.px_size_xy)
         else:
             absolute_positions.compute_shift_vectors(fm_df, sdf)
             absolute_positions.compute_initial_guess(fm_df, sdf)
