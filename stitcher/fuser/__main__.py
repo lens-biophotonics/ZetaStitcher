@@ -25,9 +25,15 @@ def parse_args():
     parser.add_argument('-o', type=str, default='fused.tiff',
                         dest='output_filename', help='output file name')
 
-    parser.add_argument('-a', action='store_true', dest='compute_average',
-                        help='instead of maximum score, take the average '
-                             'result weighted by the score')
+    group = parser.add_argument_group('absolute positions')
+    me_group = group.add_mutually_exclusive_group()
+    me_group.add_argument('-a', action='store_true', dest='compute_average',
+                          help='instead of maximum score, take the average '
+                               'result weighted by the score')
+
+    me_group.add_argument('-f', action='store_true',
+                          dest='force_recomputation',
+                          help='force recomputation of absolute positions')
 
     parser.add_argument('-d', dest='debug', action='store_true',
                         help='overlay debug info')
@@ -73,7 +79,8 @@ def main():
         setattr(fr, k, getattr(arg, k))
 
     fr._load_df()
-    if old_options and old_options['compute_average'] != arg.compute_average:
+    if old_options and old_options['compute_average'] != arg.compute_average \
+            or arg.force_recomputation:
         fr.clear_absolute_positions()
 
     fr.run()
