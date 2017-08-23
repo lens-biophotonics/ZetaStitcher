@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument('--px-size-z', type=float, default=1,
                         help='pixel size in the Z direction. If specified, '
                              'the corresponding options can be expressed in '
-                             'your custom untis.')
+                             'your custom units.')
 
     parser.add_argument('--zmin', type=float, default=0)
     parser.add_argument('--zmax', type=float, default=None,
