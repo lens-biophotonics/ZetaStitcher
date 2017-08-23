@@ -40,6 +40,9 @@ class FuseRunner(object):
 
         self._is_multichannel = None
 
+        if input_file is not None:
+            self._load_df()
+
     def _load_df(self):
         self.path, file_name = os.path.split(self.input_file)
         self.fm = FileMatrix()

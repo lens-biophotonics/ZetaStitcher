@@ -73,8 +73,6 @@ def main():
 
     fr = FuseRunner(input_file)
 
-
-    fr._load_df()
     if old_options and old_options['compute_average'] != args.compute_average \
             or args.force_recomputation:
         fr.clear_absolute_positions()
