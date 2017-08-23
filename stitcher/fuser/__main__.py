@@ -38,20 +38,19 @@ def parse_args():
     parser.add_argument('-d', dest='debug', action='store_true',
                         help='overlay debug info')
 
-    parser.add_argument('--px-size-z', type=float, default=1,
-                        help='pixel size in the Z direction. If specified, '
-                             'the corresponding options can be expressed in '
-                             'your custom units.')
+    group = parser.add_argument_group(
+        'pixel size', 'If specified, the corresponding options can be '
+                      'expressed in your custom units.')
+    group.add_argument('--px-size-xy', type=float,
+                       help='pixel size in the (X, Y) plane')
+    group.add_argument('--px-size-z', type=float,
+                       help='pixel size in the Z direction')
 
     parser.add_argument('--zmin', type=float, default=0)
     parser.add_argument('--zmax', type=float, default=None,
                         help='noninclusive')
 
     args = parser.parse_args()
-
-    args.zmin = int(round(args.zmin / args.px_size_z))
-    if args.zmax is not None:
-        args.zmax = int(round(args.zmax / args.px_size_z))
 
     return args
 
@@ -74,14 +73,30 @@ def main():
 
     fr = FuseRunner(input_file)
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
-    for k in keys:
-        setattr(fr, k, getattr(args, k))
 
     fr._load_df()
     if old_options and old_options['compute_average'] != args.compute_average \
             or args.force_recomputation:
         fr.clear_absolute_positions()
+
+    if args.px_size_z is None:
+        if 'px_size_z' in y['xcorr-options']:
+            args.px_size_z = y['xcorr-options']['px_size_z']
+        else:
+            args.px_size_z = 1
+    if args.px_size_xy is None:
+        if 'px_size_xy' in y['xcorr-options']:
+            args.px_size_xy = y['xcorr-options']['px_size_xy']
+        else:
+            args.px_size_xy = 1
+
+    args.zmin = int(round(args.zmin / args.px_size_z))
+    if args.zmax is not None:
+        args.zmax = int(round(args.zmax / args.px_size_z))
+
+    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
+    for k in keys:
+        setattr(fr, k, getattr(args, k))
 
     fr.run()
     fr.fm.save_to_yaml(input_file, 'update')
