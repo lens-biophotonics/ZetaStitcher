@@ -18,7 +18,7 @@ class Overlaps(object):
         self._compute_overlaps()
 
     def _compute_overlaps(self):
-        def comp_diff(dest, row_name, row, other_name):
+        def comp_diff(dest, row, other_name):
             other = fm_df.loc[other_name]
             temp = pd.Series()
             temp['Z_from'] = max(other['Zs'], row['Zs']) - row['Zs']
@@ -30,13 +30,13 @@ class Overlaps(object):
             temp['X_from'] = max(other['Xs'], row['Xs']) - row['Xs']
             temp['X_to'] = min(other['Xs_end'], row['Xs_end']) - row['Xs']
 
-            cols_to_zero(dest, row_name)
+            cols_to_zero(dest, row.name)
 
             if temp['Z_from'] > temp['Z_to'] or temp['Y_from'] > temp['Y_to'] \
                     or temp['X_from'] > temp['X_to']:
                 pass
             else:
-                dest.loc[row_name] = temp
+                dest.loc[row.name] = temp
 
         def cols_to_zero(dest, row_name):
             cols = ['Z_from', 'Z_to', 'Y_from', 'Y_to', 'X_from', 'X_to']
@@ -62,28 +62,28 @@ class Overlaps(object):
             # north
             try:
                 parent = tmp_df_b.loc[(row.name, 1), 'filename']
-                comp_diff(overlap_n, row.name, row, parent)
+                comp_diff(overlap_n, row, parent)
             except KeyError:
                 cols_to_zero(overlap_n, row.name)
 
             # south
             try:
                 parent = tmp_df_a.loc[(row.name, 1), 'bname']
-                comp_diff(overlap_s, row.name, row, parent)
+                comp_diff(overlap_s, row, parent)
             except KeyError:
                 cols_to_zero(overlap_s, row.name)
 
             # east
             try:
                 parent = tmp_df_a.loc[(row.name, 2), 'bname']
-                comp_diff(overlap_e, row.name, row, parent)
+                comp_diff(overlap_e, row, parent)
             except KeyError:
                 cols_to_zero(overlap_e, row.name)
 
             # west
             try:
                 parent = tmp_df_b.loc[(row.name, 2), 'filename']
-                comp_diff(overlap_w, row.name, row, parent)
+                comp_diff(overlap_w, row, parent)
             except KeyError:
                 cols_to_zero(overlap_w, row.name)
 
@@ -93,7 +93,7 @@ class Overlaps(object):
                     (row.name, 2), 'filename']  # one step W
                 other_name = tmp_df_b.loc[
                     (other_name, 1), 'filename']  # one step N
-                comp_diff(overlap_nw, row.name, row, other_name)
+                comp_diff(overlap_nw, row, other_name)
             except KeyError:
                 cols_to_zero(overlap_nw, row.name)
 
@@ -102,7 +102,7 @@ class Overlaps(object):
                 other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
                 other_name = tmp_df_b.loc[
                     (other_name, 1), 'filename']  # one step N
-                comp_diff(overlap_ne, row.name, row, other_name)
+                comp_diff(overlap_ne, row, other_name)
             except KeyError:
                 cols_to_zero(overlap_ne, row.name)
 
@@ -112,7 +112,7 @@ class Overlaps(object):
                     (row.name, 2), 'filename']  # one step W
                 other_name = tmp_df_a.loc[
                     (other_name, 1), 'bname']  # one step S
-                comp_diff(overlap_sw, row.name, row, other_name)
+                comp_diff(overlap_sw, row, other_name)
             except KeyError:
                 cols_to_zero(overlap_sw, row.name)
 
@@ -121,7 +121,7 @@ class Overlaps(object):
                 other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
                 other_name = tmp_df_a.loc[
                     (other_name, 1), 'bname']  # one step S
-                comp_diff(overlap_se, row.name, row, other_name)
+                comp_diff(overlap_se, row, other_name)
             except KeyError:
                 cols_to_zero(overlap_se, row.name)
 
