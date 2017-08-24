@@ -102,7 +102,7 @@ def main():
     # init FileMatrix
     fm = FileMatrix(args.input_file)
     if old_options and old_options['compute_average'] != args.compute_average \
-        or args.force_recomputation:
+            or args.force_recomputation or args.use_nominal_positions:
         fm.clear_absolute_positions()
     # TODO: set fm options
 
