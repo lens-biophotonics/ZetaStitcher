@@ -47,9 +47,9 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, directory=None, ascending_tiles_x=True,
+    def __init__(self, input_path=None, ascending_tiles_x=True,
                  ascending_tiles_y=True):
-        self.dir = directory
+        self.input_path = input_path
 
         self.data_frame = None
         """A :class:`pandas.DataFrame` object. Contains the following
@@ -61,12 +61,12 @@ class FileMatrix:
 
         self.name_array = None
 
-        if directory is None:
+        if input_path is None:
             return
-        if os.path.isdir(directory):
-            self.load_dir(directory)
-        elif os.path.isfile(directory):
-            self.load_yaml(directory)
+        if os.path.isdir(input_path):
+            self.load_dir(input_path)
+        elif os.path.isfile(input_path):
+            self.load_yaml(input_path)
 
     def load_dir(self, dir=None):
         """Look for files in `dir` recursively and populate data structures.
@@ -76,7 +76,7 @@ class FileMatrix:
         dir : path
         """
         if dir is None:
-            dir = self.dir
+            dir = self.input_path
 
         if dir is None:
             return
@@ -126,7 +126,7 @@ class FileMatrix:
         self.data_frame = self.data_frame.sort_values(['Z', 'Y', 'X'])
 
         self.process_data_frame()
-        self.dir = fname
+        self.input_path = fname
 
     def process_data_frame(self):
         df = self.data_frame
@@ -159,7 +159,7 @@ class FileMatrix:
     def parse_and_append(self, name, flist):
         try:
             fields = parse_file_name(name)
-            with InputFile(os.path.join(self.dir, name)) as infile:
+            with InputFile(os.path.join(self.input_path, name)) as infile:
                 fields.append(infile.nfrms)
                 fields.append(infile.ysize)
                 fields.append(infile.xsize)
