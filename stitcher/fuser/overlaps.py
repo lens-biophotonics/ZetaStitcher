@@ -2,9 +2,8 @@ import pandas as pd
 
 
 class Overlaps(object):
-    def __init__(self, filematrix_dataframe, stitch_dataframe):
-        self.fm_df = filematrix_dataframe
-        self.sdf = stitch_dataframe
+    def __init__(self, filematrix):
+        self.fm = filematrix
 
         self.overlap_n = None
         self.overlap_s = None
@@ -18,7 +17,7 @@ class Overlaps(object):
         self._compute_overlaps()
 
     def _compute_overlaps(self):
-        def comp_diff(dest, row_name, row, other_name):
+        def comp_diff(dest, row, other_name):
             other = fm_df.loc[other_name]
             temp = pd.Series()
             temp['Z_from'] = max(other['Zs'], row['Zs']) - row['Zs']
@@ -30,21 +29,20 @@ class Overlaps(object):
             temp['X_from'] = max(other['Xs'], row['Xs']) - row['Xs']
             temp['X_to'] = min(other['Xs_end'], row['Xs_end']) - row['Xs']
 
-            cols_to_zero(dest, row_name)
+            cols_to_zero(dest, row.name)
 
             if temp['Z_from'] > temp['Z_to'] or temp['Y_from'] > temp['Y_to'] \
                     or temp['X_from'] > temp['X_to']:
                 pass
             else:
-                dest.loc[row_name] = temp
+                dest.loc[row.name] = temp
 
         def cols_to_zero(dest, row_name):
             cols = ['Z_from', 'Z_to', 'Y_from', 'Y_to', 'X_from', 'X_to']
             for c in cols:
                 dest.loc[row_name, c] = 0
 
-        fm_df = self.fm_df
-        sdf = self.sdf
+        fm_df = self.fm.data_frame
 
         overlap_n = pd.DataFrame()
         overlap_s = pd.DataFrame()
@@ -55,75 +53,65 @@ class Overlaps(object):
         overlap_sw = pd.DataFrame()
         overlap_se = pd.DataFrame()
 
-        tmp_df_b = sdf.reset_index().set_index(['bname', 'axis'])
-        tmp_df_a = sdf.reset_index().set_index(['filename', 'axis'])
+        for j in range(0, self.fm.Ny):
+            for i in range(0, self.fm.Nx):
+                row = self.fm.data_frame.loc[self.fm.name_array[j, i]]
 
-        for index, row in fm_df.iterrows():
-            # north
-            try:
-                parent = tmp_df_b.loc[(row.name, 1), 'filename']
-                comp_diff(overlap_n, row.name, row, parent)
-            except KeyError:
-                cols_to_zero(overlap_n, row.name)
+                # north
+                if j > 0:
+                    parent = self.fm.name_array[j - 1, i]
+                    comp_diff(overlap_n, row, parent)
+                else:
+                    cols_to_zero(overlap_n, row.name)
 
-            # south
-            try:
-                parent = tmp_df_a.loc[(row.name, 1), 'bname']
-                comp_diff(overlap_s, row.name, row, parent)
-            except KeyError:
-                cols_to_zero(overlap_s, row.name)
+                # south
+                if j < self.fm.Ny - 1:
+                    parent = self.fm.name_array[j + 1, i]
+                    comp_diff(overlap_s, row, parent)
+                else:
+                    cols_to_zero(overlap_s, row.name)
 
-            # east
-            try:
-                parent = tmp_df_a.loc[(row.name, 2), 'bname']
-                comp_diff(overlap_e, row.name, row, parent)
-            except KeyError:
-                cols_to_zero(overlap_e, row.name)
+                # east
+                if i < self.fm.Nx - 1:
+                    parent = self.fm.name_array[j, i + 1]
+                    comp_diff(overlap_e, row, parent)
+                else:
+                    cols_to_zero(overlap_e, row.name)
 
-            # west
-            try:
-                parent = tmp_df_b.loc[(row.name, 2), 'filename']
-                comp_diff(overlap_w, row.name, row, parent)
-            except KeyError:
-                cols_to_zero(overlap_w, row.name)
+                # west
+                if i > 0:
+                    parent = self.fm.name_array[j, i - 1]
+                    comp_diff(overlap_w, row, parent)
+                else:
+                    cols_to_zero(overlap_w, row.name)
 
-            # north-west
-            try:
-                other_name = tmp_df_b.loc[
-                    (row.name, 2), 'filename']  # one step W
-                other_name = tmp_df_b.loc[
-                    (other_name, 1), 'filename']  # one step N
-                comp_diff(overlap_nw, row.name, row, other_name)
-            except KeyError:
-                cols_to_zero(overlap_nw, row.name)
+                # north-west
+                if i > 0 and j > 0:
+                    parent = self.fm.name_array[j - 1, i - 1]
+                    comp_diff(overlap_nw, row, parent)
+                else:
+                    cols_to_zero(overlap_nw, row.name)
 
-            # north-east
-            try:
-                other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
-                other_name = tmp_df_b.loc[
-                    (other_name, 1), 'filename']  # one step N
-                comp_diff(overlap_ne, row.name, row, other_name)
-            except KeyError:
-                cols_to_zero(overlap_ne, row.name)
+                # north-east
+                if i < self.fm.Nx - 1 and j > 0:
+                    parent = self.fm.name_array[j - 1, i + 1]
+                    comp_diff(overlap_ne, row, parent)
+                else:
+                    cols_to_zero(overlap_ne, row.name)
 
-            # south-west
-            try:
-                other_name = tmp_df_b.loc[
-                    (row.name, 2), 'filename']  # one step W
-                other_name = tmp_df_a.loc[
-                    (other_name, 1), 'bname']  # one step S
-                comp_diff(overlap_sw, row.name, row, other_name)
-            except KeyError:
-                cols_to_zero(overlap_sw, row.name)
+                # south-west
+                if i > 0 and j < self.fm.Ny - 1:
+                    parent = self.fm.name_array[j + 1, i - 1]
+                    comp_diff(overlap_sw, row, parent)
+                else:
+                    cols_to_zero(overlap_sw, row.name)
 
-            # south-east
-            try:
-                other_name = tmp_df_a.loc[(row.name, 2), 'bname']  # one step E
-                other_name = tmp_df_a.loc[
-                    (other_name, 1), 'bname']  # one step S
-                comp_diff(overlap_se, row.name, row, other_name)
-            except KeyError:
-                cols_to_zero(overlap_se, row.name)
+                # south-east
+                if i < self.fm.Nx - 1 and j < self.fm.Ny - 1:
+                    parent = self.fm.name_array[j + 1, i + 1]
+                    comp_diff(overlap_se, row, parent)
+                else:
+                    cols_to_zero(overlap_se, row.name)
 
         self.overlap_n = overlap_n.astype(int)
         self.overlap_s = overlap_s.astype(int)

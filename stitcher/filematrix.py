@@ -7,6 +7,7 @@ import logging
 import json
 import yaml
 
+import numpy as np
 import pandas as pd
 import networkx as nx
 
@@ -46,9 +47,9 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, directory=None, ascending_tiles_x=True,
+    def __init__(self, input_path=None, ascending_tiles_x=True,
                  ascending_tiles_y=True):
-        self.dir = directory
+        self.input_path = input_path
 
         self.data_frame = None
         """A :class:`pandas.DataFrame` object. Contains the following
@@ -58,12 +59,14 @@ class FileMatrix:
         self.ascending_tiles_x = ascending_tiles_x
         self.ascending_tiles_y = ascending_tiles_y
 
-        if directory is None:
+        self.name_array = None
+
+        if input_path is None:
             return
-        if os.path.isdir(directory):
-            self.load_dir(directory)
-        elif os.path.isfile(directory):
-            self.load_yaml(directory)
+        if os.path.isdir(input_path):
+            self.load_dir(input_path)
+        elif os.path.isfile(input_path):
+            self.load_yaml(input_path)
 
     def load_dir(self, dir=None):
         """Look for files in `dir` recursively and populate data structures.
@@ -73,7 +76,7 @@ class FileMatrix:
         dir : path
         """
         if dir is None:
-            dir = self.dir
+            dir = self.input_path
 
         if dir is None:
             return
@@ -120,9 +123,10 @@ class FileMatrix:
             setattr(self, attr, y['xcorr-options'][attr])
 
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
+        self.data_frame = self.data_frame.sort_values(['Z', 'Y', 'X'])
 
         self.process_data_frame()
-        self.dir = fname
+        self.input_path = fname
 
     def process_data_frame(self):
         df = self.data_frame
@@ -139,20 +143,19 @@ class FileMatrix:
         keys = ['X', 'Y', 'Z']
         df[keys] -= df[keys].min()
 
-        df['Z_end'] = df['Z'] + df['nfrms']
-
         cols = df.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
             for key in ['Xs', 'Ys', 'Zs']:
                 df[key] -= df[key].min()
-            df['Xs_end'] = df['Xs'] + df['xsize']
-            df['Ys_end'] = df['Ys'] + df['ysize']
-            df['Zs_end'] = df['Zs'] + df['nfrms']
+
+        df = df.sort_values(['Z', 'Y', 'X'])
+        self.compute_end_pos()
+        self.name_array = np.array(df.index.values).reshape(self.Ny, self.Nx)
 
     def parse_and_append(self, name, flist):
         try:
             fields = parse_file_name(name)
-            with InputFile(os.path.join(self.dir, name)) as infile:
+            with InputFile(os.path.join(self.input_path, name)) as infile:
                 fields.append(infile.nfrms)
                 fields.append(infile.ysize)
                 fields.append(infile.xsize)
@@ -181,6 +184,48 @@ class FileMatrix:
         else:
             with open(filename, mode) as f:
                 yaml.dump({'filematrix': j}, f, default_flow_style=False)
+
+    def clear_absolute_positions(self):
+        keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
+        for k in keys:
+            try:
+                del self.data_frame[k]
+            except KeyError:
+                pass
+
+    def compute_end_pos(self):
+        df = self.data_frame
+
+        keys = ['X', 'Y', 'Z']
+        sizes = ['xsize', 'ysize', 'nfrms']
+
+        cols = df.columns
+        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+            keys += ['Xs', 'Ys', 'Zs']
+            sizes *= 2
+
+        keys_end = [k + '_end' for k in keys]
+
+        for ke, k, s in zip(keys_end, keys, sizes):
+            df[ke] = df[k] + df[s]
+
+    def compute_nominal_positions(self, px_size_z, px_size_xy):
+        df = self.data_frame
+
+        df['Xs'] = (df['X'] // px_size_xy).astype(np.int)
+        df['Ys'] = (df['Y'] // px_size_xy).astype(np.int)
+
+        df['Zs'] = (df['Z'] // px_size_z).astype(np.int)
+
+        self.compute_end_pos()
+
+    @property
+    def Nx(self):
+        return self.data_frame['X'].unique().size
+
+    @property
+    def Ny(self):
+        return self.data_frame['Y'].unique().size
 
     @property
     def slices(self):
