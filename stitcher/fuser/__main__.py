@@ -1,3 +1,4 @@
+import sys
 import os.path
 import argparse
 
@@ -6,6 +7,7 @@ import yaml
 from ..version import full_version
 
 from .fuse_runner import FuseRunner
+from ..filematrix import FileMatrix
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -60,41 +62,52 @@ def parse_args():
 
 
 def main():
+    old_options = None
     args = parse_args()
 
-    if os.path.isdir(args.input_file):
-        input_file = os.path.join(args.input_file, 'stitch.yml')
-    else:
-        input_file = args.input_file
-
-    with open(input_file, 'r') as f:
-        y = yaml.load(f)
-
-    try:
+    # replace None args with values found in yml file
+    if os.path.isfile(args.input_file):
+        with open(args.input_file, 'r') as f:
+            y = yaml.load(f)
         old_options = y['fuse_runner_options']
-    except KeyError:
-        old_options = None
-
-    fr = FuseRunner(input_file)
-
-    if old_options and old_options['compute_average'] != args.compute_average \
-            or args.force_recomputation:
-        fr.clear_absolute_positions()
+        keys = ['px_size_z', 'px_size_xy']
+        for k in keys:
+            if getattr(args, k) is None:
+                try:
+                    setattr(args, k, y['xcorr-options'][k])
+                except KeyError:
+                    pass
 
     if args.px_size_z is None:
-        if 'px_size_z' in y['xcorr-options']:
-            args.px_size_z = y['xcorr-options']['px_size_z']
-        else:
             args.px_size_z = 1
     if args.px_size_xy is None:
-        if 'px_size_xy' in y['xcorr-options']:
-            args.px_size_xy = y['xcorr-options']['px_size_xy']
-        else:
             args.px_size_xy = 1
 
     args.zmin = int(round(args.zmin / args.px_size_z))
     if args.zmax is not None:
         args.zmax = int(round(args.zmax / args.px_size_z))
+
+    # checks
+    if os.path.isdir(args.input_file):
+        temp = os.path.join(args.input_file, 'stitch.yml')
+        if not os.path.exists(temp):
+            if not args.use_nominal_positions:
+                sys.exit("No stitch file specified or found. Please specify "
+                         "input file or run with -n.")
+        else:
+            args.input_file = temp
+
+    # =========================================================================
+
+    # init FileMatrix
+    fm = FileMatrix(args.input_file)
+    if old_options and old_options['compute_average'] != args.compute_average \
+        or args.force_recomputation:
+        fm.clear_absolute_positions()
+    # TODO: set fm options
+
+    # init FuseRunner
+    fr = FuseRunner(fm)
 
     keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average',
             'use_nominal_positions']
@@ -102,18 +115,20 @@ def main():
         setattr(fr, k, getattr(args, k))
 
     fr.run()
-    fr.fm.save_to_yaml(input_file, 'update')
 
-    with open(input_file, 'r') as f:
-        y = yaml.load(f)
-    fr_options = {}
-    keys = ['compute_average']
-    for k in keys:
-        fr_options[k] = getattr(args, k)
-    y['fuse_runner_options'] = fr_options
+    if os.path.isfile(args.input_file):
+        fm.save_to_yaml(args.input_file, 'update')
 
-    with open(input_file, 'w') as f:
-        yaml.dump(y, f, default_flow_style=False)
+        with open(args.input_file, 'r') as f:
+            y = yaml.load(f)
+        fr_options = {}
+        keys = ['compute_average']
+        for k in keys:
+            fr_options[k] = getattr(args, k)
+        y['fuse_runner_options'] = fr_options
+
+        with open(args.input_file, 'w') as f:
+            yaml.dump(y, f, default_flow_style=False)
 
 
 if __name__ == '__main__':

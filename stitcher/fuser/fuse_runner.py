@@ -27,10 +27,9 @@ def to_dtype(x, dtype):
 
 
 class FuseRunner(object):
-    def __init__(self, input_file=None):
-        self.input_file = input_file  #: input file
-        self.fm = None  #: :class:`FileMatrix`
-        self.path = None
+    def __init__(self, file_matrix):
+        self.fm = file_matrix  #: :class:`FileMatrix`
+        self.path, _ = os.path.split(self.fm.input_path)
 
         self.zmin = 0
         self.zmax = None
@@ -42,14 +41,6 @@ class FuseRunner(object):
         self.output_filename = None
 
         self._is_multichannel = None
-
-        if input_file is not None:
-            self._load_df()
-
-    def _load_df(self):
-        self.path, file_name = os.path.split(self.input_file)
-        self.fm = FileMatrix()
-        self.fm.load_yaml(self.input_file)
 
     @property
     @lru_cache()
@@ -86,22 +77,8 @@ class FuseRunner(object):
 
         return output_shape
 
-    def clear_absolute_positions(self):
-        keys = ['Xs', 'Ys', 'Zs']
-        for k in keys:
-            try:
-                del self.fm.data_frame[k]
-            except KeyError:
-                pass
-
     def run(self):
         fm_df = self.fm.data_frame
-
-        xcorr_fm = XcorrFileMatrix()
-        xcorr_fm.load_yaml(self.input_file)
-        xcorr_fm.aggregate_results(self.compute_average)
-
-        sdf = xcorr_fm.stitch_data_frame
 
         # process dataframes
         cols = self.fm.data_frame.columns
@@ -111,6 +88,12 @@ class FuseRunner(object):
             absolute_positions.compute_nominal_positions(
                 fm_df, self.px_size_z, self.px_size_xy)
         else:
+            xcorr_fm = XcorrFileMatrix()
+            xcorr_fm.load_yaml(self.fm.input_path)
+            xcorr_fm.aggregate_results(self.compute_average)
+
+            sdf = xcorr_fm.stitch_data_frame
+
             absolute_positions.compute_shift_vectors(fm_df, sdf)
             absolute_positions.compute_initial_guess(fm_df, sdf)
             absolute_position_global_optimization(fm_df, sdf,

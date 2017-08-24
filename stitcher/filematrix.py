@@ -189,6 +189,14 @@ class FileMatrix:
             with open(filename, mode) as f:
                 yaml.dump({'filematrix': j}, f, default_flow_style=False)
 
+    def clear_absolute_positions(self):
+        keys = ['Xs', 'Ys', 'Zs']
+        for k in keys:
+            try:
+                del self.data_frame[k]
+            except KeyError:
+                pass
+
     @property
     def Nx(self):
         return self.data_frame['X'].unique().size
