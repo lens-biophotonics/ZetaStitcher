@@ -35,9 +35,6 @@ class FuseRunner(object):
         self.zmax = None
         self.debug = False
         self.compute_average = False
-        self.use_nominal_positions = False
-        self.px_size_z = None
-        self.px_size_xy = None
         self.output_filename = None
 
         self._is_multichannel = None
@@ -84,9 +81,6 @@ class FuseRunner(object):
         cols = self.fm.data_frame.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
             pass
-        elif self.use_nominal_positions:
-            absolute_positions.compute_nominal_positions(
-                fm_df, self.px_size_z, self.px_size_xy)
         else:
             xcorr_fm = XcorrFileMatrix()
             xcorr_fm.load_yaml(self.fm.input_path)

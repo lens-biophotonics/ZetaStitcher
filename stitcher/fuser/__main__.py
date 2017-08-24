@@ -44,6 +44,12 @@ def parse_args():
     parser.add_argument('-d', dest='debug', action='store_true',
                         help='overlay debug info')
 
+    group = parser.add_argument_group('tile ordering (option -n only)')
+    group.add_argument('--iX', action='store_true', dest='invert_x',
+                       help='invert tile ordering along X')
+    group.add_argument('--iY', action='store_true', dest='invert_y',
+                       help='invert tile ordering along Y')
+
     group = parser.add_argument_group(
         'pixel size', 'If specified, the corresponding options can be '
                       'expressed in your custom units.')
@@ -65,12 +71,16 @@ def main():
     old_options = None
     args = parse_args()
 
+    asc_keys = ['ascending_tiles_x', 'ascending_tiles_y']
+    for k in asc_keys:
+        setattr(args, k, None)
+
     # replace None args with values found in yml file
     if os.path.isfile(args.input_file):
         with open(args.input_file, 'r') as f:
             y = yaml.load(f)
         old_options = y['fuse_runner_options']
-        keys = ['px_size_z', 'px_size_xy']
+        keys = ['px_size_z', 'px_size_xy'] + asc_keys
         for k in keys:
             if getattr(args, k) is None:
                 try:
@@ -78,10 +88,18 @@ def main():
                 except KeyError:
                     pass
 
-    if args.px_size_z is None:
-            args.px_size_z = 1
-    if args.px_size_xy is None:
-            args.px_size_xy = 1
+    for k in ['x', 'y']:
+        temp_k = 'ascending_tiles_' + k
+        if getattr(args, temp_k, None) is None:
+            setattr(args, temp_k, not getattr(args, 'invert_' + k))
+
+    attrs = ['px_size_z', 'px_size_xy']
+    for a in attrs:
+        if getattr(args, a, None) is None:
+            if args.use_nominal_positions:
+                sys.exit("px sizes need to be specified when using option -n")
+            else:
+                setattr(args, a, 1)
 
     args.zmin = int(round(args.zmin / args.px_size_z))
     if args.zmax is not None:
@@ -100,17 +118,21 @@ def main():
     # =========================================================================
 
     # init FileMatrix
-    fm = FileMatrix(args.input_file)
+    fm = FileMatrix(args.input_file,
+                    ascending_tiles_x=args.ascending_tiles_x,
+                    ascending_tiles_y=args.ascending_tiles_y)
     if old_options and old_options['compute_average'] != args.compute_average \
-            or args.force_recomputation or args.use_nominal_positions:
+            or args.force_recomputation:
         fm.clear_absolute_positions()
-    # TODO: set fm options
+
+    if args.use_nominal_positions:
+        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
 
     # init FuseRunner
     fr = FuseRunner(fm)
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average',
-            'use_nominal_positions']
+    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
+
     for k in keys:
         setattr(fr, k, getattr(args, k))
 

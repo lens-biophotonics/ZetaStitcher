@@ -60,12 +60,3 @@ def compute_initial_guess(filematrix_dataframe, stitch_dataframe):
     fm_df['Xs_end'] = fm_df['Xs'] + fm_df['xsize']
     fm_df['Ys_end'] = fm_df['Ys'] + fm_df['ysize']
     fm_df['Zs_end'] = fm_df['Zs'] + fm_df['nfrms']
-
-
-def compute_nominal_positions(filematrix_dataframe, px_size_z, px_size_xy):
-    df = filematrix_dataframe.sort_values(['Z', 'Y', 'X'])
-
-    df['Xs'] = df['X'] / px_size_xy
-    df['Ys'] = df['Y'] / px_size_xy
-
-    df['Zs'] = df['Z'] / px_size_z

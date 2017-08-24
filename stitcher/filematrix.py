@@ -143,17 +143,13 @@ class FileMatrix:
         keys = ['X', 'Y', 'Z']
         df[keys] -= df[keys].min()
 
-        df['Z_end'] = df['Z'] + df['nfrms']
-
         cols = df.columns
         if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
             for key in ['Xs', 'Ys', 'Zs']:
                 df[key] -= df[key].min()
-            df['Xs_end'] = df['Xs'] + df['xsize']
-            df['Ys_end'] = df['Ys'] + df['ysize']
-            df['Zs_end'] = df['Zs'] + df['nfrms']
 
         df = df.sort_values(['Z', 'Y', 'X'])
+        self.compute_end_pos()
         self.name_array = np.array(df.index.values).reshape(self.Ny, self.Nx)
 
     def parse_and_append(self, name, flist):
@@ -190,12 +186,38 @@ class FileMatrix:
                 yaml.dump({'filematrix': j}, f, default_flow_style=False)
 
     def clear_absolute_positions(self):
-        keys = ['Xs', 'Ys', 'Zs']
+        keys = ['Xs', 'Ys', 'Zs', 'Xs_end', 'Ys_end', 'Zs_end']
         for k in keys:
             try:
                 del self.data_frame[k]
             except KeyError:
                 pass
+
+    def compute_end_pos(self):
+        df = self.data_frame
+
+        keys = ['X', 'Y', 'Z']
+        sizes = ['xsize', 'ysize', 'nfrms']
+
+        cols = df.columns
+        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+            keys += ['Xs', 'Ys', 'Zs']
+            sizes *= 2
+
+        keys_end = [k + '_end' for k in keys]
+
+        for ke, k, s in zip(keys_end, keys, sizes):
+            df[ke] = df[k] + df[s]
+
+    def compute_nominal_positions(self, px_size_z, px_size_xy):
+        df = self.data_frame
+
+        df['Xs'] = (df['X'] // px_size_xy).astype(np.int)
+        df['Ys'] = (df['Y'] // px_size_xy).astype(np.int)
+
+        df['Zs'] = (df['Z'] // px_size_z).astype(np.int)
+
+        self.compute_end_pos()
 
     @property
     def Nx(self):
