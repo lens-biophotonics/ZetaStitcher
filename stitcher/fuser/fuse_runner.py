@@ -130,7 +130,7 @@ class FuseRunner(object):
 
         n_loops = self.output_shape[0] // n_frames_in_ram
 
-        partial_thickness = [n_frames_in_ram for i in range(0, n_loops)]
+        partial_thickness = [n_frames_in_ram for _ in range(0, n_loops)]
         remainder = self.output_shape[0] % n_frames_in_ram
         if remainder:
             partial_thickness += [remainder]
