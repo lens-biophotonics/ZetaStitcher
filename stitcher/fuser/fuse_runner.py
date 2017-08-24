@@ -49,7 +49,6 @@ class FuseRunner(object):
     def _load_df(self):
         self.path, file_name = os.path.split(self.input_file)
         self.fm = FileMatrix()
-        self.fm.compute_average = self.compute_average
         self.fm.load_yaml(self.input_file)
 
     @property
