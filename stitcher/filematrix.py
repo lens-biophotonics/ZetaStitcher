@@ -7,6 +7,7 @@ import logging
 import json
 import yaml
 
+import numpy as np
 import pandas as pd
 import networkx as nx
 
@@ -57,6 +58,8 @@ class FileMatrix:
 
         self.ascending_tiles_x = ascending_tiles_x
         self.ascending_tiles_y = ascending_tiles_y
+
+        self.name_array = None
 
         if directory is None:
             return
@@ -120,6 +123,7 @@ class FileMatrix:
             setattr(self, attr, y['xcorr-options'][attr])
 
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
+        self.data_frame = self.data_frame.sort_values(['Z', 'Y', 'X'])
 
         self.process_data_frame()
         self.dir = fname
@@ -148,6 +152,9 @@ class FileMatrix:
             df['Xs_end'] = df['Xs'] + df['xsize']
             df['Ys_end'] = df['Ys'] + df['ysize']
             df['Zs_end'] = df['Zs'] + df['nfrms']
+
+        df = df.sort_values(['Z', 'Y', 'X'])
+        self.name_array = np.array(df.index.values).reshape(self.Ny, self.Nx)
 
     def parse_and_append(self, name, flist):
         try:
@@ -181,6 +188,14 @@ class FileMatrix:
         else:
             with open(filename, mode) as f:
                 yaml.dump({'filematrix': j}, f, default_flow_style=False)
+
+    @property
+    def Nx(self):
+        return self.data_frame['X'].unique().size
+
+    @property
+    def Ny(self):
+        return self.data_frame['Y'].unique().size
 
     @property
     def slices(self):

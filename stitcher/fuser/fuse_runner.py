@@ -117,7 +117,7 @@ class FuseRunner(object):
             absolute_position_global_optimization(fm_df, sdf,
                                                   xcorr_fm.xcorr_options)
 
-        ov = Overlaps(fm_df, sdf)
+        ov = Overlaps(self.fm)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
                                       * self.dtype.itemsize)
