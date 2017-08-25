@@ -6,8 +6,11 @@ import yaml
 
 from ..version import full_version
 
+from . import absolute_positions
 from .fuse_runner import FuseRunner
 from ..filematrix import FileMatrix
+from .xcorr_filematrix import XcorrFileMatrix
+from .global_optimization import absolute_position_global_optimization
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -68,8 +71,9 @@ def parse_args():
 
 
 def main():
-    old_options = None
     args = parse_args()
+
+    abs_positions_need_to_be_cleared = False
 
     asc_keys = ['ascending_tiles_x', 'ascending_tiles_y']
     for k in asc_keys:
@@ -79,7 +83,8 @@ def main():
     if os.path.isfile(args.input_file):
         with open(args.input_file, 'r') as f:
             y = yaml.load(f)
-        old_options = y['fuse_runner_options']
+        if y['fuse_runner_options']['compute_average'] != args.compute_average:
+            abs_positions_need_to_be_cleared = True
         keys = ['px_size_z', 'px_size_xy'] + asc_keys
         for k in keys:
             if getattr(args, k) is None:
@@ -115,23 +120,42 @@ def main():
         else:
             args.input_file = temp
 
-    # =========================================================================
+    if args.force_recomputation:
+        abs_positions_need_to_be_cleared = True
 
+    # =========================================================================
     # init FileMatrix
+    # =========================================================================
     fm = FileMatrix(args.input_file,
                     ascending_tiles_x=args.ascending_tiles_x,
                     ascending_tiles_y=args.ascending_tiles_y)
-    if old_options and old_options['compute_average'] != args.compute_average \
-            or args.force_recomputation:
+
+    if abs_positions_need_to_be_cleared:
         fm.clear_absolute_positions()
 
+    cols = fm.data_frame.columns
     if args.use_nominal_positions:
         fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
+    elif 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+        pass
+    else:
+        xcorr_fm = XcorrFileMatrix()
+        xcorr_fm.load_yaml(fm.input_path)
+        xcorr_fm.aggregate_results(args.compute_average)
 
+        sdf = xcorr_fm.stitch_data_frame
+
+        absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
+        absolute_positions.compute_initial_guess(fm.data_frame, sdf)
+        absolute_position_global_optimization(fm.data_frame, sdf,
+                                              xcorr_fm.xcorr_options)
+
+    # =========================================================================
     # init FuseRunner
+    # =========================================================================
     fr = FuseRunner(fm)
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug', 'compute_average']
+    keys = ['zmin', 'zmax', 'output_filename', 'debug']
 
     for k in keys:
         setattr(fr, k, getattr(args, k))

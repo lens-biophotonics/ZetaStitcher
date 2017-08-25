@@ -11,13 +11,9 @@ import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
 from .overlaps import Overlaps
-from . import absolute_positions
 from .lcd_numbers import numbers, canvas_shape
-from .global_optimization import absolute_position_global_optimization
 
 from ..inputfile import InputFile
-from ..filematrix import FileMatrix
-from .xcorr_filematrix import XcorrFileMatrix
 
 
 def to_dtype(x, dtype):
@@ -34,7 +30,6 @@ class FuseRunner(object):
         self.zmin = 0
         self.zmax = None
         self.debug = False
-        self.compute_average = False
         self.output_filename = None
 
         self._is_multichannel = None
@@ -75,24 +70,6 @@ class FuseRunner(object):
         return output_shape
 
     def run(self):
-        fm_df = self.fm.data_frame
-
-        # process dataframes
-        cols = self.fm.data_frame.columns
-        if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
-            pass
-        else:
-            xcorr_fm = XcorrFileMatrix()
-            xcorr_fm.load_yaml(self.fm.input_path)
-            xcorr_fm.aggregate_results(self.compute_average)
-
-            sdf = xcorr_fm.stitch_data_frame
-
-            absolute_positions.compute_shift_vectors(fm_df, sdf)
-            absolute_positions.compute_initial_guess(fm_df, sdf)
-            absolute_position_global_optimization(fm_df, sdf,
-                                                  xcorr_fm.xcorr_options)
-
         ov = Overlaps(self.fm)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
