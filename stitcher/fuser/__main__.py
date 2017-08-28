@@ -27,8 +27,12 @@ def parse_args():
 
     parser.add_argument('input_file', help='input file (.yml) or folder')
 
-    parser.add_argument('-o', type=str, default='fused.tiff',
-                        dest='output_filename', help='output file name')
+    group = parser.add_argument_group('output')
+    group.add_argument('-o', type=str, default='fused.tiff',
+                       dest='output_filename', help='output file name')
+
+    group.add_argument('-d', dest='debug', action='store_true',
+                       help='overlay debug info')
 
     group = parser.add_argument_group('absolute positions')
     me_group = group.add_mutually_exclusive_group()
@@ -44,9 +48,6 @@ def parse_args():
     me_group.add_argument('-f', action='store_true', default=None,
                           dest='force_recomputation',
                           help='force recomputation of absolute positions')
-
-    parser.add_argument('-d', dest='debug', action='store_true',
-                        help='overlay debug info')
 
     group = parser.add_argument_group('tile ordering (option -n only)')
     group.add_argument('--iX', action='store_true', dest='invert_x',
