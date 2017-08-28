@@ -88,7 +88,10 @@ def main():
     if os.path.isfile(args.input_file):
         with open(args.input_file, 'r') as f:
             y = yaml.load(f)
-            old_abs_mode = y['fuser-options']['abs_mode']
+            try:
+                old_abs_mode = y['fuser-options']['abs_mode']
+            except KeyError:
+                pass
         keys = ['px_size_z', 'px_size_xy'] + asc_keys
         for k in keys:
             if getattr(args, k) is None:
