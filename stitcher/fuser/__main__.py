@@ -49,6 +49,10 @@ def parse_args():
                           dest='force_recomputation',
                           help='force recomputation of absolute positions')
 
+    group.add_argument('--no-global', action='store_true',
+                       help='do not perform global optimization (where '
+                            'applicable)')
+
     group = parser.add_argument_group('tile ordering (option -n only)')
     group.add_argument('--iX', action='store_true', dest='invert_x',
                        help='invert tile ordering along X')
@@ -154,8 +158,10 @@ def main():
 
         absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
         absolute_positions.compute_initial_guess(fm.data_frame, sdf)
-        absolute_position_global_optimization(fm.data_frame, sdf,
-                                              xcorr_fm.xcorr_options)
+
+        if not args.no_global:
+            absolute_position_global_optimization(fm.data_frame, sdf,
+                                                  xcorr_fm.xcorr_options)
 
     # =========================================================================
     # init FuseRunner
