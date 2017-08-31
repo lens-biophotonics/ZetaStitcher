@@ -1,4 +1,5 @@
 import re
+import logging
 import os.path
 import threading
 
@@ -14,6 +15,9 @@ from .overlaps import Overlaps
 from .lcd_numbers import numbers, canvas_shape
 
 from ..inputfile import InputFile
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def to_dtype(x, dtype):
@@ -70,6 +74,7 @@ class FuseRunner(object):
         return output_shape
 
     def run(self):
+        logger.info("Output shape: {}".format(self.output_shape))
         ov = Overlaps(self.fm)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
@@ -124,7 +129,8 @@ class FuseRunner(object):
                     continue
 
                 with InputFile(os.path.join(self.path, index)) as f:
-                    print('opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
+                    logger.info(
+                        'opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
                     slice = f.slice(z_from, z_to, dtype=np.float32, copy=True)
 
                 if self.debug:

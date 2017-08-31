@@ -1,8 +1,10 @@
 import sys
 import os.path
+import logging
 import argparse
 
 import yaml
+import coloredlogs
 
 from ..version import full_version
 
@@ -11,6 +13,9 @@ from .fuse_runner import FuseRunner
 from ..filematrix import FileMatrix
 from .xcorr_filematrix import XcorrFileMatrix
 from .global_optimization import absolute_position_global_optimization
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(level='DEBUG', fmt='%(levelname)s [%(name)s]: %(message)s')
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -114,8 +119,9 @@ def main():
 
     if not os.path.isfile(args.input_file):
         if args.abs_mode != 'nominal_positions':
-            sys.exit("No stitch file specified or found. Please specify input "
-                     "file or run with -s.")
+            logger.error("No stitch file specified or found. Please specify "
+                         "input file or run with -s.")
+            sys.exit(1)
 
     for k in ['x', 'y']:
         temp_k = 'ascending_tiles_' + k
@@ -126,7 +132,9 @@ def main():
     for a in attrs:
         if getattr(args, a, None) is None:
             if args.abs_mode == 'nominal_positions':
-                sys.exit("px sizes need to be specified when using option -s")
+                logger.error(
+                    "px sizes need to be specified when using option -s")
+                sys.exit(1)
             else:
                 setattr(args, a, 1)
 
@@ -177,6 +185,8 @@ def main():
             setattr(fr, k, getattr(args, k))
 
         fr.run()
+    else:
+        logger.warning("No output file specified.")
 
     if os.path.isfile(args.input_file):
         fm.save_to_yaml(args.input_file, 'update')
