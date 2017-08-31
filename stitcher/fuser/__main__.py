@@ -34,6 +34,9 @@ def parse_args():
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
 
+    group.add_argument('--zmin', type=float, default=0)
+    group.add_argument('--zmax', type=float, default=None, help='noninclusive')
+
     group = parser.add_argument_group('absolute positions')
     me_group = group.add_mutually_exclusive_group()
     me_group.add_argument('-a', dest='abs_mode', action='store_const',
@@ -66,10 +69,6 @@ def parse_args():
                        help='pixel size in the (X, Y) plane')
     group.add_argument('--px-size-z', type=float,
                        help='pixel size in the Z direction')
-
-    parser.add_argument('--zmin', type=float, default=0)
-    parser.add_argument('--zmax', type=float, default=None,
-                        help='noninclusive')
 
     args = parser.parse_args()
 
