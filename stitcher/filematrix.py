@@ -47,8 +47,23 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, input_path=None, ascending_tiles_x=True,
-                 ascending_tiles_y=True):
+    def __init__(self, input_path=None, ascending_tiles_x=None,
+                 ascending_tiles_y=None):
+        """
+        Construct a FileMatrix object from a directory path or a .yml file
+        produced by the stitcher. Tile ordering parameters need to be
+        specified only if constructing from a directory, otherwise they are
+        ignored.
+
+        Parameters
+        ----------
+        input_path : str
+                     input path (directory) or file (.yml)
+        ascending_tiles_x : bool
+            whether tiles are supposed to be read in ascending X order
+        ascending_tiles_y : bool
+            whether tiles are supposed to be read in ascending Y order
+        """
         self.input_path = input_path
 
         self.data_frame = None
@@ -56,15 +71,19 @@ class FileMatrix:
         columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, `nfrms`,
         `filename`."""
 
-        self.ascending_tiles_x = ascending_tiles_x
-        self.ascending_tiles_y = ascending_tiles_y
+        self.ascending_tiles_x = None
+        self.ascending_tiles_y = None
 
         self.name_array = None
 
         if input_path is None:
             return
+
         if os.path.isdir(input_path):
+            self.ascending_tiles_x = ascending_tiles_x
+            self.ascending_tiles_y = ascending_tiles_y
             self.load_dir(input_path)
+
         elif os.path.isfile(input_path):
             self.load_yaml(input_path)
 
@@ -116,11 +135,6 @@ class FileMatrix:
     def load_yaml(self, fname):
         with open(fname, 'r') as f:
             y = yaml.load(f)
-
-        attrs = ['ascending_tiles_x', 'ascending_tiles_y']
-
-        for attr in attrs:
-            setattr(self, attr, y['xcorr-options'][attr])
 
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
         self.data_frame = self.data_frame.sort_values(['Z', 'Y', 'X'])
