@@ -48,9 +48,9 @@ def parse_args():
                           const='nominal_positions',
                           help='use nominal stage positions')
 
-    me_group.add_argument('-f', action='store_true', default=None,
-                          dest='force_recomputation',
-                          help='force recomputation of absolute positions')
+    group.add_argument('-f', action='store_true', default=False,
+                       dest='force_recomputation',
+                       help='force recomputation of absolute positions')
 
     group.add_argument('--no-global', action='store_true',
                        help='do not perform global optimization (where '
