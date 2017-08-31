@@ -28,8 +28,10 @@ def parse_args():
     parser.add_argument('input_file', help='input file (.yml) or folder')
 
     group = parser.add_argument_group('output')
-    group.add_argument('-o', type=str, default='fused.tiff',
-                       dest='output_filename', help='output file name')
+    group.add_argument('-o', type=str, dest='output_filename',
+                       help='output file name. If not specified, no tiff '
+                            'output is produced, only absoulute coordinates '
+                            'are computed.')
 
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
@@ -166,14 +168,15 @@ def main():
     # =========================================================================
     # init FuseRunner
     # =========================================================================
-    fr = FuseRunner(fm)
+    if args.output_filename is not None:
+        fr = FuseRunner(fm)
 
-    keys = ['zmin', 'zmax', 'output_filename', 'debug']
+        keys = ['zmin', 'zmax', 'output_filename', 'debug']
 
-    for k in keys:
-        setattr(fr, k, getattr(args, k))
+        for k in keys:
+            setattr(fr, k, getattr(args, k))
 
-    fr.run()
+        fr.run()
 
     if os.path.isfile(args.input_file):
         fm.save_to_yaml(args.input_file, 'update')
