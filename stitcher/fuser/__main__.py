@@ -44,7 +44,7 @@ def parse_args():
                           help='instead of maximum score, take the average '
                                'result weighted by the score')
 
-    me_group.add_argument('-n', dest='abs_mode', action='store_const',
+    me_group.add_argument('-s', dest='abs_mode', action='store_const',
                           const='nominal_positions',
                           help='use nominal stage positions')
 
@@ -56,7 +56,7 @@ def parse_args():
                        help='do not perform global optimization (where '
                             'applicable)')
 
-    group = parser.add_argument_group('tile ordering (option -n only)')
+    group = parser.add_argument_group('tile ordering (option -s only)')
     group.add_argument('--iX', action='store_true', dest='invert_x',
                        help='invert tile ordering along X')
     group.add_argument('--iY', action='store_true', dest='invert_y',
@@ -112,7 +112,7 @@ def main():
     if not os.path.isfile(args.input_file):
         if args.abs_mode != 'nominal_positions':
             sys.exit("No stitch file specified or found. Please specify input "
-                     "file or run with -n.")
+                     "file or run with -s.")
 
     for k in ['x', 'y']:
         temp_k = 'ascending_tiles_' + k
@@ -123,7 +123,7 @@ def main():
     for a in attrs:
         if getattr(args, a, None) is None:
             if args.abs_mode == 'nominal_positions':
-                sys.exit("px sizes need to be specified when using option -n")
+                sys.exit("px sizes need to be specified when using option -s")
             else:
                 setattr(args, a, 1)
 
