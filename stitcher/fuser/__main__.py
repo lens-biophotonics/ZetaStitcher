@@ -37,12 +37,13 @@ def parse_args():
     group.add_argument('--zmin', type=float, default=0)
     group.add_argument('--zmax', type=float, default=None, help='noninclusive')
 
-    group = parser.add_argument_group('absolute positions')
+    group = parser.add_argument_group(
+        'absolute positions', 'by default, absolute positions are computed by '
+                              'taking the maximum score in cross correlations')
     me_group = group.add_mutually_exclusive_group()
     me_group.add_argument('-a', dest='abs_mode', action='store_const',
                           const='weighted_average',
-                          help='instead of maximum score, take the average '
-                               'result weighted by the score')
+                          help='take the average result weighted by the score')
 
     me_group.add_argument('-s', dest='abs_mode', action='store_const',
                           const='nominal_positions',
