@@ -159,10 +159,11 @@ def main():
         fm.clear_absolute_positions()
 
     cols = fm.data_frame.columns
+    logger.info('absolute positions mode: {}'.format(args.abs_mode))
     if args.abs_mode == 'nominal_positions':
         fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
     elif 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
-        pass
+        logger.info('using absolute positions from {}'.format(args.yml_file))
     else:
         xcorr_fm = XcorrFileMatrix()
         xcorr_fm.load_yaml(fm.input_path)
@@ -184,6 +185,9 @@ def main():
     # =========================================================================
     if args.output_filename is not None:
         fr = FuseRunner(fm)
+        logger.info("output shape: {}".format(fr.output_shape))
+        logger.info("voxel size (ZYX): {} * {} * {}".format(
+            args.px_size_z, args.px_size_xy, args.px_size_xy))
 
         keys = ['zmin', 'zmax', 'output_filename', 'debug']
 

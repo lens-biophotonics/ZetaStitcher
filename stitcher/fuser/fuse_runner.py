@@ -74,7 +74,6 @@ class FuseRunner(object):
         return output_shape
 
     def run(self):
-        logger.info("Output shape: {}".format(self.output_shape))
         ov = Overlaps(self.fm)
 
         total_byte_size = np.asscalar(np.prod(self.output_shape)
@@ -158,6 +157,7 @@ class FuseRunner(object):
                 fused = np.moveaxis(fused, -3, -1)
 
             fused = to_dtype(fused, self.dtype)
+            logger.info('saving output to {}'.format(self.output_filename))
             tiff.imsave(self.output_filename, fused, append=True,
                         bigtiff=bigtiff)
 

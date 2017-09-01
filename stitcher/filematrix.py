@@ -133,6 +133,7 @@ class FileMatrix:
         self.process_data_frame()
 
     def load_yaml(self, fname):
+        logger.info('loading {}'.format(fname))
         with open(fname, 'r') as f:
             y = yaml.load(f)
 
