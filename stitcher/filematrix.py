@@ -13,8 +13,8 @@ import networkx as nx
 
 from .inputfile import InputFile
 
-
-logger = logging.getLogger('FileMatrix')
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def parse_file_name(file_name):
@@ -193,9 +193,11 @@ class FileMatrix:
 
             y['filematrix'] = j
 
+            logger.info('updating {}'.format(filename))
             with open(filename, 'w') as f:
                 yaml.dump(y, f, default_flow_style=False)
         else:
+            logger.info('writing {}'.format(filename))
             with open(filename, mode) as f:
                 yaml.dump({'filematrix': j}, f, default_flow_style=False)
 

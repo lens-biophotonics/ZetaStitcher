@@ -30,7 +30,13 @@ def parse_args():
                'Version: {}'.format(full_version),
         formatter_class=CustomFormatter)
 
-    parser.add_argument('input_file', help='input file (.yml) or folder')
+    parser.add_argument(
+        'yml_file',
+        help='.yml file produced by stitch align. It will also be used for '
+             'saving absolute coordinates. If a directory is specified'
+             'instead of a file, uses a file named "stitch.yml" if present. '
+             'If the file does not exist, it will be created (only where '
+             'applicable: see option -s).')
 
     group = parser.add_argument_group('output')
     group.add_argument('-o', type=str, dest='output_filename',
@@ -86,10 +92,10 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if os.path.isdir(args.input_file):
-        temp = os.path.join(args.input_file, 'stitch.yml')
+    if os.path.isdir(args.yml_file):
+        temp = os.path.join(args.yml_file, 'stitch.yml')
         if os.path.exists(temp):
-            args.input_file = temp
+            args.yml_file = temp
 
     asc_keys = ['ascending_tiles_x', 'ascending_tiles_y']
     for k in asc_keys:
@@ -97,8 +103,8 @@ def main():
 
     # replace None args with values found in yml file
     old_abs_mode = None
-    if os.path.isfile(args.input_file):
-        with open(args.input_file, 'r') as f:
+    if os.path.isfile(args.yml_file):
+        with open(args.yml_file, 'r') as f:
             y = yaml.load(f)
             try:
                 old_abs_mode = y['fuser-options']['abs_mode']
@@ -117,7 +123,7 @@ def main():
     if args.abs_mode is None:
         args.abs_mode = 'maximum_score'
 
-    if not os.path.isfile(args.input_file):
+    if not os.path.isfile(args.yml_file):
         if args.abs_mode != 'nominal_positions':
             logger.error("No stitch file specified or found. Please specify "
                          "input file or run with -s.")
@@ -145,7 +151,7 @@ def main():
     # =========================================================================
     # init FileMatrix
     # =========================================================================
-    fm = FileMatrix(args.input_file,
+    fm = FileMatrix(args.yml_file,
                     ascending_tiles_x=args.ascending_tiles_x,
                     ascending_tiles_y=args.ascending_tiles_y)
 
@@ -188,19 +194,22 @@ def main():
     else:
         logger.warning("No output file specified.")
 
-    if os.path.isfile(args.input_file):
-        fm.save_to_yaml(args.input_file, 'update')
+    if os.path.isdir(args.yml_file):
+        args.yml_file = os.path.join(args.yml_file, 'stitch.yml')
+        fm.save_to_yaml(args.yml_file, 'w')
+    else:
+        fm.save_to_yaml(args.yml_file, 'update')
 
-        with open(args.input_file, 'r') as f:
-            y = yaml.load(f)
-        fr_options = {}
-        keys = ['abs_mode']
-        for k in keys:
-            fr_options[k] = getattr(args, k)
-        y['fuser-options'] = fr_options
+    with open(args.yml_file, 'r') as f:
+        y = yaml.load(f)
+    fr_options = {}
+    keys = ['abs_mode']
+    for k in keys:
+        fr_options[k] = getattr(args, k)
+    y['fuser-options'] = fr_options
 
-        with open(args.input_file, 'w') as f:
-            yaml.dump(y, f, default_flow_style=False)
+    with open(args.yml_file, 'w') as f:
+        yaml.dump(y, f, default_flow_style=False)
 
 
 if __name__ == '__main__':
