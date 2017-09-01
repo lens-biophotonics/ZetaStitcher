@@ -54,6 +54,11 @@ def parse_args():
         'absolute positions', 'by default, absolute positions are computed by '
                               'taking the maximum score in cross correlations')
     me_group = group.add_mutually_exclusive_group()
+    me_group.add_argument('-m', dest='abs_mode', action='store_const',
+                          const='maximum_score',
+                          help='take the maximum score in cross correlations '
+                               '(default)')
+
     me_group.add_argument('-a', dest='abs_mode', action='store_const',
                           const='weighted_average',
                           help='take the average result weighted by the score')
