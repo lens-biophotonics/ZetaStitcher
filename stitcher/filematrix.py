@@ -41,7 +41,7 @@ def parse_file_name(file_name):
     for i in range(1, 4):
         fields.append(int(m.group(i)))
 
-    print('{} \tX={} Y={} Z={}'.format(file_name, *fields))
+    logger.info('adding {} \tX={} Y={} Z={}'.format(file_name, *fields))
     return fields
 
 

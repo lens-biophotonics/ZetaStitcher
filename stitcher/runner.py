@@ -1,9 +1,12 @@
 import queue
+import logging
 import argparse
 import threading
 
 import json
 import yaml
+
+import coloredlogs
 
 import numpy as np
 import pandas as pd
@@ -13,6 +16,10 @@ from .filematrix import FileMatrix
 from .normxcorr import normxcorr2_fftw
 
 from .version import full_version
+
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(level='DEBUG', fmt='%(levelname)s [%(name)s]: %(message)s')
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -220,10 +227,10 @@ class Runner(object):
                     score = 0
 
                 progress = 100 * (1 - self.q.qsize() / initial_queue_length)
-                print('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
-                      '{shift}\t{score}'.format(
-                          progress=progress, aname=aname, bname=bname,
-                          z_frame=z_frame, shift=shift, score=score))
+                logger.info('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
+                            '{shift}\t{score:.3f}'.format(
+                    progress=progress, aname=aname, bname=bname,
+                    z_frame=z_frame, shift=shift, score=score))
                 self.output_q.put(
                     [aname, bname, axis, z_frame] + shift + [score])
             finally:
