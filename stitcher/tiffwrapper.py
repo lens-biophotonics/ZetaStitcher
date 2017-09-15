@@ -67,6 +67,8 @@ class TiffWrapper(object):
 
         if not self.glob_mode:
             a = self.tfile.asarray(slice(start_frame, end_frame))
+            if self.nchannels > 1:
+                a = np.rollaxis(a, -3, len(a.shape))
         else:
             frames_per_file = self.nfrms // len(self.flist)
             start_file = start_frame // frames_per_file
