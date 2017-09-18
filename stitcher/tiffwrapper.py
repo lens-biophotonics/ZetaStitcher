@@ -34,7 +34,10 @@ class TiffWrapper(object):
     @property
     def nchannels(self):
         try:
-            return self.tfile.pages[0].shape[2]
+            if self.glob_mode:
+                return self.tfile.pages[0].shape[-1]
+            else:
+                return self.tfile.pages[0].shape[0]
         except IndexError:
             return 1
 
