@@ -33,13 +33,20 @@ def parse_file_name(file_name):
     file_name = os.path.basename(file_name)
     m = re.search('^.*x_([-]?\d+).*y_([-]?\d+).*z_([-]?\d+).*', file_name)
     if m is None:
+        m = re.search('^.*x_([-]?\d+).*y_([-]?\d+)', file_name)
+    if m is None:
         m = re.search('^([-]?\d+)_([-]?\d+)_([-]?\d+)', file_name)
+    if m is None:
+        m = re.search('^([-]?\d+)_([-]?\d+)', file_name)
     if m is None:
         raise ValueError('Invalid name {}'.format(file_name))
 
     fields = []
     for i in range(1, 4):
-        fields.append(int(m.group(i)))
+        try:
+            fields.append(int(m.group(i)))
+        except IndexError:
+            fields.append(0)
 
     logger.info('adding {} \tX={} Y={} Z={}'.format(file_name, *fields))
     return fields
