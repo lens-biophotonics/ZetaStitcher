@@ -71,7 +71,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     bframe = b.slice_idx(z_frame)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
-    b_roi = bframe[..., :2 * max_shift_y, max_shift_x:-max_shift_x]
+    b_roi = bframe[..., :overlap - max_shift_y, max_shift_x:-max_shift_x]
 
     tiff.imsave('aslice.tiff', a_roi.astype(np.float32))
     tiff.imsave('bframe.tiff', b_roi.astype(np.float32))

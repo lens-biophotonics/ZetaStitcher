@@ -266,7 +266,8 @@ class Runner(object):
                 bframe = b.slice_idx(z_frame, copy=True)
                 if axis == 2:
                     bframe = np.rot90(bframe, axes=(-1, -2))
-                bframe = bframe[..., :2* self.max_dy, self.max_dx:-self.max_dx]
+                bframe = bframe[..., :overlap - self.max_dy,
+                                self.max_dx:-self.max_dx]
 
                 aslice = aslice.astype(np.float32)
                 bframe = bframe.astype(np.float32)
