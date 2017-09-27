@@ -63,12 +63,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     z_min = z_frame - max_shift_z
     z_max = z_frame + max_shift_z + 1
 
-    aslice = a.slice(z_min, z_max)
+    aslice = a.zslice(z_min, z_max)
     if axis == 2:
         aslice = np.rot90(aslice, axes=(-1, -2))
     a_roi = aslice[..., -(overlap + max_shift_y):, :]
 
-    bframe = b.slice_idx(z_frame)
+    bframe = b.zslice_idx(z_frame)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
     b_roi = bframe[..., :overlap - max_shift_y, max_shift_x:-max_shift_x]

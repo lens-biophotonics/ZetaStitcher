@@ -12,6 +12,8 @@ class InputFile(object):
         self._channel = -1
         self.nchannels = 1
 
+        self.nfrms = None
+
         if file_name is not None:
             self.open()
 
@@ -98,7 +100,7 @@ class InputFile(object):
             except AttributeError:
                 pass
 
-    def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
+    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         """Return a slice, i.e. a substack of frames.
 
         Parameters
@@ -120,7 +122,7 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
-        l = self.wrapper.slice(start_frame, end_frame, dtype, copy)
+        l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
         if self.channel == -2:
             l = np.sum(l, axis=-1)
         elif self.channel != -1:
@@ -130,7 +132,7 @@ class InputFile(object):
 
         return l
 
-    def slice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
+    def zslice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
         """Return a slice, i.e. a substack of frames, by index.
 
         Parameters
@@ -148,7 +150,7 @@ class InputFile(object):
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
-        return self.slice(start_frame, end_frame, dtype, copy)
+        return self.zslice(start_frame, end_frame, dtype, copy)
 
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
@@ -165,7 +167,7 @@ class InputFile(object):
         :class:`numpy.ndarray`
             A numpy array, see :func:`slice`.
         """
-        return self.slice_idx(0, self.nfrms, dtype, copy)
+        return self.zslice_idx(0, self.nfrms, dtype, copy)
 
     def frame(self, index, dtype=None, copy=True):
         """Convenience function to retrieve a single slice.
@@ -183,4 +185,4 @@ class InputFile(object):
         :class:`numpy.ndarray`
             A numpy array, see :func:`slice`.
         """
-        return np.squeeze(self.slice_idx(index, dtype=dtype, copy=copy))
+        return np.squeeze(self.zslice_idx(index, dtype=dtype, copy=copy))

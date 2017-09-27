@@ -50,7 +50,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'coloredlogs',
-        'dcimg>=0.3.0',
+        'dcimg>=0.4.0',
         'networkx',
         'numpy',
         'pandas',

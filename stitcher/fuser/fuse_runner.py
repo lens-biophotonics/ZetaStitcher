@@ -130,7 +130,7 @@ class FuseRunner(object):
                 with InputFile(os.path.join(self.path, index)) as f:
                     logger.info(
                         'opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
-                    slice = f.slice(z_from, z_to, dtype=np.float32, copy=True)
+                    slice = f.zslice(z_from, z_to, dtype=np.float32, copy=True)
 
                 if self.debug:
                     self.overlay_debug(slice, index, z_from)

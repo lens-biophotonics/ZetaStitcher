@@ -64,7 +64,7 @@ class TiffWrapper(object):
         self.tfile = tiff.TiffFile(fname)
         setattr(self, 'close', getattr(self.tfile, 'close'))
 
-    def slice(self, start_frame, end_frame=None, dtype=None, copy=True):
+    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         if end_frame is None:
             end_frame = start_frame + 1
 
