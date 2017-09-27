@@ -109,7 +109,7 @@ class FileMatrix:
 
         flist = []
 
-        for root, dirs, files in os.walk(dir):
+        for root, dirs, files in os.walk(dir, followlinks=True):
             if os.path.basename(root):
                 try:
                     self.parse_and_append(root, flist)
