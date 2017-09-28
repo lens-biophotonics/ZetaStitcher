@@ -122,7 +122,7 @@ class Overlaps(object):
         self.overlap_sw = overlap_sw.astype(int)
         self.overlap_se = overlap_se.astype(int)
 
-    def overlaps(self, tile_name):
+    def __getitem__(self, tile_name):
         df = pd.DataFrame()
         names = ['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se']
         for n in names:

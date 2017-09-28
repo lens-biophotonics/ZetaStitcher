@@ -137,7 +137,7 @@ class FuseRunner(object):
                     self.overlay_debug(slice, index, z_from)
 
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
-                overlaps = ov.overlaps(index).copy()
+                overlaps = ov[index].copy()
                 overlaps = overlaps.loc[
                     (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
                 ]
