@@ -1,4 +1,3 @@
-import re
 import logging
 import os.path
 import threading
@@ -12,7 +11,6 @@ import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue
 from .overlaps import Overlaps
-from .lcd_numbers import numbers, canvas_shape
 
 from ..inputfile import InputFile
 
@@ -133,9 +131,6 @@ class FuseRunner(object):
                     zslice = f.zslice(
                         z_from, z_to, dtype=np.float32, copy=True)
 
-                if self.debug:
-                    self.overlay_debug(slice, index, z_from)
-
                 top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
                 overlaps = ov[index].copy()
                 overlaps = overlaps.loc[
@@ -147,9 +142,9 @@ class FuseRunner(object):
 
                 overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
-                q.put([zslice, top_left, overlaps])
+                q.put([zslice, index, z_from, top_left, overlaps])
 
-            q.put([None, None, None])  # close queue
+            q.put([None, None, None, None, None])  # close queue
 
             t.join()  # wait for fuse thread to finish
             print('=================================')
@@ -163,31 +158,3 @@ class FuseRunner(object):
                         bigtiff=bigtiff)
 
             self.zmin += thickness
-
-    def overlay_debug(self, slice, index, z_from):
-        cx = slice.shape[-1] // 2
-        cy = slice.shape[-2] // 2 + 10
-        x = cx - cx // 2
-        for xstr in re.findall(r'\d+', index):
-            for l in xstr:
-                x_end = x + canvas_shape[1]
-                try:
-                    slice[..., cy:cy + canvas_shape[0], x:x_end] = \
-                        numbers[int(l)]
-                except ValueError:
-                    break
-                x = x_end + canvas_shape[1] // 2
-            x = x_end + canvas_shape[1]
-
-        cy += int(canvas_shape[0] * 1.4)
-        for f in range(0, slice.shape[0]):
-            x = cx
-            xstr = str(z_from + f)
-            for l in xstr:
-                x_end = x + canvas_shape[1]
-                try:
-                    slice[f, ..., cy:cy + canvas_shape[0], x:x_end] = \
-                        numbers[int(l)]
-                except ValueError:
-                    break
-                x = x_end + canvas_shape[1] // 2
