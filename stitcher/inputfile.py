@@ -26,6 +26,44 @@ class InputFile(object):
     def __exit__(self, *args):
         self.close()
 
+    def __getitem__(self, item):
+        item = np.index_exp[tuple(item)]  # ensure item is a tuple
+
+        # ensure all items are slice objects
+        myitem = []
+        for i in item:
+            if isinstance(i, int):
+                start = i
+                stop = i + 1
+                step = 1
+            elif i is Ellipsis:
+                for _ in range(0, len(self.shape) - len(item) + 1):
+                    myitem.append(slice(0, self.shape[len(myitem)], 1))
+                continue
+            elif isinstance(i, slice):
+                start = i.start
+                stop = i.stop
+                step = i.step if i.step is not None else 1
+            else:
+                raise TypeError("Invalid type: {}".format(type(i)))
+
+            if start is None:
+                start = 0 if step > 0 else self.shape[len(myitem)]
+            elif start < 0:
+                start += self.shape[len(myitem)]
+
+            if stop is None:
+                stop = self.shape[len(myitem)] if step > 0 else 0
+            elif stop < 0:
+                stop += self.shape[len(myitem)]
+
+            myitem.append(slice(start, stop, step))
+
+        for _ in range(0, len(self.shape) - len(myitem)):
+            myitem.append(slice(0, self.shape[len(myitem)], 1))
+
+        return self.wrapper.__getitem__(myitem)
+
     @property
     def channel(self):
         return self._channel
