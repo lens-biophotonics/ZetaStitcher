@@ -60,7 +60,7 @@ class VirtualFusedVolume:
         output_shape[-2] = self.fm.full_height
         output_shape[-1] = self.fm.full_width
 
-        return output_shape
+        return tuple(output_shape)
 
     def __getitem__(self, item):
 

@@ -57,10 +57,10 @@ class FuseRunner(object):
             thickness -= (thickness - self.zmax)
         thickness -= self.zmin
 
-        output_shape = self.vfv.shape
+        output_shape = list(self.vfv.shape)
         output_shape[0] = thickness
 
-        return output_shape
+        return tuple(output_shape)
 
     def run(self):
         ov = Overlaps(self.fm)
