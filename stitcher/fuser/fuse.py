@@ -87,7 +87,7 @@ def fuse_queue(q, dest, frame_shape, debug=False):
     """
 
     while True:
-        slice, index, zfrom, sl, pos, overlaps = q.get()
+        slice, index_dbg, zfrom_dbg, sl, pos, overlaps = q.get()
 
         if slice is None:
             break
@@ -153,7 +153,7 @@ def fuse_queue(q, dest, frame_shape, debug=False):
             slice[slice_index] *= factor
 
         if debug:
-            overlay_debug(slice, index, zfrom)
+            overlay_debug(slice, index_dbg, zfrom_dbg)
             slice[..., -2:, :] = 65000
             slice[..., -2:] = 65000
 
