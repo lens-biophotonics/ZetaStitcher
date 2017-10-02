@@ -96,13 +96,17 @@ class FuseRunner(object):
         except FileNotFoundError:
             pass
 
+        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
+        with InputFile(infile) as f:
+            frame_shape = list(f.shape)[-2::]
+
         for thickness in partial_thickness:
             self.zmax = self.zmin + thickness
             fused = np.zeros(self.output_shape, dtype=np.float32)
             q = Queue(maxsize=20)
 
             t = threading.Thread(target=fuse_queue,
-                                 args=(q, fused, self.debug))
+                                 args=(q, fused, frame_shape, self.debug))
             t.start()
 
             for index, row in self.fm.data_frame.iterrows():
@@ -142,9 +146,9 @@ class FuseRunner(object):
 
                 overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
-                q.put([zslice, index, z_from, top_left, overlaps])
+                q.put([zslice, index, z_from, None, top_left, overlaps])
 
-            q.put([None, None, None, None, None])  # close queue
+            q.put([None, None, None, None, None, None])  # close queue
 
             t.join()  # wait for fuse thread to finish
             print('=================================')

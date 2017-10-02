@@ -110,7 +110,8 @@ class VirtualFusedVolume:
 
         q = Queue(maxsize=20)
 
-        t = threading.Thread(target=fuse_queue, args=(q, fused, True))
+        t = threading.Thread(target=fuse_queue,
+                             args=(q, fused, self.temp_shape[-2::], True))
         t.start()
 
         sl = myitem[:]
@@ -133,7 +134,7 @@ class VirtualFusedVolume:
 
             with InputFile(os.path.join(self.path, index)) as f:
                 logger.info('opening {}\t{}'.format(index, sl))
-                sl_a = np.copy(f[np.index_exp[tuple(sl)]]).astype(np.float32)
+                sl_a = np.copy(f[tuple(sl)]).astype(np.float32)
 
             z_from = sl[0].start
             z_to = sl[0].stop
@@ -154,8 +155,8 @@ class VirtualFusedVolume:
 
             overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
-            q.put([sl_a, index, z_from, top_left, overlaps])
+            q.put([sl_a, index, z_from, tuple(sl), top_left, overlaps])
 
-        q.put([None, None, None, None, None])  # close queue
+        q.put([None, None, None, None, None, None])  # close queue
 
         t.join()  # wait for fuse thread to finish

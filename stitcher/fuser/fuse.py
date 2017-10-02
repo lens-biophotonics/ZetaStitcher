@@ -67,7 +67,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, debug=False):
+def fuse_queue(q, dest, frame_shape, debug=False):
     """Fuses a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -87,7 +87,7 @@ def fuse_queue(q, dest, debug=False):
     """
 
     while True:
-        slice, index, zfrom, pos, overlaps = q.get()
+        slice, index, zfrom, sl, pos, overlaps = q.get()
 
         if slice is None:
             break
@@ -105,7 +105,7 @@ def fuse_queue(q, dest, debug=False):
         z = np.unique(z)
         z = np.sort(z)
 
-        xy_weights = squircle_alpha(*slice.shape[-2::])
+        xy_weights = squircle_alpha(*frame_shape)
 
         z_list = list(zip(z, z[1::]))
         try:
@@ -128,8 +128,7 @@ def fuse_queue(q, dest, debug=False):
                 if not area:
                     continue
 
-                # FIXME: pass size of overlapping tile
-                w = squircle_alpha(*slice.shape[-2::])[:height, :width]
+                w = squircle_alpha(*frame_shape)[:height, :width]
 
                 if row.X_from == 0:
                     w = np.fliplr(w)
@@ -144,8 +143,14 @@ def fuse_queue(q, dest, debug=False):
                 slice_index = np.index_exp[zfrom:, ...]
             else:
                 slice_index = np.index_exp[zfrom:zto, ...]
+
             with np.errstate(invalid='ignore'):
-                slice[slice_index] *= (xy_weights / sums)
+                factor = xy_weights / sums
+
+            if sl is not None:
+                factor = factor[sl[-2::]]
+
+            slice[slice_index] *= factor
 
         if debug:
             overlay_debug(slice, index, zfrom)
