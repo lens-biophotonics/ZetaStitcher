@@ -11,6 +11,7 @@ import skimage.external.tifffile as tiff
 
 from .fuse import fuse_queue, to_dtype
 from .overlaps import Overlaps
+from .virtual_fused_volume import VirtualFusedVolume
 
 from ..inputfile import InputFile
 
@@ -29,6 +30,7 @@ class FuseRunner(object):
         self.output_filename = None
 
         self._is_multichannel = None
+        self.vfv = VirtualFusedVolume(file_matrix)
 
     @property
     @lru_cache()
@@ -55,13 +57,8 @@ class FuseRunner(object):
             thickness -= (thickness - self.zmax)
         thickness -= self.zmin
 
-        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
-        with InputFile(infile) as f:
-            output_shape = list(f.shape)
-
+        output_shape = self.vfv.shape
         output_shape[0] = thickness
-        output_shape[-2] = self.fm.full_height
-        output_shape[-1] = self.fm.full_width
 
         return output_shape
 
