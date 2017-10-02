@@ -80,7 +80,7 @@ class FuseRunner(object):
                                       * self.dtype.itemsize)
         bigtiff = total_byte_size > 2**31 - 1
 
-        ram = psutil.virtual_memory().total
+        ram = psutil.virtual_memory().available
 
         # size in bytes of an xy plane (including channels) (float32)
         xy_size = np.asscalar(np.prod(self.output_shape[1::]) * 4)
