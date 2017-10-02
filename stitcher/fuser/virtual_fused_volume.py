@@ -88,8 +88,6 @@ class VirtualFusedVolume:
         for _ in range(0, len(self.shape) - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
-        print(myitem)
-
         zmin = myitem[0].start
         zmax = myitem[0].stop
 
@@ -161,4 +159,3 @@ class VirtualFusedVolume:
         q.put([None, None, None, None, None])  # close queue
 
         t.join()  # wait for fuse thread to finish
-        print('=================================')
