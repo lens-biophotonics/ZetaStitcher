@@ -19,4 +19,5 @@ pytz==2016.10             # via babel
 requests==2.13.0          # via sphinx
 six==1.10.0               # via pip-tools, sphinx
 snowballstemmer==1.2.1    # via sphinx
+sphinx-rtd-theme==0.2.4
 sphinx==1.5.2

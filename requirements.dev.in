@@ -1,3 +1,4 @@
 pip-tools
 sphinx
+sphinx_rtd_theme
 numpydoc
