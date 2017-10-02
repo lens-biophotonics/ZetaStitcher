@@ -74,22 +74,26 @@ def squircle_alpha(height, width):
 
 
 def fuse_queue(q, dest, frame_shape, debug=False):
-    """Fuses a queue of images along Y, optionally applying padding.
+    """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
     ----------
     q : :py:class:`queue.Queue`
-        A queue containing elements in the form ``[slice, index, zfrom,
-        top_left, overlaps]`` where `slice` is a :class:`numpy.ndarray`,
-        `index` and `zfrom` are the tile index in the pandas dataframe and
-        the starting frame in the original stack (these two are used for
-        debugging purposes only), `top_left` is a list specifying the image
-        position in the form ``[Z, Y, X]``, `overlaps` is a
-        :class:`pandas.DataFrame` specifying overlaps with adjacent tiles.
+        A queue containing elements in the form ``[hyperslice, index, zfrom,
+        offset_idx, top_left, overlaps]`` where `hyperslice` is a
+        `numpy.ndarray`, `index` and `zfrom` are the tile index in the
+        pandas dataframe and the starting frame in the original stack (these
+        two are used for debugging purposes only), `offset_idx` is a
+        tuple of :class:`slice` objects with the slice offset inside a single
+        stack, `top_left` is a list specifying the image position in the form
+        ``[Z, Y, X]``, `overlaps` is a :class:`pandas.DataFrame` specifying
+        overlaps with adjacent tiles.
+    frame_shape : tuple
+        Shape of a stack plane (XY).
     dest : :class:`numpy.ndarray`
         Destination array.
     debug: bool
-        Whether to overlay debug information (tile edges)
+        Whether to overlay debug information (tile edges and numbers).
     """
 
     while True:
