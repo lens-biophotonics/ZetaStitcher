@@ -30,12 +30,22 @@ class VirtualFusedVolume:
             if not k in self.fm.data_frame.columns:
                 raise ValueError('Absolute coordinates not found')
 
+        self._debug = False
+
         self.ov = Overlaps(self.fm)
 
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
             self.temp_shape = list(f.shape)
             self.dtype = f.dtype
+
+    @property
+    def overlay_debug_enabled(self):
+        return self._debug
+
+    @overlay_debug_enabled.setter
+    def overlay_debug_enabled(self, value):
+        self._debug = value
 
     @property
     @lru_cache()
@@ -111,8 +121,9 @@ class VirtualFusedVolume:
 
         q = Queue(maxsize=20)
 
-        t = threading.Thread(target=fuse_queue,
-                             args=(q, fused, self.temp_shape[-2::], True))
+        t = threading.Thread(
+            target=fuse_queue,
+            args=(q, fused, self.temp_shape[-2::], self._debug))
         t.start()
 
         sl = myitem[:]
