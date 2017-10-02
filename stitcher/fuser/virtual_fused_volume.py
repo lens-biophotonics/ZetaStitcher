@@ -10,7 +10,7 @@ import numpy as np
 from .overlaps import Overlaps
 from ..inputfile import InputFile
 from ..filematrix import FileMatrix
-from .fuse import fuse_queue
+from .fuse import fuse_queue, to_dtype
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -35,6 +35,7 @@ class VirtualFusedVolume:
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
             self.temp_shape = list(f.shape)
+            self.dtype = f.dtype
 
     @property
     @lru_cache()
@@ -160,3 +161,4 @@ class VirtualFusedVolume:
         q.put([None, None, None, None, None, None])  # close queue
 
         t.join()  # wait for fuse thread to finish
+        return to_dtype(fused, self.dtype)

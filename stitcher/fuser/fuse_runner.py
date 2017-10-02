@@ -9,19 +9,13 @@ import psutil
 import numpy as np
 import skimage.external.tifffile as tiff
 
-from .fuse import fuse_queue
+from .fuse import fuse_queue, to_dtype
 from .overlaps import Overlaps
 
 from ..inputfile import InputFile
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
-
-def to_dtype(x, dtype):
-    if np.issubdtype(dtype, np.integer):
-        np.rint(x, x)
-    return x.astype(dtype, copy=False)
 
 
 class FuseRunner(object):

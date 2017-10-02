@@ -11,6 +11,12 @@ def flatten(my_list):
     return [item for sublist in my_list for item in sublist]
 
 
+def to_dtype(x, dtype):
+    if np.issubdtype(dtype, np.integer):
+        np.rint(x, x)
+    return x.astype(dtype, copy=False)
+
+
 @lru_cache()
 def squircle_alpha(height, width):
     squircle = np.zeros((height, width))
