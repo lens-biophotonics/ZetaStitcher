@@ -1,13 +1,13 @@
 from os import path
 from setuptools import setup, find_packages
 
-from stitcher.version import full_version
+from stitcher import __version__
 
 here = path.abspath(path.dirname(__file__))
 
 setup(
     name='stitcher',
-    version=full_version,
+    version=__version__,
     description='Stitch 3D tiles',
     long_description='Stitch 3D tiles',
     author='Giacomo Mazzamuto',
@@ -60,7 +60,6 @@ setup(
         'pyyaml',
         'scipy',
         'scikit-image',
-        'semver',
     ],
 
     # List additional groups of dependencies here (e.g. development
