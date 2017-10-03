@@ -106,15 +106,20 @@ class VirtualFusedVolume:
             else:
                 raise TypeError("Invalid type: {}".format(type(i)))
 
+            curr_max = self.shape[len(myitem)]
             if start is None:
-                start = 0 if step > 0 else self.shape[len(myitem)]
+                start = 0 if step > 0 else curr_max
             elif start < 0:
-                start += self.shape[len(myitem)]
+                start += curr_max
+            elif start > curr_max:
+                start = curr_max
 
             if stop is None:
-                stop = self.shape[len(myitem)] if step > 0 else 0
+                stop = curr_max if step > 0 else 0
             elif stop < 0:
-                stop += self.shape[len(myitem)]
+                stop += curr_max
+            elif stop > curr_max:
+                stop = curr_max
 
             myitem.append(slice(start, stop, step))
 
@@ -141,6 +146,8 @@ class VirtualFusedVolume:
         ]
 
         output_shape = [(it.stop - it.start) // abs(it.step) for it in myitem]
+        if 0 in output_shape:
+            return np.array([], dtype=self.dtype)
 
         fused = np.zeros(output_shape, dtype=np.float32)
 
