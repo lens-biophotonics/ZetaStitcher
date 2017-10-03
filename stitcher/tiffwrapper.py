@@ -85,8 +85,7 @@ class TiffWrapper(object):
         if self.nchannels > 1:
             a = np.rollaxis(a, -1, -3)
 
-        a = a[::item[0].step, ...,
-              item[-2].start:item[-2].stop:item[-2].step,
-              item[-1].start:item[-1].stop:item[-1].step
-            ]
+        item[0] = slice(0, None, item[0].step)
+
+        a = a[item]
         return a
