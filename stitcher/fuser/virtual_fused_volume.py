@@ -1,3 +1,5 @@
+"""API to query an arbitrary region in the stitched volume."""
+
 import os.path
 import logging
 import threading
@@ -17,6 +19,19 @@ logger.addHandler(logging.NullHandler())
 
 
 class VirtualFusedVolume:
+    """An API to query arbitrary regions in the stitched volume.
+
+    Example usage:
+
+    >>> vfv = VirtualFusedVolume('stitch.yml')
+    >>> vfv.shape
+    (208, 3, 4533, 2487)
+
+    Axis order is ZCYX.
+
+    >>> subvolume = vfv[40, ..., 1000:1500, 2000:2400]
+
+    """
     def __init__(self, file_or_matrix):
         if isinstance(file_or_matrix, str):
             self.path, _ = os.path.split(file_or_matrix)
@@ -41,6 +56,9 @@ class VirtualFusedVolume:
 
     @property
     def overlay_debug_enabled(self):
+        """Whether to overlay debug information (tile edges and numbers).
+
+        Defaults to `False`."""
         return self._debug
 
     @overlay_debug_enabled.setter
@@ -50,6 +68,10 @@ class VirtualFusedVolume:
     @property
     @lru_cache()
     def shape(self):
+        """Shape of the whole stitched volume.
+
+        Axis order is ZCYX.
+        """
         thickness = self.fm.full_thickness
 
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
