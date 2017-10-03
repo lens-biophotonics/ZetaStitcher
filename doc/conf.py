@@ -54,6 +54,7 @@ intersphinx_mapping = {
 }
 
 default_role = 'any'
+highlight_language = 'python3'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -179,3 +180,7 @@ texinfo_documents = [
 ]
 
 numpydoc_class_members_toctree = False
+
+
+def setup(app):
+    app.add_javascript('https://docs.python.org/3/_static/copybutton.js')
