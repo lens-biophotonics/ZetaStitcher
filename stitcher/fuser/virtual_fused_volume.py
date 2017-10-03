@@ -121,6 +121,9 @@ class VirtualFusedVolume:
         for _ in range(0, len(self.shape) - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
 
+        if len(myitem) != len(self.shape):
+            raise IndexError('Too many indices for array')
+
         zmin = myitem[0].start
         zmax = myitem[0].stop
 
