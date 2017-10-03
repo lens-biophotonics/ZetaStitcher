@@ -161,40 +161,33 @@ class VirtualFusedVolume:
         sl = myitem[:]
 
         X_min = np.array([myitem[i].start for i in [0, -2, -1]])
+        X_stop = np.array([myitem[i].stop for i in [0, -2, -1]])
+        steps = np.array([myitem[i].step for i in [0, -2, -1]])
+
         for index, row in df.iterrows():
             Xs = np.array([row.Zs, row.Ys, row.Xs])
-            for size_key, i in zip(
-                ['nfrms', 'ysize', 'xsize'],
-                [0, -2, -1],
-            ):
-                xsize = getattr(row, size_key)
+            xsize = np.array([row.nfrms, row.ysize, row.xsize])
 
-                xto = myitem[i].stop - Xs[i]
-                if xto > xsize:
-                    xto = xsize
+            xto = X_stop - Xs
+            xto[xto > xsize] = xsize[xto > xsize]
+            xfrom = X_min - Xs
+            xfrom[xfrom < 0] = 0
+            xfrom = xfrom + (Xs + xfrom - X_min) % steps
 
-                xfrom = myitem[i].start - Xs[i]
-                if xfrom < 0:
-                    xfrom = 0
-
-                sl[i] = slice(
-                    xfrom + (Xs[i] + xfrom- X_min[i]) % sl[i].step,
-                    xto,
-                    sl[i].step
-                )
+            for i in [0, -2, -1]:
+                sl[i] = slice(xfrom[i], xto[i], steps[i])
 
             z_from = sl[0].start
             z_to = sl[0].stop
 
             x_from = np.array([sl[i].start for i in [0, -2, -1]])
-            x_step = np.array([sl[i].step for i in [0, -2, -1]])
 
             with InputFile(os.path.join(self.path, index)) as f:
                 logger.info('opening {}\t{}'.format(index, sl))
                 sl_a = np.copy(f[tuple(sl)]).astype(np.float32)
 
             Top_left = Xs + x_from
-            top_left = (Top_left - X_min) // x_step
+            top_left = (Top_left - X_min) // steps
 
             overlaps = self.ov[index].copy()
             overlaps = overlaps.loc[
