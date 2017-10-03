@@ -196,7 +196,8 @@ class VirtualFusedVolume:
 
             overlaps['Z_from'] -= z_from
             overlaps['Z_to'] -= z_from
-            overlaps['Z_to'] //= abs(sl[0].step)
+            overlaps['Z_to'] /= abs(sl[0].step)
+            overlaps['Z_to'] = overlaps['Z_to'].apply(np.round).astype(int)
 
             overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
