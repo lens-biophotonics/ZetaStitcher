@@ -160,35 +160,42 @@ class VirtualFusedVolume:
 
         sl = myitem[:]
 
+        X_min = np.array([myitem[i].start for i in [0, -2, -1]])
         for index, row in df.iterrows():
-            for start_key, size_key, i in zip(
-                ['Zs', 'Ys', 'Xs'],
+            Xs = np.array([row.Zs, row.Ys, row.Xs])
+            for size_key, i in zip(
                 ['nfrms', 'ysize', 'xsize'],
                 [0, -2, -1],
             ):
-                xto = myitem[i].stop - getattr(row, start_key)
-                if xto > getattr(row, size_key):
-                    xto = getattr(row, size_key)
+                xsize = getattr(row, size_key)
 
-                xfrom = myitem[i].start - getattr(row, start_key)
+                xto = myitem[i].stop - Xs[i]
+                if xto > xsize:
+                    xto = xsize
+
+                xfrom = myitem[i].start - Xs[i]
                 if xfrom < 0:
                     xfrom = 0
 
-                sl[i] = slice(xfrom, xto, sl[i].step)
+                sl[i] = slice(
+                    xfrom + (Xs[i] + xfrom- X_min[i]) % sl[i].step,
+                    xto,
+                    sl[i].step
+                )
+
+            z_from = sl[0].start
+            z_to = sl[0].stop
+
+            x_from = np.array([sl[i].start for i in [0, -2, -1]])
+            x_step = np.array([sl[i].step for i in [0, -2, -1]])
 
             with InputFile(os.path.join(self.path, index)) as f:
                 logger.info('opening {}\t{}'.format(index, sl))
                 sl_a = np.copy(f[tuple(sl)]).astype(np.float32)
 
-            z_from = sl[0].start
-            z_to = sl[0].stop
+            Top_left = Xs + x_from
+            top_left = (Top_left - X_min) // x_step
 
-            y_from = sl[-2].start
-            x_from = sl[-1].start
-
-            top_left = [row.Zs + z_from - zmin,
-                        row.Ys + y_from - ymin,
-                        row.Xs + x_from - xmin]
             overlaps = self.ov[index].copy()
             overlaps = overlaps.loc[
                 (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
@@ -196,6 +203,7 @@ class VirtualFusedVolume:
 
             overlaps['Z_from'] -= z_from
             overlaps['Z_to'] -= z_from
+            overlaps['Z_to'] //= abs(sl[0].step)
 
             overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
