@@ -90,6 +90,7 @@ class VirtualFusedVolume:
 
         # ensure all items are slice objects
         myitem = []
+        flip_axis = []
         for i in item:
             if isinstance(i, int):
                 start = i
@@ -98,6 +99,7 @@ class VirtualFusedVolume:
             elif i is Ellipsis:
                 for _ in range(0, len(self.shape) - len(item) + 1):
                     myitem.append(slice(0, self.shape[len(myitem)], 1))
+                    flip_axis.append(1)
                 continue
             elif isinstance(i, slice):
                 start = i.start
@@ -121,7 +123,12 @@ class VirtualFusedVolume:
             elif stop > curr_max:
                 stop = curr_max
 
-            myitem.append(slice(start, stop, step))
+            flip_axis.append(1 if step > 0 else -1)
+
+            if start < stop:
+                myitem.append(slice(start, stop, abs(step)))
+            else:
+                myitem.append(slice(stop, start, abs(step)))
 
         for _ in range(0, len(self.shape) - len(myitem)):
             myitem.append(slice(0, self.shape[len(myitem)], 1))
@@ -138,14 +145,9 @@ class VirtualFusedVolume:
         xmin = myitem[-1].start
         xmax = myitem[-1].stop
 
-        df = self.fm.data_frame
-        df = df[
-            (df['Zs_end'] > zmin) & (df['Zs'] <= zmax)
-            & (df['Ys_end'] > ymin) & (df['Ys'] <= ymax)
-            & (df['Xs_end'] > xmin) & (df['Xs'] <= xmax)
+        output_shape = [
+            (it.stop - it.start) // it.step for it in myitem
         ]
-
-        output_shape = [(it.stop - it.start) // abs(it.step) for it in myitem]
         if 0 in output_shape:
             return np.array([], dtype=self.dtype)
 
@@ -163,6 +165,13 @@ class VirtualFusedVolume:
         X_min = np.array([myitem[i].start for i in [0, -2, -1]])
         X_stop = np.array([myitem[i].stop for i in [0, -2, -1]])
         steps = np.array([myitem[i].step for i in [0, -2, -1]])
+
+        df = self.fm.data_frame
+        df = df[
+            (df['Zs_end'] > zmin) & (df['Zs'] <= zmax)
+            & (df['Ys_end'] > ymin) & (df['Ys'] <= ymax)
+            & (df['Xs_end'] > xmin) & (df['Xs'] <= xmax)
+        ]
 
         for index, row in df.iterrows():
             Xs = np.array([row.Zs, row.Ys, row.Xs])
@@ -206,4 +215,9 @@ class VirtualFusedVolume:
         q.put([None, None, None, None, None, None])  # close queue
 
         t.join()  # wait for fuse thread to finish
-        return to_dtype(fused, self.dtype)
+        fused = to_dtype(fused, self.dtype)
+
+        ie = [slice(None, None, flip) for flip in flip_axis]
+        fused = fused[ie]
+
+        return fused
