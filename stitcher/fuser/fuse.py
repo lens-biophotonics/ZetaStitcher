@@ -1,11 +1,20 @@
+import re
 import math
 import numpy as np
 
 from functools import lru_cache
 
+from .lcd_numbers import numbers, canvas_shape
+
 
 def flatten(my_list):
     return [item for sublist in my_list for item in sublist]
+
+
+def to_dtype(x, dtype):
+    if np.issubdtype(dtype, np.integer):
+        np.rint(x, x)
+    return x.astype(dtype, copy=False)
 
 
 @lru_cache()
@@ -64,24 +73,31 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, debug=False):
-    """Fuses a queue of images along Y, optionally applying padding.
+def fuse_queue(q, dest, frame_shape, debug=False):
+    """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
     ----------
     q : :py:class:`queue.Queue`
-        A queue containing elements in the form ``[slice, top_left, overlaps]``
-        where `slice` is a :class:`numpy.ndarray`, `top_left` is a list
-        specifying the image position in the form ``[Z, Y, X]``, `overlaps`
-        is a :class:`pandas.DataFrame` specifying overlaps with adjacent tiles.
+        A queue containing elements in the form ``[hyperslice, index, zfrom,
+        offset_idx, top_left, overlaps]`` where `hyperslice` is a
+        `numpy.ndarray`, `index` and `zfrom` are the tile index in the
+        pandas dataframe and the starting frame in the original stack (these
+        two are used for debugging purposes only), `offset_idx` is a
+        tuple of :class:`slice` objects with the slice offset inside a single
+        stack, `top_left` is a list specifying the image position in the form
+        ``[Z, Y, X]``, `overlaps` is a :class:`pandas.DataFrame` specifying
+        overlaps with adjacent tiles.
+    frame_shape : tuple
+        Shape of a stack plane (XY).
     dest : :class:`numpy.ndarray`
         Destination array.
     debug: bool
-        Whether to overlay debug information (tile edges)
+        Whether to overlay debug information (tile edges and numbers).
     """
 
     while True:
-        slice, pos, overlaps = q.get()
+        slice, index_dbg, zfrom_dbg, sl, pos, overlaps = q.get()
 
         if slice is None:
             break
@@ -99,7 +115,7 @@ def fuse_queue(q, dest, debug=False):
         z = np.unique(z)
         z = np.sort(z)
 
-        xy_weights = squircle_alpha(*slice.shape[-2::])
+        xy_weights = squircle_alpha(*frame_shape)
 
         z_list = list(zip(z, z[1::]))
         try:
@@ -122,8 +138,7 @@ def fuse_queue(q, dest, debug=False):
                 if not area:
                     continue
 
-                # FIXME: pass size of overlapping tile
-                w = squircle_alpha(*slice.shape[-2::])[:height, :width]
+                w = squircle_alpha(*frame_shape)[:height, :width]
 
                 if row.X_from == 0:
                     w = np.fliplr(w)
@@ -138,10 +153,17 @@ def fuse_queue(q, dest, debug=False):
                 slice_index = np.index_exp[zfrom:, ...]
             else:
                 slice_index = np.index_exp[zfrom:zto, ...]
+
             with np.errstate(invalid='ignore'):
-                slice[slice_index] *= (xy_weights / sums)
+                factor = xy_weights / sums
+
+            if sl is not None:
+                factor = factor[sl[-2::]]
+
+            slice[slice_index] *= factor
 
         if debug:
+            overlay_debug(slice, index_dbg, zfrom_dbg)
             slice[..., -2:, :] = 65000
             slice[..., -2:] = 65000
 
@@ -150,3 +172,32 @@ def fuse_queue(q, dest, debug=False):
         dest[output_roi_index] += slice
 
         q.task_done()
+
+
+def overlay_debug(slice, index, z_from):
+    cx = slice.shape[-1] // 2
+    cy = slice.shape[-2] // 2 + 10
+    x = cx - cx // 2
+    for xstr in re.findall(r'\d+', index):
+        for l in xstr:
+            x_end = x + canvas_shape[1]
+            try:
+                slice[..., cy:cy + canvas_shape[0], x:x_end] = \
+                    numbers[int(l)]
+            except ValueError:
+                break
+            x = x_end + canvas_shape[1] // 2
+        x = x_end + canvas_shape[1]
+
+    cy += int(canvas_shape[0] * 1.4)
+    for f in range(0, slice.shape[0]):
+        x = cx
+        xstr = str(z_from + f)
+        for l in xstr:
+            x_end = x + canvas_shape[1]
+            try:
+                slice[f, ..., cy:cy + canvas_shape[0], x:x_end] = \
+                    numbers[int(l)]
+            except ValueError:
+                break
+            x = x_end + canvas_shape[1] // 2
