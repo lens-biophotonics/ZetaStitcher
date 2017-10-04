@@ -53,6 +53,7 @@ class VirtualFusedVolume:
         with InputFile(infile) as f:
             self.temp_shape = list(f.shape)
             self.dtype = f.dtype
+            self.nchannels = f.nchannels
 
     @property
     def overlay_debug_enabled(self):
