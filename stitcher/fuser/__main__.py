@@ -6,7 +6,7 @@ import argparse
 import yaml
 import coloredlogs
 
-from ..version import full_version
+from ..version import __version__
 
 from . import absolute_positions
 from .fuse_runner import FuseRunner
@@ -27,7 +27,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Fuse stitched tiles in a folder.',
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
-               'Version: {}'.format(full_version),
+               'Version: {}'.format(__version__),
         formatter_class=CustomFormatter)
 
     parser.add_argument(

@@ -15,7 +15,7 @@ from .inputfile import InputFile
 from .filematrix import FileMatrix
 from .normxcorr import normxcorr2_fftw
 
-from .version import full_version
+from .version import __version__
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ The following naming conventions are used:
 Unless otherwise stated, all values are expected in px.
     ''',
         epilog='Author: Giacomo Mazzamuto <mazzamuto@lens.unifi.it>\n'
-               'Version: {}'.format(full_version),
+               'Version: {}'.format(__version__),
         formatter_class=CustomFormatter)
 
     parser.add_argument('input_folder', help='input folder')
