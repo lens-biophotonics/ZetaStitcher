@@ -39,6 +39,11 @@ class TiffWrapper(object):
     def dtype(self):
         return np.dtype(self.tfile.pages[0].dtype)
 
+    @property
+    def shape(self):
+        s = self.tfile.pages[0]._shape[-3:]
+        return (self.nfrms,) + tuple(s[i] for i in [-1, -3, -2])
+
     def open(self, file_name=None):
         if file_name is not None:
             self.file_name = file_name
@@ -80,12 +85,55 @@ class TiffWrapper(object):
         return a.astype(dtype)
 
     def __getitem__(self, item):
-        a = self.zslice(item[0].start, item[0].stop)
+        item = np.index_exp[tuple(item)]  # ensure item is a tuple
 
-        if self.nchannels > 1:
-            a = np.rollaxis(a, -1, -3)
+        # ensure all items are slice objects
+        myitem = []
+        for i in item:
+            if isinstance(i, int):
+                start = i
+                stop = i + 1
+                step = 1
+            elif i is Ellipsis:
+                for _ in range(0, len(self.shape) - len(item) + 1):
+                    myitem.append(slice(0, self.shape[len(myitem)], 1))
+                continue
+            elif isinstance(i, slice):
+                start = i.start
+                stop = i.stop
+                step = i.step if i.step is not None else 1
+            else:
+                raise TypeError("Invalid type: {}".format(type(i)))
 
-        item[0] = slice(0, None, item[0].step)
+            curr_max = self.shape[len(myitem)]
+            if start is None:
+                start = 0 if step > 0 else curr_max
+            elif start < 0:
+                start += curr_max
+            elif start > curr_max:
+                start = curr_max
 
-        a = a[item]
-        return a
+            if stop is None:
+                stop = curr_max if step > 0 else 0
+            elif stop < 0:
+                stop += curr_max
+            elif stop > curr_max:
+                stop = curr_max
+
+            if step < 0:
+                start += abs(step)
+                stop += abs(step)
+
+            myitem.append(slice(start, stop, step))
+
+        for _ in range(0, len(self.shape) - len(myitem)):
+            myitem.append(slice(0, self.shape[len(myitem)], 1))
+
+        a = self.zslice(myitem[0].start, myitem[0].stop)
+
+        a = np.rollaxis(a, -1, -3)
+
+        myitem[0] = slice(0, None, myitem[0].step)
+
+        a = a[myitem]
+        return np.squeeze(a)

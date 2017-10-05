@@ -124,6 +124,10 @@ class VirtualFusedVolume:
             elif stop > curr_max:
                 stop = curr_max
 
+            if step < 0:
+                start += abs(step)
+                stop += abs(step)
+
             flip_axis.append(1 if step > 0 else -1)
 
             if start < stop:
