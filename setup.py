@@ -1,9 +1,10 @@
-from os import path
 from setuptools import setup, find_packages
 
-from stitcher import __version__
 
-here = path.abspath(path.dirname(__file__))
+version = {}
+with open("stitcher/version.py") as fp:
+    exec(fp.read(), version)
+__version__ = version['__version__']
 
 setup(
     name='stitcher',
@@ -50,7 +51,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'coloredlogs',
-        'dcimg>=0.4.0',
+        'dcimg>=0.4.0a1',
         'networkx',
         'numpy',
         'pandas',
