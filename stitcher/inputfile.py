@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 
 import dcimg
@@ -64,6 +66,10 @@ class InputFile(object):
         if self.nchannels != 1 and self.channel == -1:
             s.insert(1, self.nchannels)
         return tuple(s)
+
+    @property
+    def file_size(self):
+        return os.path.getsize(self.file_name)
 
     def open(self, file_name=None):
         if file_name is not None:
