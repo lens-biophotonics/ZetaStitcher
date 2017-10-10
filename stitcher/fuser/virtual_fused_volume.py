@@ -178,6 +178,17 @@ class VirtualFusedVolume:
             & (df['Xs_end'] > xmin) & (df['Xs'] <= xmax)
         ]
 
+        if df.shape[0] == 1:
+            index = df.iloc[0].name
+            with InputFile(os.path.join(self.path, index)) as f:
+                try:
+                    f.wrapper.deep_copy_enabled = True
+                except AttributeError:
+                    pass
+                logger.info('opening {}\t{}'.format(index, sl))
+                sl_a = f[item]
+            return sl_a
+
         for index, row in df.iterrows():
             Xs = np.array([row.Zs, row.Ys, row.Xs])
             xsize = np.array([row.nfrms, row.ysize, row.xsize])
