@@ -175,7 +175,7 @@ class Runner(object):
         q = queue.Queue()
 
         for s in fm.slices:
-            df = fm.data_frame.loc[s.nodes()]
+            df = fm.data_frame.loc[list(s.nodes())]
             for stitch_config in [stitch_X, stitch_Y]:
                 view = df.sort_values(stitch_config['sort'],
                                       ascending=True)
