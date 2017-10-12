@@ -32,8 +32,15 @@ class TiffWrapper(object):
         return self.tfile.pages[0].image_length
 
     @property
+    def axes(self):
+        return self.tfile.pages[0].axes
+
+    @property
     def nchannels(self):
-        return self.tfile.pages[0]._shape[-1]
+        if self.axes == 'YXS':
+            return self.tfile.pages[0]._shape[-1]
+        elif self.axes == 'SYX':
+            return self.tfile.pages[0]._shape[1]
 
     @property
     def dtype(self):
@@ -69,8 +76,6 @@ class TiffWrapper(object):
 
         if not self.glob_mode:
             a = self.tfile.asarray(slice(start_frame, end_frame))
-            if self.nchannels > 1:
-                a = np.rollaxis(a, -3, len(a.shape))
         else:
             frames_per_file = self.nfrms // len(self.flist)
             start_file = start_frame // frames_per_file
@@ -79,6 +84,9 @@ class TiffWrapper(object):
 
         if end_frame - start_frame == 1:
             a = np.expand_dims(a, axis=0)
+
+        if self.axes == 'SYX':
+            a = np.moveaxis(a, 1, -1)
 
         if dtype is None:
             return a

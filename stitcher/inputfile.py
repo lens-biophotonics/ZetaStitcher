@@ -137,7 +137,7 @@ class InputFile(object):
         elif self.channel != -1:
             l = l[..., self.channel]
         elif self.nchannels > 1:
-            l = np.rollaxis(l, -1, -3)
+            l = np.moveaxis(l, -1, -3)
 
         return l
 
