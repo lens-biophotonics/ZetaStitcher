@@ -123,8 +123,10 @@ def main():
                 except KeyError:
                     pass
 
+    using_old_abs_mode = False
     if args.abs_mode is None:
         args.abs_mode = old_abs_mode
+        using_old_abs_mode = True
     if args.abs_mode is None:
         args.abs_mode = 'maximum_score'
 
@@ -142,7 +144,7 @@ def main():
     attrs = ['px_size_z', 'px_size_xy']
     for a in attrs:
         if getattr(args, a, None) is None:
-            if args.abs_mode == 'nominal_positions':
+            if args.abs_mode == 'nominal_positions' and not using_old_abs_mode:
                 logger.error(
                     "px sizes need to be specified when using option -s")
                 sys.exit(1)
@@ -165,10 +167,10 @@ def main():
 
     cols = fm.data_frame.columns
     logger.info('absolute positions mode: {}'.format(args.abs_mode))
-    if args.abs_mode == 'nominal_positions':
-        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
-    elif 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+    if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
         logger.info('using absolute positions from {}'.format(args.yml_file))
+    elif args.abs_mode == 'nominal_positions':
+        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
     else:
         xcorr_fm = XcorrFileMatrix()
         xcorr_fm.load_yaml(fm.input_path)
@@ -213,7 +215,7 @@ def main():
     with open(args.yml_file, 'r') as f:
         y = yaml.load(f)
     fr_options = {}
-    keys = ['abs_mode']
+    keys = ['abs_mode', 'px_size_xy', 'px_size_z']
     for k in keys:
         fr_options[k] = getattr(args, k)
     y['fuser-options'] = fr_options
