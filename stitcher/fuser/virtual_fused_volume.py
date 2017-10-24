@@ -173,9 +173,9 @@ class VirtualFusedVolume:
 
         df = self.fm.data_frame
         df = df[
-            (df['Zs_end'] > zmin) & (df['Zs'] <= zmax)
-            & (df['Ys_end'] > ymin) & (df['Ys'] <= ymax)
-            & (df['Xs_end'] > xmin) & (df['Xs'] <= xmax)
+            (df['Zs_end'] > zmin) & (df['Zs'] < zmax)
+            & (df['Ys_end'] > ymin) & (df['Ys'] < ymax)
+            & (df['Xs_end'] > xmin) & (df['Xs'] < xmax)
         ]
 
         if df.shape[0] == 1:
