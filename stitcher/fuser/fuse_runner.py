@@ -27,6 +27,7 @@ class FuseRunner(object):
         self.zmax = None
         self.debug = False
         self.output_filename = None
+        self.channel = -1
 
         self._is_multichannel = None
 
@@ -40,6 +41,8 @@ class FuseRunner(object):
     @property
     @lru_cache()
     def is_multichannel(self):
+        if self.channel != -1:
+            return False
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
             if f.nchannels > 1:
@@ -57,6 +60,7 @@ class FuseRunner(object):
 
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
+            f.channel = self.channel
             output_shape = list(f.shape)
 
         output_shape[0] = thickness
@@ -92,6 +96,7 @@ class FuseRunner(object):
 
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
+            f.channel = self.channel
             frame_shape = list(f.shape)[-2::]
 
         for thickness in partial_thickness:
@@ -124,6 +129,7 @@ class FuseRunner(object):
                     continue
 
                 with InputFile(os.path.join(self.path, index)) as f:
+                    f.channel = self.channel
                     logger.info(
                         'opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
                     zslice = f.zslice(

@@ -47,6 +47,9 @@ def parse_args():
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
 
+    group.add_argument('-c', type=int, default=-1, dest='channel',
+                       help='channel')
+
     group.add_argument('--zmin', type=float, default=0)
     group.add_argument('--zmax', type=float, default=None, help='noninclusive')
 
@@ -193,7 +196,7 @@ def main():
     if args.output_filename is not None:
         fr = FuseRunner(fm)
 
-        keys = ['zmin', 'zmax', 'output_filename', 'debug']
+        keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel']
 
         for k in keys:
             setattr(fr, k, getattr(args, k))
