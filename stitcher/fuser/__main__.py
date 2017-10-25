@@ -220,7 +220,8 @@ def main():
     with open(args.yml_file, 'r') as f:
         y = yaml.load(f)
     fr_options = {}
-    keys = ['abs_mode', 'px_size_xy', 'px_size_z']
+    keys = ['abs_mode', 'px_size_xy', 'px_size_z', 'ascending_tiles_x',
+            'ascending_tiles_y']
     for k in keys:
         fr_options[k] = getattr(args, k)
     y['fuser-options'] = fr_options
