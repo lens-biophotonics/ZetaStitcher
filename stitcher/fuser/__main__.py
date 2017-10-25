@@ -201,6 +201,8 @@ def main():
         for k in keys:
             setattr(fr, k, getattr(args, k))
 
+        logger.info("invert X: {}, invert Y: {}".format(
+            not args.ascending_tiles_x, not args.ascending_tiles_y))
         logger.info("output shape: {}".format(fr.output_shape))
         logger.info("voxel size (ZYX): {} * {} * {}".format(
             args.px_size_z, args.px_size_xy, args.px_size_xy))
