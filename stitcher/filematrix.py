@@ -177,7 +177,7 @@ class FileMatrix:
     def parse_and_append(self, name, flist):
         try:
             fields = parse_file_name(name)
-            with InputFile(os.path.join(self.input_path, name)) as infile:
+            with InputFile(name) as infile:
                 fields.append(infile.nfrms)
                 fields.append(infile.ysize)
                 fields.append(infile.xsize)
