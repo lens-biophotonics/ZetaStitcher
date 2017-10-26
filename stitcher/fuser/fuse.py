@@ -12,6 +12,8 @@ def flatten(my_list):
 
 
 def to_dtype(x, dtype):
+    if x.dtype == dtype:
+        return x
     if np.issubdtype(dtype, np.integer):
         np.rint(x, x)
     return x.astype(dtype, copy=False)
@@ -111,56 +113,57 @@ def fuse_queue(q, dest, frame_shape, debug=False):
         x_from = pos[2]
         x_to = x_from + slice.shape[-1]
 
-        z = np.array(flatten(overlaps[['Z_from', 'Z_to']].values))
-        z = np.unique(z)
-        z = np.sort(z)
+        if overlaps is not None:
+            z = np.array(flatten(overlaps[['Z_from', 'Z_to']].values))
+            z = np.unique(z)
+            z = np.sort(z)
 
-        xy_weights = squircle_alpha(*frame_shape)
+            xy_weights = squircle_alpha(*frame_shape)
 
-        z_list = list(zip(z, z[1::]))
-        try:
-            z_list += [(z[-1], None)]
-        except IndexError:
-            pass
+            z_list = list(zip(z, z[1::]))
+            try:
+                z_list += [(z[-1], None)]
+            except IndexError:
+                pass
 
-        for zfrom, zto in z_list:
-            sums = np.copy(xy_weights)
-            condition = (overlaps['Z_from'] <= zfrom)
-            if zto is not None:
-                condition = condition & (zto <= (overlaps['Z_to']))
-            else:
-                condition = condition & (overlaps['Z_to'] >= z_to)
+            for zfrom, zto in z_list:
+                sums = np.copy(xy_weights)
+                condition = (overlaps['Z_from'] <= zfrom)
+                if zto is not None:
+                    condition = condition & (zto <= (overlaps['Z_to']))
+                else:
+                    condition = condition & (overlaps['Z_to'] >= z_to)
 
-            for _, row in overlaps[condition].iterrows():
-                width = row.X_to - row.X_from
-                height = row.Y_to - row.Y_from
-                area = width * height
-                if not area:
-                    continue
+                for _, row in overlaps[condition].iterrows():
+                    width = row.X_to - row.X_from
+                    height = row.Y_to - row.Y_from
+                    area = width * height
+                    if not area:
+                        continue
 
-                w = squircle_alpha(*frame_shape)[:height, :width]
+                    w = squircle_alpha(*frame_shape)[:height, :width]
 
-                if row.X_from == 0:
-                    w = np.fliplr(w)
-                if row.Y_from == 0:
-                    w = np.flipud(w)
+                    if row.X_from == 0:
+                        w = np.fliplr(w)
+                    if row.Y_from == 0:
+                        w = np.flipud(w)
 
-                xy_index = np.index_exp[row.Y_from:row.Y_to,
-                                        row.X_from:row.X_to]
-                sums[xy_index] += w
+                    xy_index = np.index_exp[row.Y_from:row.Y_to,
+                                            row.X_from:row.X_to]
+                    sums[xy_index] += w
 
-            if zto is None:
-                slice_index = np.index_exp[zfrom:, ...]
-            else:
-                slice_index = np.index_exp[zfrom:zto, ...]
+                if zto is None:
+                    slice_index = np.index_exp[zfrom:, ...]
+                else:
+                    slice_index = np.index_exp[zfrom:zto, ...]
 
-            with np.errstate(invalid='ignore'):
-                factor = xy_weights / sums
+                with np.errstate(invalid='ignore'):
+                    factor = xy_weights / sums
 
-            if sl is not None:
-                factor = factor[sl[-2::]]
+                if sl is not None:
+                    factor = factor[sl[-2::]]
 
-            slice[slice_index] *= factor
+                slice[slice_index] *= factor
 
         if debug:
             overlay_debug(slice, index_dbg, zfrom_dbg)

@@ -40,14 +40,20 @@ class VirtualFusedVolume:
             self.fm = file_or_matrix
             self.path, _ = os.path.split(self.fm.input_path)
 
+        absolute_positions_found = True
         abs_keys = ['Xs', 'Ys', 'Zs']
         for k in abs_keys:
             if not k in self.fm.data_frame.columns:
-                raise ValueError('Absolute coordinates not found')
+                absolute_positions_found = False
+                break
+
+        if absolute_positions_found:
+            self.ov = Overlaps(self.fm)
+        else:
+            self.fm.compute_nominal_positions(1, 1)
+            self.ov = None
 
         self._debug = False
-
-        self.ov = Overlaps(self.fm)
 
         infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
         with InputFile(infile) as f:
@@ -156,7 +162,8 @@ class VirtualFusedVolume:
         if 0 in output_shape:
             return np.array([], dtype=self.dtype)
 
-        fused = np.zeros(output_shape, dtype=np.float32)
+        dtype = np.float32 if self.ov is not None else self.dtype
+        fused = np.zeros(output_shape, dtype=dtype)
 
         q = Queue(maxsize=20)
 
@@ -209,28 +216,32 @@ class VirtualFusedVolume:
 
             with InputFile(os.path.join(self.path, index)) as f:
                 logger.info('opening {}\t{}'.format(index, sl))
-                sl_a = np.copy(f[tuple(sl)]).astype(np.float32)
+                sl_a = np.copy(f[tuple(sl)]).astype(dtype)
 
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
 
-            overlaps = self.ov[index].copy()
-            overlaps = overlaps.loc[
-                (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
-                ]
+            if self.ov is None:
+                overlaps = None
+            else:
+                overlaps = self.ov[index].copy()
+                overlaps = overlaps.loc[
+                    (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
+                    ]
 
-            overlaps['Z_from'] -= z_from
-            overlaps['Z_to'] -= z_from
-            overlaps['Z_to'] /= abs(sl[0].step)
-            overlaps['Z_to'] = overlaps['Z_to'].apply(np.round).astype(int)
+                overlaps['Z_from'] -= z_from
+                overlaps['Z_to'] -= z_from
+                overlaps['Z_to'] /= abs(sl[0].step)
+                overlaps['Z_to'] = overlaps['Z_to'].apply(np.round).astype(int)
 
-            overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
+                overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
 
             q.put([sl_a, index, z_from, tuple(sl), top_left, overlaps])
 
         q.put([None, None, None, None, None, None])  # close queue
 
         t.join()  # wait for fuse thread to finish
+
         fused = to_dtype(fused, self.dtype)
 
         ie = [slice(None, None, flip) for flip in flip_axis]

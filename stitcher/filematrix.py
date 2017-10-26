@@ -54,8 +54,8 @@ def parse_file_name(file_name):
 
 class FileMatrix:
     """Data structures for a matrix of input files."""
-    def __init__(self, input_path=None, ascending_tiles_x=None,
-                 ascending_tiles_y=None):
+    def __init__(self, input_path=None, ascending_tiles_x=True,
+                 ascending_tiles_y=True):
         """
         Construct a FileMatrix object from a directory path or a .yml file
         produced by the stitcher. Tile ordering parameters need to be
@@ -78,8 +78,8 @@ class FileMatrix:
         columns: `X`, `Y`, `Z`, `Z_end`, `xsize`, `ysize`, `nfrms`,
         `filename`."""
 
-        self.ascending_tiles_x = None
-        self.ascending_tiles_y = None
+        self.ascending_tiles_x = ascending_tiles_x
+        self.ascending_tiles_y = ascending_tiles_y
 
         self.name_array = None
 
@@ -87,8 +87,6 @@ class FileMatrix:
             return
 
         if os.path.isdir(input_path):
-            self.ascending_tiles_x = ascending_tiles_x
-            self.ascending_tiles_y = ascending_tiles_y
             self.load_dir(input_path)
 
         elif os.path.isfile(input_path):
