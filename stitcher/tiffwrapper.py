@@ -48,8 +48,10 @@ class TiffWrapper(object):
 
     @property
     def shape(self):
-        s = self.tfile.pages[0]._shape[-3:]
-        return (self.nfrms,) + tuple(s[i] for i in [-1, -3, -2])
+        if self.nchannels > 1:
+            return (self.nfrms, self.nchannels, self.ysize, self.xsize)
+        else:
+            return (self.nfrms, self.ysize, self.xsize)
 
     def open(self, file_name=None):
         if file_name is not None:
@@ -139,7 +141,8 @@ class TiffWrapper(object):
 
         a = self.zslice(myitem[0].start, myitem[0].stop)
 
-        a = np.rollaxis(a, -1, -3)
+        if self.nchannels > 1:
+            a = np.rollaxis(a, -1, -3)
 
         myitem[0] = slice(0, None, myitem[0].step)
 
