@@ -4,7 +4,8 @@ import numpy as np
 
 import dcimg
 
-from . import tiffwrapper as tw
+from .ffmpeg_wrapper import FFMPEGWrapper
+from .tiffwrapper import TiffWrapper
 
 
 class InputFile(object):
@@ -141,7 +142,13 @@ class InputFile(object):
             pass
 
         try:
-            self.wrapper = tw.TiffWrapper(self.file_name)
+            self.wrapper = TiffWrapper(self.file_name)
+            return
+        except (FileNotFoundError, ValueError, IsADirectoryError):
+            pass
+
+        try:
+            self.wrapper = FFMPEGWrapper(self.file_name)
             return
         except ValueError:
             pass
