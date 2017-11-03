@@ -37,7 +37,7 @@ class TiffWrapper(object):
 
     @property
     def nchannels(self):
-        if self.axes == 'YXS':
+        if self.axes.startswith('YX'):
             return self.tfile.pages[0]._shape[-1]
         elif self.axes == 'SYX':
             return self.tfile.pages[0]._shape[1]
