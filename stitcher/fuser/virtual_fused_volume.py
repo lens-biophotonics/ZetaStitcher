@@ -214,9 +214,11 @@ class VirtualFusedVolume:
 
             x_from = np.array([sl[i].start for i in [0, -2, -1]])
 
+            logger.info('opening {}\t{}'.format(index, sl))
             with InputFile(os.path.join(self.path, index)) as f:
-                logger.info('opening {}\t{}'.format(index, sl))
                 sl_a = np.copy(f[tuple(sl)]).astype(dtype)
+            sl_a.shape = ([1 for _ in range(0, len(sl) - len(sl_a.shape))]
+                          + list(sl_a.shape))
 
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
@@ -247,4 +249,4 @@ class VirtualFusedVolume:
         ie = [slice(None, None, flip) for flip in flip_axis]
         fused = fused[ie]
 
-        return fused
+        return np.squeeze(fused)
