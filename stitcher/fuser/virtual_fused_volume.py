@@ -224,10 +224,10 @@ class VirtualFusedVolume:
             if self.ov is None:
                 overlaps = None
             else:
-                overlaps = self.ov[index].copy()
+                overlaps = self.ov[index]
                 overlaps = overlaps.loc[
                     (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
-                    ]
+                    ].copy()
 
                 overlaps['Z_from'] -= z_from
                 overlaps['Z_to'] -= z_from
