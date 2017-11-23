@@ -1,14 +1,21 @@
-ZetaStitcher is a tool designed to sitch large volumetric images such as those produced by Light-Sheet Fluorescence Microscopes.
+<p align="center">
+<img src="doc/_static/zetastitcher.svg", height="150">
+</p>
 
+ZetaStitcher is a tool designed to stitch large volumetric images such as
+those produced by Light-Sheet Fluorescence Microscopes.
 
 Key features:
 
 * able to handle datasets as big as 10<sup>12</sup> voxels
 * multichannel images
-* powerful and simple Python API to query arbitrary regions within the fused volume
+* powerful and simple Python API to query arbitrary regions within the fused
+volume
 
 ## Short guide
-File names must be in the form X_Y_Z.tiff. There are two commands: `stitch-align` and `stitch-fuse` to be run in this order. Please refer to their help message (`-h` option) for more informations.
+File names must be in the form X_Y_Z.tiff. There are two commands:
+`stitch-align` and `stitch-fuse` to be run in this order. Please refer to their
+help message (`-h` option) for more informations.
 
 ### stitch-align
 ```
