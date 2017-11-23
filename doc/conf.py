@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Stitcher documentation build configuration file, created by
+# ZetaStitcher documentation build configuration file, created by
 # sphinx-quickstart on Tue Feb 14 15:17:55 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -34,7 +34,7 @@
 
 import sphinx_rtd_theme
 
-from stitcher import __version__
+from zetastitcher import __version__
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -69,7 +69,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Stitcher'
+project = 'ZetaStitcher'
 copyright = '2017, Giacomo Mazzamuto'
 author = 'Giacomo Mazzamuto'
 
@@ -126,7 +126,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Stitcherdoc'
+htmlhelp_basename = 'ZetaStitcherdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -153,7 +153,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Stitcher.tex', 'Stitcher Documentation',
+    (master_doc, 'zetastitcher.tex', 'ZetaStitcher Documentation',
      'Giacomo Mazzamuto', 'manual'),
 ]
 
@@ -163,7 +163,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'stitcher', 'Stitcher Documentation',
+    (master_doc, 'zetastitcher', 'ZetaStitcher Documentation',
      [author], 1)
 ]
 
@@ -174,8 +174,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Stitcher', 'Stitcher Documentation',
-     author, 'Stitcher', 'One line description of project.',
+    (master_doc, 'zetastitcher', 'ZetaStitcher Documentation',
+     author, 'ZetaStitcher', 'One line description of project.',
      'Miscellaneous'),
 ]
 

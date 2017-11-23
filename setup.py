@@ -2,17 +2,20 @@ from setuptools import setup, find_packages
 
 
 version = {}
-with open("stitcher/version.py") as fp:
+with open("zetastitcher/version.py") as fp:
     exec(fp.read(), version)
 __version__ = version['__version__']
 
 setup(
-    name='stitcher',
+    name='zetastitcher',
     version=__version__,
     description='Stitch 3D tiles',
-    long_description='Stitch 3D tiles',
+    long_description='ZetaStitcher is a tool designed to stitch large '
+                     'volumetric images such as those produced by Light-Sheet '
+                     'Fluorescence Microscopes.',
     author='Giacomo Mazzamuto',
     author_email='mazzamuto@lens.unifi.it',
+    license='GPLv3+',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
@@ -26,6 +29,7 @@ setup(
         'Topic :: Scientific/Engineering',
 
         # Pick your license as you wish (should match "license" above)
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -90,8 +94,8 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'stitch-align = stitcher.runner:main',
-            'stitch-fuse = stitcher.fuser.__main__:main',
+            'stitch-align = zetastitcher.runner:main',
+            'stitch-fuse = zetastitcher.fuser.__main__:main',
         ],
 
     },

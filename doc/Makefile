@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = Stitcher
+SPHINXPROJ    = ZetaStitcher
 SOURCEDIR     = .
 BUILDDIR      = _build
 
@@ -20,7 +20,7 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 generate_rst:
-	sphinx-apidoc -faM --separate -o generated ../stitcher
+	sphinx-apidoc -faM --separate -o generated ../zetastitcher
 
 clean:
 	rm -fr _build generated
