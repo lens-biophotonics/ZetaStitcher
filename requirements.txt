@@ -7,7 +7,6 @@
 cloudpickle==0.4.0        # via pygmo
 coloredlogs==7.3
 cycler==0.10.0            # via matplotlib
-dcimg==0.4.0
 decorator==4.1.2          # via networkx
 humanfriendly==4.4.1      # via coloredlogs
 matplotlib==2.1.0         # via scikit-image

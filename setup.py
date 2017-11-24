@@ -55,7 +55,6 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'coloredlogs',
-        'dcimg>=0.4.0a1',
         'networkx',
         'numpy',
         'pandas',
@@ -74,6 +73,9 @@ setup(
     extras_require={
         'dev': [
             'pip-tools',
+        ],
+        'dcimg': [
+            'dcimg>=0.4.0'
         ],
         'doc': [
             'numpydoc',

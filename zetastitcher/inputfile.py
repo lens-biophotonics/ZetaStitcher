@@ -2,7 +2,10 @@ import os.path
 
 import numpy as np
 
-import dcimg
+try:
+    import dcimg
+except ImportError:
+    pass
 
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
@@ -135,16 +138,16 @@ class InputFile(object):
 
     def _open(self):
         try:
-            self.wrapper = dcimg.DCIMGFile(self.file_name)
-            self.wrapper.retrieve_first_4_pixels = False
+            self.wrapper = TiffWrapper(self.file_name)
             return
         except (FileNotFoundError, ValueError, IsADirectoryError):
             pass
 
         try:
-            self.wrapper = TiffWrapper(self.file_name)
+            self.wrapper = dcimg.DCIMGFile(self.file_name)
+            self.wrapper.retrieve_first_4_pixels = False
             return
-        except (FileNotFoundError, ValueError, IsADirectoryError):
+        except (NameError, FileNotFoundError, ValueError, IsADirectoryError):
             pass
 
         try:
