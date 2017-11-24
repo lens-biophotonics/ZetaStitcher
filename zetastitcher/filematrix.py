@@ -88,7 +88,6 @@ class FileMatrix:
 
         if os.path.isdir(input_path):
             self.load_dir(input_path)
-
         elif os.path.isfile(input_path):
             self.load_yaml(input_path)
 
