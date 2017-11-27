@@ -9,7 +9,7 @@ __version__ = version['__version__']
 setup(
     name='zetastitcher',
     version=__version__,
-    description='Stitch 3D tiles',
+    description='Stitch large volumetric images (3D stacks)',
     long_description='ZetaStitcher is a tool designed to stitch large '
                      'volumetric images such as those produced by Light-Sheet '
                      'Fluorescence Microscopes.',
