@@ -162,18 +162,6 @@ class VirtualFusedVolume:
         if 0 in output_shape:
             return np.array([], dtype=self.dtype)
 
-        dtype = np.float32 if self.ov is not None else self.dtype
-        fused = np.zeros(output_shape, dtype=dtype)
-
-        q = Queue(maxsize=20)
-
-        t = threading.Thread(
-            target=fuse_queue,
-            args=(q, fused, self.temp_shape[-2::], self._debug))
-        t.start()
-
-        sl = myitem[:]
-
         X_min = np.array([myitem[i].start for i in [0, -2, -1]])
         X_stop = np.array([myitem[i].stop for i in [0, -2, -1]])
         steps = np.array([myitem[i].step for i in [0, -2, -1]])
@@ -184,6 +172,22 @@ class VirtualFusedVolume:
             & (df['Ys_end'] > ymin) & (df['Ys'] < ymax)
             & (df['Xs_end'] > xmin) & (df['Xs'] < xmax)
         ]
+
+        if self.ov is None or df.shape[0] == 1:
+            dtype = self.dtype
+        else:
+            dtype = np.float32
+
+        fused = np.zeros(output_shape, dtype=dtype)
+
+        q = Queue(maxsize=20)
+
+        t = threading.Thread(
+            target=fuse_queue,
+            args=(q, fused, self.temp_shape[-2::], self._debug))
+        t.start()
+
+        sl = myitem[:]
 
         for index, row in df.iterrows():
             Xs = np.array([row.Zs, row.Ys, row.Xs])
