@@ -10,11 +10,13 @@ Welcome to ZetaStitcher's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+Tutorial
+========
+Please follow the :ref:`Tutorial<tutorial>` for instructions on how to get
+started.
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
