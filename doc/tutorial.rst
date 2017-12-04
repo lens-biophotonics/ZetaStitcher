@@ -35,7 +35,7 @@ the file names, i.e. we skip step 1 altogether for the moment. Open a terminal
 and ``cd`` to the directory containing your collection of files. Then run the
 following command::
 
-    stitch-fuse -s --px-size-xy 0.5 --px-size-z 2 -o nominal200.tiff --zmin 200 --zmax 202 .
+    stitch-fuse -s --px-size-xy 0.5 --px-size-z 2 -o nominal200.tiff --zmin 200 --nz 1 .
 
 Let's break down the options used in the command above. The ``-s`` option tells
 ``stitch-fuse`` to use the nominal stage coordinates to produce the final
@@ -48,13 +48,12 @@ increasing ``X`` and ``Y``. If this is not the case (i.e. one or more axes of
 your translational stage are inverted), use options ``--iX`` and ``--iY`` to
 specify axis inversion. We then specify an output file name using the ``-o``
 option. Finally, for this testing run, we don't want to produce the whole
-output stack. We therefore limit the output between 200 and 202 um
-(noninclusivee) using the ``--zmin`` and ``-zmax`` options. Since we have
-specified a voxel size of 2 along Z, the output image will contain one frame
-only (i.e. we are producing a 2D image). Note the trailing dot in the command
-line: that's the path to the directory containing the input stacks (in this
-case, that means the current directory). You can now inspect the result of this
-*nominal stitching*.
+output stack. We therefore limit the output to one frame (``--nz``) starting at
+200 um (``--zmin``). Since we have specified a voxel size of 2 along Z, the
+output image will contain one frame only (i.e. we are producing a 2D image).
+Note the trailing dot in the command line: that's the path to the directory
+containing the input stacks (in this case, that means the current directory).
+ You can now inspect the result of this *nominal stitching*.
 
 
 Global optimal alignment and fusion
@@ -91,7 +90,7 @@ The command above prints some progress information and creates a file named
 ``stitch.yml`` in the current directory. We now want to inspect the result of
 the alignment by taking a look at a fused frame::
 
-    stitch-fuse -o test200.tiff --zmin 200 --zmax 202 .
+    stitch-fuse -o test200.tiff --zmin 200 --nz 1 .
 
 This will save the frame located at a depth of 200um in the stack to a file
 named ``test200.tiff``. Note that there is no need to specify the pixel size

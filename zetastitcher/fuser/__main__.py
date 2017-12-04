@@ -50,8 +50,12 @@ def parse_args():
     group.add_argument('-c', type=int, default=-1, dest='channel',
                        help='channel')
 
-    group.add_argument('--zmin', type=float, default=0)
-    group.add_argument('--zmax', type=float, default=None, help='noninclusive')
+    group.add_argument('--zmin', type=float, default=0,
+                       help='start frame (in your units)')
+    me_group = group.add_mutually_exclusive_group()
+    me_group.add_argument('--zmax', type=float,
+                          help='end frame (noninclusive, in your units)')
+    me_group.add_argument('--nz', type=int, help='number of z frames')
 
     group = parser.add_argument_group(
         'absolute positions', 'by default, absolute positions are computed by '
@@ -157,6 +161,8 @@ def main():
     args.zmin = int(round(args.zmin / args.px_size_z))
     if args.zmax is not None:
         args.zmax = int(round(args.zmax / args.px_size_z))
+    elif args.nz is not None:
+        args.zmax = args.zmin + args.nz
 
     # =========================================================================
     # init FileMatrix
