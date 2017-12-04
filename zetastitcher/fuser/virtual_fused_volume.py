@@ -216,7 +216,7 @@ class VirtualFusedVolume:
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
 
-            if self.ov is None:
+            if self.ov is None or df.shape[0] == 1:
                 overlaps = None
             else:
                 overlaps = self.ov[index]
