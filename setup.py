@@ -15,6 +15,7 @@ setup(
                      'Fluorescence Microscopes.',
     author='Giacomo Mazzamuto',
     author_email='mazzamuto@lens.unifi.it',
+    url='https://github.com/lens-biophotonics/ZetaStitcher',
     license='GPLv3+',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
