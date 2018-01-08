@@ -4,7 +4,6 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-cloudpickle==0.5.2        # via pygmo
 coloredlogs==9.3.1
 cycler==0.10.0            # via matplotlib
 decorator==4.3.0          # via networkx
@@ -18,7 +17,6 @@ pandas==0.22.0
 pillow==5.1.0             # via imageio, scikit-image
 psutil==5.4.5
 pyfftw==0.10.4
-pygmo==2.7
 pyparsing==2.2.0          # via matplotlib
 python-dateutil==2.7.3    # via matplotlib, pandas
 pytz==2018.4              # via matplotlib, pandas

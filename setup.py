@@ -63,7 +63,6 @@ setup(
         'pandas',
         'psutil',
         'pyfftw',
-        'pygmo>=2',
         'pyyaml',
         'scipy',
         'scikit-image',
