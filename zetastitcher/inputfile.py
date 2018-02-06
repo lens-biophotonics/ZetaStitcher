@@ -33,27 +33,30 @@ class InputFile(object):
         self.close()
 
     def __getitem__(self, item):
+        try:
+            return self.wrapper.__getitem__(item)
+        except AttributeError:
+            pass
+
         item = np.index_exp[item]  # ensure item is a tuple
+        myitem = list(item)
 
         # ensure all items are slice objects
-        myitem = []
-        for i in item:
-            if isinstance(i, int):
-                start = i
-                stop = i + 1
-                step = 1
-            elif i is Ellipsis:
-                for _ in range(0, len(self.shape) - len(item) + 1):
-                    myitem.append(slice(0, self.shape[len(myitem)], 1))
-                continue
-            elif isinstance(i, slice):
-                start = i.start
-                stop = i.stop
-                step = i.step if i.step is not None else 1
-            else:
-                raise TypeError("Invalid type: {}".format(type(i)))
+        # myitem = []
+        if isinstance(item[0], int):
+            start = item[0]
+            stop = item[0] + 1
+            step = 1
+        elif item[0] is Ellipsis:
+            start = 0
+            stop = self.shape[0]
+            step = 1
+        elif isinstance(item[0], slice):
+            start = item[0].start
+            stop = item[0].stop
+            step = item[0].step if item[0].step is not None else 1
 
-            curr_max = self.shape[len(myitem)]
+            curr_max = self.shape[0]
             if start is None:
                 start = 0 if step > 0 else curr_max
             elif start < 0:
@@ -69,22 +72,22 @@ class InputFile(object):
                 stop = curr_max
 
             if step < 0:
-                start += abs(step)
-                stop += abs(step)
+                temp = start
+                start = stop
+                stop = temp
+                if start > 0:
+                    start += abs(step) - (start - stop) % abs(step)
+                stop += 1
+        else:
+            raise TypeError("Invalid type: {}".format(type(item[0])))
 
-            myitem.append(slice(start, stop, step))
+        a = self.zslice(start, stop)
+        if step < 0:
+            a = a[::-1]
+        a = a[::abs(step)]
 
-        for _ in range(0, len(self.shape) - len(myitem)):
-            myitem.append(slice(0, self.shape[len(myitem)], 1))
-
-        try:
-            return self.wrapper.__getitem__(myitem)
-        except AttributeError:
-            pass
-
-        a = self.zslice(myitem[0].start, myitem[0].stop)
-
-        myitem[0] = slice(0, None, myitem[0].step)
+        if item[0] is not Ellipsis:
+            myitem[0] = slice(None, None, 1)
         a = a[myitem]
 
         return np.squeeze(a)
