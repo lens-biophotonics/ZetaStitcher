@@ -118,12 +118,12 @@ class InputFile(object):
         Returns
         -------
         tuple
-            (:attr:`nfrms`, `channels`, :attr:`xsize`, :attr:`ysize`) where
+            (:attr:`nfrms`, `channels`, :attr:`ysize`, :attr:`xsize`) where
             `channels` is the number of color channels in the image. If
             :attr:`channel` is set or if there is only one channel,
             the `channels` dimension is squeezed.
         """
-        s = [self.nfrms, self.xsize, self.ysize]
+        s = [self.nfrms, self.ysize, self.xsize]
         if self.nchannels != 1 and self.channel == -1:
             s.insert(1, self.nchannels)
         return tuple(s)
