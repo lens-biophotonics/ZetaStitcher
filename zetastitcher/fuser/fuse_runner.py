@@ -9,10 +9,11 @@ import psutil
 import numpy as np
 import skimage.external.tifffile as tiff
 
-from .fuse import fuse_queue, to_dtype
 from .overlaps import Overlaps
+from .fuse import fuse_queue, to_dtype
 
-from ..inputfile import InputFile
+from ..io.inputfile import InputFile
+
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

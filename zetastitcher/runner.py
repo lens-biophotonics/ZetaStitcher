@@ -11,8 +11,8 @@ import coloredlogs
 import numpy as np
 import pandas as pd
 
-from .inputfile import InputFile
-from .filematrix import FileMatrix
+from .io.inputfile import InputFile
+from .io.filematrix import FileMatrix
 from .normxcorr import normxcorr2_fftw
 
 from .version import __version__

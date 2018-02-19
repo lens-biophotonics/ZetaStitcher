@@ -5,7 +5,7 @@ import numpy as np
 import skimage.external.tifffile as tiff
 
 from .normxcorr import normxcorr2_fftw
-from .inputfile import InputFile
+from .io.inputfile import InputFile
 
 
 def to_dtype(x, dtype):

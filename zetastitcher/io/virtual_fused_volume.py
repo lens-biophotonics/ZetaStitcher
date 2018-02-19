@@ -9,10 +9,10 @@ from functools import lru_cache
 
 import numpy as np
 
-from .overlaps import Overlaps
-from ..inputfile import InputFile
-from ..filematrix import FileMatrix
-from .fuse import fuse_queue, to_dtype
+from .filematrix import FileMatrix
+from .inputfile import InputFile
+from ..fuser.overlaps import Overlaps
+from ..fuser.fuse import fuse_queue, to_dtype
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

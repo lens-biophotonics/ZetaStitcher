@@ -10,7 +10,7 @@ from ..version import __version__
 
 from . import absolute_positions
 from .fuse_runner import FuseRunner
-from ..filematrix import FileMatrix
+from ..io.filematrix import FileMatrix
 from .xcorr_filematrix import XcorrFileMatrix
 from .global_optimization import absolute_position_global_optimization
 
