@@ -18,7 +18,10 @@ class TiffWrapper(object):
 
     @property
     def nfrms(self):
-        nfrms = len(self.tfile.pages)
+        if self.axes.startswith('IYX'):
+            nfrms = self.tfile.pages[0]._shape[0]
+        else:
+            nfrms = len(self.tfile.pages)
         if self.glob_mode:
             nfrms *= len(self.flist)
         return nfrms
@@ -41,6 +44,7 @@ class TiffWrapper(object):
             return self.tfile.pages[0]._shape[-1]
         elif self.axes == 'SYX':
             return self.tfile.pages[0]._shape[1]
+        return 1
 
     @property
     def dtype(self):
