@@ -156,7 +156,7 @@ class InputFile(object):
         try:
             self.wrapper = FFMPEGWrapper(self.file_name)
             return
-        except ValueError:
+        except (ValueError, FileNotFoundError):
             pass
 
         raise ValueError('Unsupported file type')
