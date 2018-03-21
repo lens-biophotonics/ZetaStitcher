@@ -61,6 +61,8 @@ class VirtualFusedVolume:
             self.dtype = f.dtype
             self.nchannels = f.nchannels
 
+        self.squeeze_enabled = True
+
     @property
     def overlay_debug_enabled(self):
         """Whether to overlay debug information (tile edges and numbers).
@@ -242,4 +244,6 @@ class VirtualFusedVolume:
         ie = [slice(None, None, flip) for flip in flip_axis]
         fused = fused[ie]
 
-        return np.squeeze(fused)
+        if self.squeeze_enabled:
+            return np.squeeze(fused)
+        return fused
