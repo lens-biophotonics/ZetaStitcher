@@ -234,7 +234,7 @@ class VirtualFusedVolume:
 
             q.put([sl_a, index, z_from, tuple(sl), top_left, overlaps])
 
-        q.put([None, None, None, None, None, None])  # close queue
+        q.put(None)  # close queue
 
         t.join()  # wait for fuse thread to finish
 

@@ -99,10 +99,13 @@ def fuse_queue(q, dest, frame_shape, debug=False):
     """
 
     while True:
-        slice, index_dbg, zfrom_dbg, sl, pos, overlaps = q.get()
+        got = q.get()
 
-        if slice is None:
+        if got is None:
             break
+
+        slice, index_dbg, zfrom_dbg, sl, pos, overlaps = got
+
 
         z_from = pos[0]
         z_to = z_from + slice.shape[0]

@@ -149,7 +149,7 @@ class FuseRunner(object):
 
                 q.put([zslice, index, z_from, None, top_left, overlaps])
 
-            q.put([None, None, None, None, None, None])  # close queue
+            q.put(None)  # close queue
 
             t.join()  # wait for fuse thread to finish
             print('=================================')
