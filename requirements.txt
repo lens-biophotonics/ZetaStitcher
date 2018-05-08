@@ -9,12 +9,13 @@ coloredlogs==9.3.1
 cycler==0.10.0            # via matplotlib
 decorator==4.3.0          # via networkx
 humanfriendly==4.12.1     # via coloredlogs
+imageio==2.3.0
 kiwisolver==1.0.1         # via matplotlib
 matplotlib==2.2.2         # via scikit-image
 networkx==2.1
 numpy==1.14.3
 pandas==0.22.0
-pillow==5.1.0             # via scikit-image
+pillow==5.1.0             # via imageio, scikit-image
 psutil==5.4.5
 pyfftw==0.10.4
 pygmo==2.7

@@ -9,6 +9,9 @@ except ImportError:
 
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
+from .tarwrapper import TarWrapper
+
+from tarfile import ReadError
 
 
 class InputFile(object):
@@ -153,6 +156,12 @@ class InputFile(object):
             pass
 
         try:
+            self.wrapper = TarWrapper(self.file_name)
+            return
+        except (NameError, FileNotFoundError, ReadError, IsADirectoryError):
+            pass
+
+        try:
             self.wrapper = FFMPEGWrapper(self.file_name)
             return
         except (ValueError, FileNotFoundError):
@@ -197,7 +206,14 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
-        l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
+        try:
+            l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
+        except AttributeError:
+            s = list(self.shape)
+            s[0] = end_frame - start_frame
+            l = np.zeros(s, dtype=self.dtype)
+            for i in range(start_frame, end_frame):
+                l[i] = self.wrapper.frame(i)
         if self.channel == -2:
             l = np.sum(l, axis=-1)
         elif self.channel != -1:
@@ -260,4 +276,8 @@ class InputFile(object):
         :class:`numpy.ndarray`
             A numpy array, see :func:`slice`.
         """
-        return np.squeeze(self.zslice_idx(index, dtype=dtype, copy=copy))
+        try:
+            a = self.wrapper.frame(index, dtype=dtype, copy=copy)
+        except AttributeError:
+            a = self.zslice_idx(index, dtype=dtype, copy=copy)
+        return np.squeeze(a)
