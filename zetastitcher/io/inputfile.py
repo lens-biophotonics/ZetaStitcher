@@ -148,7 +148,6 @@ class InputFile(object):
 
         try:
             self.wrapper = dcimg.DCIMGFile(self.file_name)
-            self.wrapper.retrieve_first_4_pixels = False
             return
         except (NameError, FileNotFoundError, ValueError, IsADirectoryError):
             pass
