@@ -4,25 +4,28 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-cloudpickle==0.4.0        # via pygmo
-coloredlogs==7.3
+cloudpickle==0.5.2        # via pygmo
+coloredlogs==9.3.1
 cycler==0.10.0            # via matplotlib
-decorator==4.1.2          # via networkx
-humanfriendly==4.4.1      # via coloredlogs
-matplotlib==2.1.0         # via scikit-image
-networkx==2.0
-numpy==1.13.3
-olefile==0.44             # via pillow
-pandas==0.20.3
-pillow==4.3.0             # via scikit-image
-psutil==5.3.1
+decorator==4.3.0          # via networkx
+humanfriendly==4.12.1     # via coloredlogs
+kiwisolver==1.0.1         # via matplotlib
+matplotlib==2.2.2         # via scikit-image
+networkx==2.1
+numpy==1.14.3
+pandas==0.22.0
+pillow==5.1.0             # via scikit-image
+psutil==5.4.5
 pyfftw==0.10.4
-pygmo==2.4
+pygmo==2.7
 pyparsing==2.2.0          # via matplotlib
-python-dateutil==2.6.1    # via matplotlib, pandas
-pytz==2017.2              # via matplotlib, pandas
-pywavelets==0.5.2         # via scikit-image
+python-dateutil==2.7.3    # via matplotlib, pandas
+pytz==2018.4              # via matplotlib, pandas
+PyWavelets==0.5.2         # via scikit-image
 pyyaml==3.12
 scikit-image==0.13.1
-scipy==0.19.1
+scipy==1.1.0
 six==1.11.0               # via cycler, matplotlib, python-dateutil, scikit-image
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools                # via kiwisolver
