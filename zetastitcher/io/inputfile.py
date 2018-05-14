@@ -213,7 +213,7 @@ class InputFile(object):
             s[0] = end_frame - start_frame
             l = np.zeros(s, dtype=self.dtype)
             for i in range(start_frame, end_frame):
-                l[i] = self.wrapper.frame(i)
+                l[i - start_frame] = self.wrapper.frame(i)
         if self.channel == -2:
             l = np.sum(l, axis=-1)
         elif self.channel != -1:

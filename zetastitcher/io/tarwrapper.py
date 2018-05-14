@@ -29,9 +29,8 @@ class TarWrapper(object):
         if file_name is not None:
             self.file_name = file_name
 
-        self.tar = tarfile.TarFile(self.file_name, mode='r')
-        names = self.tar.getnames()
-        self.nfrms = len(names)
+        self.zf = zipfile.ZipFile(self.file_name, mode='r')
+        names = self.zf.namelist()
 
         br = self.tar.extractfile(names[0])  #BufferedReader
         im = imageio.imread(br)
