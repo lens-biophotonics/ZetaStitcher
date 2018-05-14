@@ -9,9 +9,9 @@ except ImportError:
 
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
-from .tarwrapper import TarWrapper
+from .zipwrapper import ZipWrapper
 
-from tarfile import ReadError
+from zipfile import BadZipFile
 
 
 class InputFile(object):
@@ -156,9 +156,9 @@ class InputFile(object):
             pass
 
         try:
-            self.wrapper = TarWrapper(self.file_name)
+            self.wrapper = ZipWrapper(self.file_name)
             return
-        except (NameError, FileNotFoundError, ReadError, IsADirectoryError):
+        except (NameError, FileNotFoundError, BadZipFile, IsADirectoryError):
             pass
 
         try:

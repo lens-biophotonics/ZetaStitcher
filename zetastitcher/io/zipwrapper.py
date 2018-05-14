@@ -1,14 +1,14 @@
 import os.path
-import tarfile
+import zipfile
 
 import imageio
 
 
-class TarWrapper(object):
+class ZipWrapper(object):
     def __init__(self, file_name=None):
         self.file_name = file_name
 
-        self.tar = None
+        self.zf = None
         self.file_name_fmt = ''
         self.xsize = None
         self.ysize = None
@@ -32,8 +32,7 @@ class TarWrapper(object):
         self.zf = zipfile.ZipFile(self.file_name, mode='r')
         names = self.zf.namelist()
 
-        br = self.tar.extractfile(names[0])  #BufferedReader
-        im = imageio.imread(br)
+        im = imageio.imread(self.zf.read(names[0]))
 
         self.xsize = im.shape[-1]
         self.ysize = im.shape[-2]
@@ -45,8 +44,7 @@ class TarWrapper(object):
         self.file_name_fmt = '{:0' + str(len(fname)) + '}' + ext
 
     def frame(self, index, dtype=None, copy=None):
-        br = self.tar.extractfile(self.file_name_fmt.format(index))
-        a = imageio.imread(br)
+        a = imageio.imread(self.zf.read(self.file_name_fmt.format(index)))
 
         if dtype is not None:
             a = a.astype(dtype)
