@@ -176,10 +176,10 @@ def main():
 
     cols = fm.data_frame.columns
     logger.info('absolute positions mode: {}'.format(args.abs_mode))
-    if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
-        logger.info('using absolute positions from {}'.format(args.yml_file))
-    elif args.abs_mode == 'nominal_positions':
+    if args.abs_mode == 'nominal_positions':
         fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
+    elif 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+        logger.info('using absolute positions from {}'.format(args.yml_file))
     else:
         xcorr_fm = XcorrFileMatrix()
         xcorr_fm.load_yaml(fm.input_path)
@@ -195,6 +195,12 @@ def main():
         if not args.no_global:
             absolute_position_global_optimization(fm.data_frame, sdf,
                                                   xcorr_fm.xcorr_options)
+
+        if os.path.isdir(args.yml_file):
+            args.yml_file = os.path.join(args.yml_file, 'stitch.yml')
+            fm.save_to_yaml(args.yml_file, 'w')
+        else:
+            fm.save_to_yaml(args.yml_file, 'update')
 
     # =========================================================================
     # init FuseRunner
@@ -217,17 +223,13 @@ def main():
     else:
         logger.warning("No output file specified.")
 
-    if os.path.isdir(args.yml_file):
-        args.yml_file = os.path.join(args.yml_file, 'stitch.yml')
-        fm.save_to_yaml(args.yml_file, 'w')
-    else:
-        fm.save_to_yaml(args.yml_file, 'update')
-
-    with open(args.yml_file, 'r') as f:
-        y = yaml.load(f)
+    if os.path.isfile(args.yml_file):
+        with open(args.yml_file, 'r') as f:
+            y = yaml.load(f)
     fr_options = {}
-    keys = ['abs_mode', 'px_size_xy', 'px_size_z', 'ascending_tiles_x',
-            'ascending_tiles_y']
+    keys = ['px_size_xy', 'px_size_z', 'ascending_tiles_x', 'ascending_tiles_y']
+    if args.abs_mode != 'nominal_positions':
+        keys += ['abs_mode']
     for k in keys:
         fr_options[k] = getattr(args, k)
     y['fuser-options'] = fr_options

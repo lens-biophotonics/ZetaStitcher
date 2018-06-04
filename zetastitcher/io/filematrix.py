@@ -183,14 +183,17 @@ class FileMatrix:
         except (RuntimeError, ValueError):
             raise
 
-    def save_to_yaml(self, filename, mode):
+    def get_json(self):
         keys = ['X', 'Y', 'Z', 'nfrms', 'xsize', 'ysize']
         abs_keys = ['Xs', 'Ys', 'Zs']
         for k in abs_keys:
             if k in self.data_frame.columns:
                 keys.append(k)
         df = self.data_frame[keys].reset_index()
-        j = json.loads(df.to_json(orient='records'))
+        return json.loads(df.to_json(orient='records'))
+
+    def save_to_yaml(self, filename, mode):
+        j = self.get_json()
 
         if mode == 'update':
             with open(filename, 'r') as f:
