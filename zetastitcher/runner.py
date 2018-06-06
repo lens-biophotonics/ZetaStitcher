@@ -1,3 +1,4 @@
+import os
 import queue
 import logging
 import argparse
@@ -278,6 +279,10 @@ class Runner(object):
             self.q.task_done()
 
     def run(self):
+        out_dir = os.path.dirname(os.path.abspath(self.output_file))
+        if not os.access(out_dir, os.W_OK):
+            raise ValueError('cannot write to {}'.format(self.output_file))
+
         self.initialize_queue()
         self.data_queue = queue.Queue(maxsize=int(self.n_of_threads * 2))
         self.output_q = queue.Queue()

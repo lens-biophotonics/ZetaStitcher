@@ -164,6 +164,9 @@ def main():
     elif args.nz is not None:
         args.zmax = args.zmin + args.nz
 
+    if not os.access(args.yml_file, os.W_OK):
+        raise ValueError('cannot write to {}'.format(args.yml_file))
+
     # =========================================================================
     # init FileMatrix
     # =========================================================================
