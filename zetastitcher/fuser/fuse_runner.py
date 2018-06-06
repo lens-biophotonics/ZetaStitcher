@@ -132,7 +132,7 @@ class FuseRunner(object):
                 with InputFile(os.path.join(self.path, index)) as f:
                     f.channel = self.channel
                     logger.info(
-                        'opening {}\tz=[{}:{}]'.format(index, z_from, z_to))
+                        'loading {}\tz=[{}:{}]'.format(index, z_from, z_to))
                     zslice = f.zslice(
                         z_from, z_to, dtype=np.float32, copy=True)
 
