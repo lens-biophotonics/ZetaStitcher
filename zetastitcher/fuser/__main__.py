@@ -109,11 +109,9 @@ def main():
         if os.path.exists(temp):
             args.yml_file = temp
 
-    asc_keys = ['ascending_tiles_x', 'ascending_tiles_y']
-    for k in asc_keys:
-        setattr(args, k, None)
 
     # replace None args with values found in yml file
+    ascending_keys = ['ascending_tiles_x', 'ascending_tiles_y']
     old_abs_mode = None
     if os.path.isfile(args.yml_file):
         with open(args.yml_file, 'r') as f:
@@ -143,11 +141,6 @@ def main():
                          "input file or run with -s.")
             sys.exit(1)
 
-    for k in ['x', 'y']:
-        temp_k = 'ascending_tiles_' + k
-        if getattr(args, temp_k, None) is None:
-            setattr(args, temp_k, not getattr(args, 'invert_' + k))
-
     attrs = ['px_size_z', 'px_size_xy']
     for a in attrs:
         if getattr(args, a, None) is None:
@@ -166,6 +159,11 @@ def main():
 
     if not os.access(args.yml_file, os.W_OK):
         raise ValueError('cannot write to {}'.format(args.yml_file))
+
+    if args.abs_mode == 'nominal_positions':
+        for k in ['x', 'y']:
+            setattr(args, 'ascending_tiles_' + k, not getattr(args,
+                                                              'invert_' + k))
 
     # =========================================================================
     # init FileMatrix
