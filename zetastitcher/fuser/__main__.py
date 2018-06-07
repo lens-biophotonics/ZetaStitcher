@@ -33,14 +33,18 @@ def parse_args():
     parser.add_argument(
         'yml_file',
         help='.yml file produced by stitch align. It will also be used for '
-             'saving absolute coordinates. If a directory is specified'
-             'instead of a file, uses a file named "stitch.yml"')
+             'saving absolute coordinates, unless option -w is specified. If a '
+             'directory is specified instead of a file, uses a file named '
+             '"stitch.yml"')
 
     group = parser.add_argument_group('output')
     group.add_argument('-o', type=str, dest='output_filename',
                        help='output file name. If not specified, no tiff '
                             'output is produced, only absoulute coordinates '
                             'are computed.')
+
+    group.add_argument('-w', type=str, dest='yml_out_file',
+                       help='save data to a different .yml file')
 
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
@@ -171,11 +175,9 @@ def compute_absolute_positions(args, fm):
         absolute_position_global_optimization(fm.data_frame, sdf,
                                               xcorr_fm.xcorr_options)
 
-    fm.save_to_yaml(args.yml_file, 'update')
 
-
-def append_fuser_options_to_yaml(args):
-    with open(args.yml_file, 'r') as f:
+def append_fuser_options_to_yaml(yml_out_file, args):
+    with open(yml_out_file, 'r') as f:
         y = yaml.load(f)
     fr_options = {}
     keys = ['px_size_xy', 'px_size_z']
@@ -187,7 +189,7 @@ def append_fuser_options_to_yaml(args):
         fr_options[k] = getattr(args, k)
     y['fuser-options'] = fr_options
 
-    with open(args.yml_file, 'w') as f:
+    with open(yml_out_file, 'w') as f:
         yaml.dump(y, f, default_flow_style=False)
 
 
@@ -215,13 +217,24 @@ def main():
 
     if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
         logger.info('using absolute positions from {}'.format(args.yml_file))
-    elif args.abs_mode == 'nominal_positions':
-        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
     else:
-        if not os.access(args.yml_file, os.W_OK):
-            raise ValueError('cannot write to {}'.format(args.yml_file))
-        compute_absolute_positions(args, fm)
-        append_fuser_options_to_yaml(args)
+        if args.abs_mode == 'nominal_positions':
+            fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
+            yml_out_file = args.yml_out_file
+        else:
+            if not os.access(args.yml_file, os.W_OK):
+                raise ValueError('cannot write to {}'.format(args.yml_file))
+            compute_absolute_positions(args, fm)
+            yml_out_file = args.yml_file
+
+        if yml_out_file is None:
+            logger.warning('No .yml output file specified (-w option)')
+        else:
+            if os.path.isfile(yml_out_file):
+                fm.save_to_yaml(yml_out_file, 'update')
+            else:
+                fm.save_to_yaml(yml_out_file, 'w')
+            append_fuser_options_to_yaml(yml_out_file, args)
 
     # =========================================================================
     # init FuseRunner
