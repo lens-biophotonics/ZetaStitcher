@@ -23,6 +23,11 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
     pass
 
 
+ABS_MODE_NOMINAL_POSITIONS = 'nominal_positions'
+ABS_MODE_MAXIMUM_SCORE = 'maximum_score'
+ABS_MODE_WEIGHTED_AVERAGE = 'maximum_score'
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Fuse stitched tiles in a folder.',
@@ -64,16 +69,16 @@ def parse_args():
                               'taking the maximum score in cross correlations')
     me_group = group.add_mutually_exclusive_group()
     me_group.add_argument('-m', dest='abs_mode', action='store_const',
-                          const='maximum_score',
+                          const=ABS_MODE_MAXIMUM_SCORE,
                           help='take the maximum score in cross correlations '
                                '(default)')
 
     me_group.add_argument('-a', dest='abs_mode', action='store_const',
-                          const='weighted_average',
+                          const=ABS_MODE_WEIGHTED_AVERAGE,
                           help='take the average result weighted by the score')
 
     me_group.add_argument('-s', dest='abs_mode', action='store_const',
-                          const='nominal_positions',
+                          const=ABS_MODE_NOMINAL_POSITIONS,
                           help='use nominal stage positions')
 
     group.add_argument('-f', action='store_true', default=False,
@@ -105,7 +110,7 @@ def parse_args():
 
 def preprocess_and_check_args(args):
     px_attrs = ['px_size_z', 'px_size_xy']
-    if args.abs_mode == 'nominal_positions':
+    if args.abs_mode == ABS_MODE_NOMINAL_POSITIONS:
         for a in px_attrs:
             if getattr(args, a, None) is None:
                 logger.error(
@@ -145,7 +150,7 @@ def preprocess_and_check_args(args):
         if args.abs_mode is None:
             args.abs_mode = old_abs_mode
         if args.abs_mode is None:
-            args.abs_mode = 'maximum_score'
+            args.abs_mode = ABS_MODE_MAXIMUM_SCORE
 
         if args.abs_mode != old_abs_mode:
             args.force_recomputation = True
@@ -163,7 +168,7 @@ def compute_absolute_positions(args, fm):
     xcorr_fm = XcorrFileMatrix()
     xcorr_fm.load_yaml(fm.input_path)
     compute_average = \
-        True if args.abs_mode == 'weighted_average' else False
+        True if args.abs_mode == ABS_MODE_WEIGHTED_AVERAGE else False
     xcorr_fm.aggregate_results(compute_average=compute_average)
 
     sdf = xcorr_fm.stitch_data_frame
@@ -181,7 +186,7 @@ def append_fuser_options_to_yaml(yml_out_file, args):
         y = yaml.load(f)
     fr_options = {}
     keys = ['px_size_xy', 'px_size_z']
-    if args.abs_mode == 'nominal_positions':
+    if args.abs_mode == ABS_MODE_NOMINAL_POSITIONS:
         keys += ['ascending_tiles_x', 'ascending_tiles_y']
     else:
         keys += ['abs_mode']
@@ -218,7 +223,7 @@ def main():
     if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
         logger.info('using absolute positions from {}'.format(args.yml_file))
     else:
-        if args.abs_mode == 'nominal_positions':
+        if args.abs_mode == ABS_MODE_NOMINAL_POSITIONS:
             fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
             yml_out_file = args.yml_out_file
         else:
