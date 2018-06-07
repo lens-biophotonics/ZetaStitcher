@@ -34,9 +34,7 @@ def parse_args():
         'yml_file',
         help='.yml file produced by stitch align. It will also be used for '
              'saving absolute coordinates. If a directory is specified'
-             'instead of a file, uses a file named "stitch.yml" if present. '
-             'If the file does not exist, it will be created (only where '
-             'applicable: see option -s).')
+             'instead of a file, uses a file named "stitch.yml"')
 
     group = parser.add_argument_group('output')
     group.add_argument('-o', type=str, dest='output_filename',
@@ -101,55 +99,54 @@ def parse_args():
     return args
 
 
-def main():
-    args = parse_args()
-
-    if os.path.isdir(args.yml_file):
-        temp = os.path.join(args.yml_file, 'stitch.yml')
-        if os.path.exists(temp):
-            args.yml_file = temp
-
-
-    # replace None args with values found in yml file
-    ascending_keys = ['ascending_tiles_x', 'ascending_tiles_y']
-    old_abs_mode = None
-    if os.path.isfile(args.yml_file):
-        with open(args.yml_file, 'r') as f:
-            y = yaml.load(f)
-            try:
-                old_abs_mode = y['fuser-options']['abs_mode']
-            except KeyError:
-                pass
-        keys = ['px_size_z', 'px_size_xy'] + asc_keys
-        for k in keys:
-            if getattr(args, k) is None:
-                try:
-                    setattr(args, k, y['xcorr-options'][k])
-                except KeyError:
-                    pass
-
-    using_old_abs_mode = False
-    if args.abs_mode is None:
-        args.abs_mode = old_abs_mode
-        using_old_abs_mode = True
-    if args.abs_mode is None:
-        args.abs_mode = 'maximum_score'
-
-    if not os.path.isfile(args.yml_file):
-        if args.abs_mode != 'nominal_positions':
-            logger.error("No stitch file specified or found. Please specify "
-                         "input file or run with -s.")
-            sys.exit(1)
-
-    attrs = ['px_size_z', 'px_size_xy']
-    for a in attrs:
-        if getattr(args, a, None) is None:
-            if args.abs_mode == 'nominal_positions' and not using_old_abs_mode:
+def preprocess_and_check_args(args):
+    px_attrs = ['px_size_z', 'px_size_xy']
+    if args.abs_mode == 'nominal_positions':
+        for a in px_attrs:
+            if getattr(args, a, None) is None:
                 logger.error(
                     "px sizes need to be specified when using option -s")
                 sys.exit(1)
-            else:
-                setattr(args, a, 1)
+
+        for k in ['x', 'y']:
+            setattr(args, 'ascending_tiles_' + k, not getattr(args,
+                                                              'invert_' + k))
+    else:
+        if os.path.isdir(args.yml_file):
+            args.yml_file = os.path.join(args.yml_file, 'stitch.yml')
+        if not os.path.isfile(args.yml_file):
+            logger.error(
+                "No stitch file specified or found. Please specify input file "
+                "or run with -s.")
+            sys.exit(1)
+
+        old_abs_mode = None
+        # replace None args with values found in yml file
+        if os.path.isfile(args.yml_file):
+            with open(args.yml_file, 'r') as f:
+                y = yaml.load(f)
+                try:
+                    old_abs_mode = y['fuser-options']['abs_mode']
+                except KeyError:
+                    pass
+            keys = ['px_size_z', 'px_size_xy', 'ascending_tiles_x',
+                    'ascending_tiles_y']
+            for k in keys:
+                if getattr(args, k) is None:
+                    try:
+                        setattr(args, k, y['xcorr-options'][k])
+                    except KeyError:
+                        pass
+
+        if args.abs_mode is None:
+            args.abs_mode = old_abs_mode
+        if args.abs_mode is None:
+            args.abs_mode = 'maximum_score'
+
+        if args.abs_mode != old_abs_mode:
+            args.force_recomputation = True
+        for a in px_attrs:
+            setattr(args, a, 1)
 
     args.zmin = int(round(args.zmin / args.px_size_z))
     if args.zmax is not None:
@@ -157,13 +154,51 @@ def main():
     elif args.nz is not None:
         args.zmax = args.zmin + args.nz
 
-    if not os.access(args.yml_file, os.W_OK):
-        raise ValueError('cannot write to {}'.format(args.yml_file))
 
+def compute_absolute_positions(args, fm):
+    xcorr_fm = XcorrFileMatrix()
+    xcorr_fm.load_yaml(fm.input_path)
+    compute_average = \
+        True if args.abs_mode == 'weighted_average' else False
+    xcorr_fm.aggregate_results(compute_average=compute_average)
+
+    sdf = xcorr_fm.stitch_data_frame
+
+    absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
+    absolute_positions.compute_initial_guess(fm.data_frame, sdf)
+
+    if not args.no_global:
+        absolute_position_global_optimization(fm.data_frame, sdf,
+                                              xcorr_fm.xcorr_options)
+
+    fm.save_to_yaml(args.yml_file, 'update')
+
+
+def append_fuser_options_to_yaml(args):
+    with open(args.yml_file, 'r') as f:
+        y = yaml.load(f)
+    fr_options = {}
+    keys = ['px_size_xy', 'px_size_z']
     if args.abs_mode == 'nominal_positions':
-        for k in ['x', 'y']:
-            setattr(args, 'ascending_tiles_' + k, not getattr(args,
-                                                              'invert_' + k))
+        keys += ['ascending_tiles_x', 'ascending_tiles_y']
+    else:
+        keys += ['abs_mode']
+    for k in keys:
+        fr_options[k] = getattr(args, k)
+    y['fuser-options'] = fr_options
+
+    with open(args.yml_file, 'w') as f:
+        yaml.dump(y, f, default_flow_style=False)
+
+
+def main():
+    args = parse_args()
+    preprocess_and_check_args(args)
+
+    logger.info("invert X: {}, invert Y: {}".format(
+        not args.ascending_tiles_x, not args.ascending_tiles_y))
+    logger.info("voxel size (ZYX): {} * {} * {}".format(
+        args.px_size_z, args.px_size_xy, args.px_size_xy))
 
     # =========================================================================
     # init FileMatrix
@@ -172,36 +207,21 @@ def main():
                     ascending_tiles_x=args.ascending_tiles_x,
                     ascending_tiles_y=args.ascending_tiles_y)
 
-    if args.force_recomputation or args.abs_mode != old_abs_mode:
+    if args.force_recomputation:
         fm.clear_absolute_positions()
 
     cols = fm.data_frame.columns
     logger.info('absolute positions mode: {}'.format(args.abs_mode))
-    if args.abs_mode == 'nominal_positions':
-        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
-    elif 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
+
+    if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
         logger.info('using absolute positions from {}'.format(args.yml_file))
+    elif args.abs_mode == 'nominal_positions':
+        fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
     else:
-        xcorr_fm = XcorrFileMatrix()
-        xcorr_fm.load_yaml(fm.input_path)
-        compute_average = \
-            True if args.abs_mode == 'weighted_average' else False
-        xcorr_fm.aggregate_results(compute_average=compute_average)
-
-        sdf = xcorr_fm.stitch_data_frame
-
-        absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
-        absolute_positions.compute_initial_guess(fm.data_frame, sdf)
-
-        if not args.no_global:
-            absolute_position_global_optimization(fm.data_frame, sdf,
-                                                  xcorr_fm.xcorr_options)
-
-        if os.path.isdir(args.yml_file):
-            args.yml_file = os.path.join(args.yml_file, 'stitch.yml')
-            fm.save_to_yaml(args.yml_file, 'w')
-        else:
-            fm.save_to_yaml(args.yml_file, 'update')
+        if not os.access(args.yml_file, os.W_OK):
+            raise ValueError('cannot write to {}'.format(args.yml_file))
+        compute_absolute_positions(args, fm)
+        append_fuser_options_to_yaml(args)
 
     # =========================================================================
     # init FuseRunner
@@ -214,29 +234,11 @@ def main():
         for k in keys:
             setattr(fr, k, getattr(args, k))
 
-        logger.info("invert X: {}, invert Y: {}".format(
-            not args.ascending_tiles_x, not args.ascending_tiles_y))
         logger.info("output shape: {}".format(fr.output_shape))
-        logger.info("voxel size (ZYX): {} * {} * {}".format(
-            args.px_size_z, args.px_size_xy, args.px_size_xy))
 
         fr.run()
     else:
         logger.warning("No output file specified.")
-
-    if os.path.isfile(args.yml_file):
-        with open(args.yml_file, 'r') as f:
-            y = yaml.load(f)
-    fr_options = {}
-    keys = ['px_size_xy', 'px_size_z', 'ascending_tiles_x', 'ascending_tiles_y']
-    if args.abs_mode != 'nominal_positions':
-        keys += ['abs_mode']
-    for k in keys:
-        fr_options[k] = getattr(args, k)
-    y['fuser-options'] = fr_options
-
-    with open(args.yml_file, 'w') as f:
-        yaml.dump(y, f, default_flow_style=False)
 
 
 if __name__ == '__main__':
