@@ -141,7 +141,11 @@ def preprocess_and_check_args(args):
             keys = ['px_size_z', 'px_size_xy', 'ascending_tiles_x',
                     'ascending_tiles_y']
             for k in keys:
-                if getattr(args, k) is None:
+                try:
+                    attr = getattr(args, k)
+                except AttributeError:
+                    attr = None
+                if attr is None:
                     try:
                         setattr(args, k, y['xcorr-options'][k])
                     except KeyError:
