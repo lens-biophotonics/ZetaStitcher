@@ -143,28 +143,31 @@ class InputFile(object):
         self._setattrs()
 
     def _open(self):
+        if not os.path.exists(self.file_name):
+            raise FileNotFoundError(self.file_name)
+
         try:
             self.wrapper = TiffWrapper(self.file_name)
             return
-        except (FileNotFoundError, ValueError, IsADirectoryError):
-            pass
-
-        try:
-            self.wrapper = dcimg.DCIMGFile(self.file_name)
-            return
-        except (NameError, FileNotFoundError, ValueError, IsADirectoryError):
-            pass
-
-        try:
-            self.wrapper = ZipWrapper(self.file_name)
-            return
-        except (NameError, FileNotFoundError, BadZipFile, IsADirectoryError):
+        except ValueError:
             pass
 
         try:
             self.wrapper = FFMPEGWrapper(self.file_name)
             return
-        except (ValueError, FileNotFoundError):
+        except ValueError:
+            pass
+
+        try:
+            self.wrapper = dcimg.DCIMGFile(self.file_name)
+            return
+        except (NameError, ValueError):
+            pass
+
+        try:
+            self.wrapper = ZipWrapper(self.file_name)
+            return
+        except (NameError, BadZipFile):
             pass
 
         raise ValueError('Unsupported file type')
