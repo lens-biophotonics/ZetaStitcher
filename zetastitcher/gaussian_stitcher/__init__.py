@@ -1,0 +1,1 @@
+from .stitching import GaussianStitcher
