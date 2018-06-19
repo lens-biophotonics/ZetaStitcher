@@ -1,4 +1,5 @@
 import os
+import sys
 import queue
 import logging
 import argparse
@@ -73,10 +74,11 @@ Unless otherwise stated, all values are expected in px.
                        help='maximum allowed shift along x (lateral shift)')
 
     group = parser.add_argument_group('overlaps')
-    group.add_argument('--overlap-h', type=float, required=True, metavar='OH',
+    group.add_argument('--overlap', type=float, help='nominal overlap, H & V')
+    group.add_argument('--overlap-h', type=float, metavar='OH',
                        help='nominal overlap along the horizontal axis')
 
-    group.add_argument('--overlap-v', type=float, required=True, metavar='OV',
+    group.add_argument('--overlap-v', type=float, metavar='OV',
                        help='nominal overlap along the vertical axis')
 
     group = parser.add_argument_group(
@@ -97,6 +99,20 @@ Unless otherwise stated, all values are expected in px.
                        help='invert tile ordering along Y')
 
     args = parser.parse_args()
+
+    if args.overlap is None:
+        if args.overlap_h is None or args.overlap_v is None:
+            logger.error('Missing overlap options. '
+                         'Use --overlap, or both --overlap-h and --overlap-v')
+            sys.exit(1)
+    elif args.overlap_h is not None or args.overlap_v is not None:
+        logger.error('Incompatible options: --overlap and --overlap-h, '
+                     '--overlap-v')
+        sys.exit(1)
+    else:
+        setattr(args, 'overlap_h', args.overlap)
+        setattr(args, 'overlap_v', args.overlap)
+
 
     channels = {
         's': -2,  # sum
