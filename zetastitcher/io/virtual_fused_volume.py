@@ -94,7 +94,11 @@ class VirtualFusedVolume:
         return tuple(output_shape)
 
     def __getitem__(self, item):
-        item = np.index_exp[tuple(item)]  # ensure item is a tuple
+        # ensure item is a tuple
+        if isinstance(item, list):
+            item = tuple(item)
+        else:
+            item = np.index_exp[item]
 
         # ensure all items are slice objects
         myitem = []
