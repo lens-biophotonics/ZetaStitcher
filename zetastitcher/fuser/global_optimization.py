@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from ..gaussian_stitcher import GaussianStitcher
+from zetastitcher.gaussian_stitcher.qp.stitching import GaussianStitcherQP as \
+    GaussianStitcher
 from ..gaussian_stitcher.solver import sparse_lsqr_solver
 
 
@@ -32,12 +33,12 @@ def absolute_position_global_optimization(df, sdf):
 
     stitcher = GaussianStitcher(
         n_dims=N_DIMS,
-        solver_hook=sparse_lsqr_solver
+        solver='cvxopt'
     )
     node2coordinates, digraph = stitcher.stitch(data_in, v_origin)
 
     laplacian_df = pd.DataFrame(node2coordinates).transpose()
-    print(laplacian_df)
+
     keys = ['Xs', 'Ys', 'Zs']  # do not change order
     df[keys] = laplacian_df
     df[keys] -= df[keys].min()

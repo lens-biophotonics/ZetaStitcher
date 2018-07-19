@@ -1,4 +1,5 @@
 coloredlogs
+cvxopt
 imageio
 networkx
 numpy
@@ -6,5 +7,6 @@ pandas
 psutil
 pyfftw
 pyyaml
+qpsolvers
 scipy
 scikit-image
