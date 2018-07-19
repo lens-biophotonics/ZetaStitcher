@@ -57,6 +57,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'coloredlogs',
+        'cvxopt',
         'imageio',
         'networkx',
         'numpy',
@@ -64,6 +65,7 @@ setup(
         'psutil',
         'pyfftw',
         'pyyaml',
+        'qpsolvers',
         'scipy',
         'scikit-image',
     ],
