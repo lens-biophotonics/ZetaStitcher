@@ -4,7 +4,7 @@ from qpsolvers import solve_qp
 from collections import defaultdict
 import networkx as nx
 import numpy as np
-    
+
 
 def get_node2coordinates(x, nodes, n_dims):
     node2coordinates = {}
@@ -94,18 +94,18 @@ class GaussianStitcherQP(object):
     def __init__(self, n_dims, solver):
         self.n_dims = n_dims
         self.solver = solver
-    
+
     def stitch(self, data_in, v_origin):
         digraph = self._make_digraph(data_in)
-        solver_sol, variables = self._optimize(digraph, v_origin)
-        if solver_sol['status'] != 'optimal':
-            raise Exception("solver error {}".format(str(solver_sol)))
-        x_sol = np.array(solver_sol['x']).reshape((-1,))
+        x, variables = self._optimize(digraph, v_origin)
+        if x is None:
+            raise Exception("solver error")
+        x_sol = np.array(x).reshape((-1,))
         # print('VARS', variables)
         # print('VALS', x_sol)
         node2coords, _edge2coords = self._sol2coords(x_sol, variables)
         return node2coords, digraph
-    
+
     def _sol2coords(self, x_sol, variables):
         assert len(variables) == len(x_sol)
         node2coords = defaultdict(lambda:np.zeros((self.n_dims,)))
@@ -159,8 +159,6 @@ class GaussianStitcherQP(object):
         # print('rank([P; A; G])', np.linalg.matrix_rank(PAG))
         # print('shape([P; A; G])', PAG.shape)
 
-        # res = {'x':solve_qp(P + np.eye(P.shape[0])*0.0001, q, G, h, A, b), 'status':'optimal'}
-        res = {'x':solve_qp(P, q, G, h, A, b, solver=self.solver), 'status':'optimal'}
-        print('res', res)
-        return res, variables
+        x = solve_qp(P, q, G, h, A, b, solver=self.solver)
+        return x, variables
 #
