@@ -181,7 +181,8 @@ def compute_absolute_positions(args, fm):
     absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
 
     if not args.no_global:
-        absolute_position_global_optimization(fm.data_frame, sdf)
+        logger.info('performing global optimization...')
+        absolute_position_global_optimization(fm.data_frame, xcorr_fm)
 
 
 def append_fuser_options_to_yaml(yml_out_file, args):

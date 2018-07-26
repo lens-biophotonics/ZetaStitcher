@@ -57,7 +57,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'coloredlogs',
-        'cvxopt',
+        'cvxpy',
         'imageio',
         'networkx',
         'numpy',

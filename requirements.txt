@@ -5,15 +5,21 @@
 #    pip-compile --output-file requirements.txt requirements.in
 #
 coloredlogs==9.3.1
-cvxopt==1.2.0
+cvxpy==1.0.6
 cycler==0.10.0            # via matplotlib
 decorator==4.3.0          # via networkx
+dill==0.2.8.2             # via multiprocess
+ecos==2.0.5               # via cvxpy
+fastcache==1.0.2          # via cvxpy
+future==0.16.0            # via osqp
 humanfriendly==4.12.1     # via coloredlogs
 imageio==2.3.0
 kiwisolver==1.0.1         # via matplotlib
 matplotlib==2.2.2         # via scikit-image
+multiprocess==0.70.6.1    # via cvxpy
 networkx==2.1
 numpy==1.14.3
+osqp==0.4.0               # via cvxpy
 pandas==0.22.0
 pillow==5.1.0             # via imageio, scikit-image
 psutil==5.4.5
@@ -27,7 +33,9 @@ qpsolvers==1.0.4
 quadprog==0.1.6           # via qpsolvers
 scikit-image==0.13.1
 scipy==1.1.0
-six==1.11.0               # via cycler, matplotlib, python-dateutil, scikit-image
+scs==2.0.2                # via cvxpy
+six==1.11.0               # via cvxpy, cycler, matplotlib, python-dateutil, scikit-image
+toolz==0.9.0              # via cvxpy
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools                # via kiwisolver
