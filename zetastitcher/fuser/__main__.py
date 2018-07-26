@@ -159,7 +159,8 @@ def preprocess_and_check_args(args):
         if args.abs_mode != old_abs_mode:
             args.force_recomputation = True
         for a in px_attrs:
-            setattr(args, a, 1)
+            if a not in args:
+                setattr(args, a, 1)
 
     args.zmin = int(round(args.zmin / args.px_size_z))
     if args.zmax is not None:
