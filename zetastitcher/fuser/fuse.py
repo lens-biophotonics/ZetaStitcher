@@ -29,7 +29,7 @@ def squircle_alpha(height, width):
                                  np.linspace(0, a - 1, a))).reshape(2, -1).T
     grid = grid.astype(np.int)
     N = max(a, b)
-    ps = np.logspace(np.log10(2), np.log10(50), N)
+    ps = np.logspace(np.log10(2), np.log10(50), N)  # exponents
     # ps = np.ones(N) * 2
     alpha = np.linspace(0, 1, N)
 
@@ -44,32 +44,25 @@ def squircle_alpha(height, width):
         ras = rbs * ratio
         dra = drb * ratio
 
-    counter = 0
     for y, x in grid:
         j = x / dra
         k = y / drb
         i = int(max(j, k))
-        for n in range(0, N - i):
-            ii = i + n
-            try:
-                p = ps[ii]
-                ra = ras[ii]
-                rb = rbs[ii]
-            except IndexError:
-                break
+        count = -1  # 0-based
+        for n, p, ra, rb in zip(range(0, N - i), ps[i:], ras[i:], rbs[i:]):
+            count += 1
 
             constant = math.pow(x / ra, p) + math.pow(y / rb, p)
 
             if constant < 1:
                 break
 
+        ii = i + count
         squircle[y + b, x + a] = alpha[ii] ** 2
-        counter += 1
 
     squircle[:b, a:] = np.flipud(squircle[b:, a:])
     squircle[:, :a] = np.fliplr(squircle[:, a:])
 
-    squircle /= np.amax(squircle)
     squircle = 1 - squircle
 
     return squircle
