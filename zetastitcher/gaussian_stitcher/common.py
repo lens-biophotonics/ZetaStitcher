@@ -22,7 +22,7 @@ def ConstraintTuple(ndims, eps_reg=None):
                 raise ValueError('Lambda.shape should be {} rather than {}.'.format((ndims, ndims), Lambda.shape))
             if p.shape != (ndims,):
                 raise ValueError('p.shape should be {} rather than {}.'.format((ndims,), p.shape))
-            
+
             if ub is not None and ub.shape != (ndims,):
                 raise ValueError('ub.shape should be {} rather than {}.'.format((ndims,), ub.shape))
 

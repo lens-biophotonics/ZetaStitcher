@@ -14,16 +14,16 @@ class Variable(object):
     def __init__(self, factory, name):
         self.factory = factory
         self.name = name
-    
+
     def __eq__(self, other):
         return self.factory is other.factory and self.name == other.name
-    
+
     def __hash__(self):
         return hash(self.name)
-    
+
     def __lt__(self, other):
         return str(self.name).__lt__(str(other.name))
-            
+
     def __repr__(self):
         return str(self.name)
 
@@ -41,10 +41,10 @@ class Term(object):
 
     def order(self):
         return len(self.variables)
-    
+
     def __hash__(self):
         return hash(self.variables)
-    
+
     def __eq__(self, other):
         return self.variables == other.variables
 
@@ -68,7 +68,7 @@ class Term(object):
                 l.append(str(k))
         return " ".join(map(str, l))
 
-    
+
 class Expression(object):
     def __init__(self, factory, term2coeff=None):
         self.factory = factory
@@ -130,7 +130,7 @@ class Expression(object):
             return max([term.order() for term in self.term2coeff])
         else:
             return 0
-    
+
     def add_term(self, term, coeff):
         assert isinstance(term, Term)
         for v in term.variables:
@@ -140,7 +140,7 @@ class Expression(object):
             self.term2coeff[term] = coeff
         else:
             self.term2coeff[term] += coeff
-    
+
     def add_dotprod(self, x, z):
         for xi, zi in zip(x, z):
             elem_expr = self.one()
@@ -166,8 +166,9 @@ class QPBuilder(object):
         self.inequality_list = []
         self.equality_list = []
         self.var_set = set()
-    
+
     def print_(self):
+        return
         print('objective')
         print(self.objective)
         print('s.t.')
@@ -192,10 +193,10 @@ class QPBuilder(object):
 
     def variables(self):
         return sorted(self.var_set)
-    
+
     def add_variable(self, v):
         self.var_set.add(v)
-    
+
     def _create_expression(self):
         return Expression(factory=self)
 
@@ -205,7 +206,7 @@ class QPBuilder(object):
         return expr
 
     def new_inequality(self):
-        print('DEBUG INEQUALITIES')
+        # print('DEBUG INEQUALITIES')
         expr = self._create_expression()
         self.inequality_list.append(expr)
         return expr
@@ -233,14 +234,14 @@ class QPBuilder(object):
             else:
                 raise ValueError('Term order higher than 2. TERM {}'.format(term))
         return Q, p
-    
+
     def Ab_matrices(self, variables, var2idx):
-        print('Ab_matrices\n', '\n\t'.join(map(str, self.equality_list)))
+        # print('Ab_matrices\n', '\n\t'.join(map(str, self.equality_list)))
         A, b = self.lin_constr2arrays(self.equality_list, variables, var2idx)
         return A, b
-    
+
     def Gh_matrices(self, variables, var2idx):
-        print('Gh_matrices\n', '\n\t'.join(map(str, self.inequality_list)))
+        # print('Gh_matrices\n', '\n\t'.join(map(str, self.inequality_list)))
         G, h = self.lin_constr2arrays(self.inequality_list, variables, var2idx)
         return G, h
 
@@ -248,8 +249,8 @@ class QPBuilder(object):
         variables = self.variables()
         var2idx = self.var2idx()
         self.print_()
-        print('DEBUG variables', variables)
-        print('DEBUG var2idx', var2idx)
+        # print('DEBUG variables', variables)
+        # print('DEBUG var2idx', var2idx)
         P, q = self.Qp_matrices(variables, var2idx)
         A, b = self.Ab_matrices(variables, var2idx)
         G, h = self.Gh_matrices(variables, var2idx)
