@@ -55,7 +55,7 @@ def parse_file_name(file_name):
 class FileMatrix:
     """Data structures for a matrix of input files."""
     def __init__(self, input_path=None, ascending_tiles_x=True,
-                 ascending_tiles_y=True):
+                 ascending_tiles_y=True, recursive=False):
         """
         Construct a FileMatrix object from a directory path or a .yml file
         produced by the stitcher. Tile ordering parameters need to be
@@ -87,17 +87,25 @@ class FileMatrix:
             return
 
         if os.path.isdir(input_path):
-            self.load_dir(input_path)
+            self.load_dir(input_path, recursive)
         elif os.path.isfile(input_path):
             self.load_yaml(input_path)
 
-    def load_dir(self, dir=None):
+    def load_dir(self, dir=None, recursive=False):
         """Look for files in `dir` recursively and populate data structures.
 
         Parameters
         ----------
         dir : path
         """
+        def _process_list(root, mylist):
+            for f in mylist:
+                try:
+                    self.parse_and_append(os.path.join(root, f), flist)
+                    continue
+                except (RuntimeError, ValueError):
+                    pass
+
         if dir is None:
             dir = self.input_path
 
@@ -106,20 +114,21 @@ class FileMatrix:
 
         flist = []
 
-        for root, dirs, files in os.walk(dir, followlinks=True):
-            if os.path.basename(root):
-                try:
-                    self.parse_and_append(root, flist)
-                    continue
-                except (RuntimeError, ValueError):
-                    pass
+        if recursive:
+            for root, dirs, files in os.walk(dir, followlinks=True):
+                if os.path.basename(root):
+                    try:
+                        self.parse_and_append(root, flist)
+                        continue
+                    except (RuntimeError, ValueError):
+                        pass
 
-            for f in files:
-                try:
-                    self.parse_and_append(os.path.join(root, f), flist)
-                    continue
-                except (RuntimeError, ValueError):
-                    pass
+                _process_list(root, files)
+        else:
+            _process_list(dir, os.listdir(dir))
+
+        if not flist:
+            raise ValueError('Empty file list')
 
         data = {'X': flist[0::7], 'Y': flist[1::7], 'Z': flist[2::7],
                 'nfrms': flist[3::7], 'ysize': flist[4::7],

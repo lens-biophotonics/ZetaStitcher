@@ -53,6 +53,8 @@ Unless otherwise stated, all values are expected in px.
                         choices=['r', 'g', 'b', 's'], help='color channel')
     parser.add_argument('-n', type=int, default=8, dest='n_of_threads',
                         help='number of parallel threads to use')
+    parser.add_argument('-r', action='store_true', dest='recursive',
+                        help='recursively look for files')
 
     group = parser.add_argument_group(
         'pixel size', 'If specified, the corresponding options can be '
@@ -162,6 +164,7 @@ class Runner(object):
         self.compute_average = False
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
+        self.recursive = False
         self.df = None
         self.fm = None
         self.px_size_xy = 1
@@ -173,8 +176,8 @@ class Runner(object):
         return {1: self.overlap_v, 2: self.overlap_h}
 
     def initialize_queue(self):
-        fm = FileMatrix(
-            self.input_folder, self.ascending_tiles_x, self.ascending_tiles_y)
+        fm = FileMatrix(self.input_folder, self.ascending_tiles_x,
+                        self.ascending_tiles_y, recursive=self.recursive)
         self.fm = fm
 
         stitch_X = {
@@ -360,7 +363,7 @@ def main():
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
             'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
-            'px_size_z', 'n_of_threads']
+            'px_size_z', 'n_of_threads', 'recursive']
 
     for key in keys:
         setattr(r, key, getattr(arg, key))
