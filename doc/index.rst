@@ -4,19 +4,11 @@
    contain the root `toctree` directive.
 
 Welcome to ZetaStitcher's documentation!
-====================================
+========================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-Tutorial
-========
-Please follow the :ref:`Tutorial<tutorial>` for instructions on how to get
-started.
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
+   tutorial
+   module_index
