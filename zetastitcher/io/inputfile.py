@@ -153,12 +153,6 @@ class InputFile(object):
             pass
 
         try:
-            self.wrapper = FFMPEGWrapper(self.file_name)
-            return
-        except ValueError:
-            pass
-
-        try:
             self.wrapper = dcimg.DCIMGFile(self.file_name)
             return
         except (NameError, ValueError):
@@ -168,6 +162,12 @@ class InputFile(object):
             self.wrapper = ZipWrapper(self.file_name)
             return
         except (NameError, BadZipFile):
+            pass
+
+        try:
+            self.wrapper = FFMPEGWrapper(self.file_name)
+            return
+        except (ValueError, FileNotFoundError):
             pass
 
         raise ValueError('Unsupported file type')
