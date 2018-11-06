@@ -45,7 +45,7 @@ def parse_args():
     group = parser.add_argument_group('output')
     group.add_argument('-o', type=str, dest='output_filename',
                        help='output file name. If not specified, no tiff '
-                            'output is produced, only absoulute coordinates '
+                            'output is produced, only absolute coordinates '
                             'are computed.')
 
     group.add_argument('-w', type=str, dest='yml_out_file',
