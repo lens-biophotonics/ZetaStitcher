@@ -128,17 +128,17 @@ def main():
     parser.add_argument('-a', type=int, help='axis (1=Y, 2=X)', dest='axis',
                         choices=(1, 2), default=1)
     parser.add_argument('--overlap', type=int, default=100, help='overlap')
-    parser.add_argument('--Mz', type=int, default=20, help='Max shift along Z')
-    parser.add_argument('--My', type=int, default=100,
+    parser.add_argument('--dz', type=int, default=20, help='Max shift along Z')
+    parser.add_argument('--dy', type=int, default=100,
                         help='Max shift along Y')
-    parser.add_argument('--Mx', type=int, default=20,
+    parser.add_argument('--dx', type=int, default=20,
                         help='Max shift along X (lateral)')
 
     args = parser.parse_args(sys.argv[1:])
 
     stitch(args.input_file1, args.input_file2, z_frame=args.frame,
-           overlap=args.overlap, axis=args.axis, max_shift_z=args.Mz,
-           max_shift_y=args.My, max_shift_x=args.Mx)
+           overlap=args.overlap, axis=args.axis, max_shift_z=args.dz,
+           max_shift_y=args.dy, max_shift_x=args.dx)
 
 
 if __name__ == '__main__':
