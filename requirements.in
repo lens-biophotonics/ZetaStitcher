@@ -1,11 +1,12 @@
 coloredlogs
+cvxpy
 imageio
 networkx
 numpy
 pandas
 psutil
 pyfftw
-pygmo
 pyyaml
+#qpsolvers
 scipy
 scikit-image

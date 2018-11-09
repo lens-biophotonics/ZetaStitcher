@@ -179,11 +179,10 @@ def compute_absolute_positions(args, fm):
     sdf = xcorr_fm.stitch_data_frame
 
     absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
-    absolute_positions.compute_initial_guess(fm.data_frame, sdf)
 
     if not args.no_global:
-        absolute_position_global_optimization(fm.data_frame, sdf,
-                                              xcorr_fm.xcorr_options)
+        logger.info('performing global optimization...')
+        absolute_position_global_optimization(fm.data_frame, xcorr_fm)
 
 
 def append_fuser_options_to_yaml(yml_out_file, args):
