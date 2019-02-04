@@ -15,7 +15,7 @@ volume
 ## How to install
 On Ubuntu 16.04 LTS, run these commands:
 ```
-sudo apt-get install libfftw3-dev
+sudo apt-get install libfftw3-dev cython3 python3-numpy
 sudo pip3 install zetastitcher
 ```
 
