@@ -23,8 +23,8 @@ def to_dtype(x, dtype):
 def squircle_alpha(height, width):
     squircle = np.zeros((height, width))
     ratio = width / height
-    a = width // 2
-    b = height // 2
+    a = math.ceil(width / 2)
+    b = math.ceil(height / 2)
     grid = np.vstack(np.meshgrid(np.linspace(0, b - 1, b),
                                  np.linspace(0, a - 1, a))).reshape(2, -1).T
     grid = grid.astype(np.int)
@@ -44,6 +44,9 @@ def squircle_alpha(height, width):
         ras = rbs * ratio
         dra = drb * ratio
 
+    start_y = b - 1 if height % 2 else b
+    start_x = a - 1 if width % 2 else a
+
     for y, x in grid:
         j = x / dra
         k = y / drb
@@ -58,10 +61,15 @@ def squircle_alpha(height, width):
                 break
 
         ii = i + count
-        squircle[y + b, x + a] = alpha[ii] ** 2
+        squircle[start_y + y, start_x + x] = alpha[ii] ** 2
 
-    squircle[:b, a:] = np.flipud(squircle[b:, a:])
-    squircle[:, :a] = np.fliplr(squircle[:, a:])
+    stop_y_up = b - 1 if height % 2 else b
+    start_y_down = b
+    squircle[:stop_y_up, start_x:] = np.flipud(squircle[start_y_down:, start_x:])
+
+    stop_x_left = a - 1 if width % 2 else a
+    start_x_right = a
+    squircle[:, :stop_x_left] = np.fliplr(squircle[:, start_x_right:])
 
     squircle = 1 - squircle
 
