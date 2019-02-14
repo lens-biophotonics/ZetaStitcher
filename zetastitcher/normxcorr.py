@@ -17,6 +17,16 @@ def normxcorr2_fftw(aslice, bframe):
     -------
     :class:`numpy.ndarray`
     """
+    if aslice.shape[-1] % 2:
+        padding = [(0, 0) for _ in range(len(aslice.shape) - 1)]
+        padding += [(1, 0)]
+        aslice = np.pad(aslice, padding, 'constant')
+
+    if bframe.shape[-1] % 2:
+        padding = [(0, 0) for _ in range(len(bframe.shape) - 1)]
+        padding += [(0, 1)]
+        bframe = np.pad(bframe, padding, 'constant')
+
     ashape = aslice.shape
     b_old_shape = bframe.shape
 
