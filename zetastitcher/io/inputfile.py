@@ -91,7 +91,7 @@ class InputFile(object):
 
         if item[0] is not Ellipsis:
             myitem[0] = slice(None, None, 1)
-        a = a[myitem]
+        a = a[tuple(myitem)]
 
         return np.squeeze(a)
 
