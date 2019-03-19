@@ -209,14 +209,19 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
+        ok = False
         try:
-            l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
+            ok = callable(getattr(self.wrapper, 'zslice'))
+            if not ok:
+                raise AttributeError
         except AttributeError:
             s = list(self.shape)
             s[0] = end_frame - start_frame
             l = np.zeros(s, dtype=self.dtype)
             for i in range(start_frame, end_frame):
                 l[i - start_frame] = self.wrapper.frame(i)
+        if ok:
+            l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
         if self.channel == -2:
             l = np.sum(l, axis=-1)
         elif self.channel != -1:
