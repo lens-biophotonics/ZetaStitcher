@@ -29,6 +29,7 @@ class FuseRunner(object):
         self.debug = False
         self.output_filename = None
         self.channel = -1
+        self.compression = 0
 
         self._is_multichannel = None
 
@@ -160,6 +161,6 @@ class FuseRunner(object):
             fused = to_dtype(fused, self.dtype)
             logger.info('saving output to {}'.format(self.output_filename))
             tiff.imsave(self.output_filename, fused, append=True,
-                        bigtiff=bigtiff)
+                        bigtiff=bigtiff, compress=self.compression)
 
             self.zmin += thickness

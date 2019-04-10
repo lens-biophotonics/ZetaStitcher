@@ -54,8 +54,12 @@ def parse_args():
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
 
-    group.add_argument('-c', type=int, default=-1, dest='channel',
+    group.add_argument('--ch', type=int, default=-1, dest='channel',
                        help='channel')
+
+    group.add_argument('-c', type=str, default=0, dest='compression',
+                       choices=[str(i) for i in range(10)] + ['lzma'],
+                       help='compression')
 
     group.add_argument('--zmin', type=float, default=0,
                        help='start frame (in your units)')
@@ -168,6 +172,11 @@ def preprocess_and_check_args(args):
     elif args.nz is not None:
         args.zmax = args.zmin + args.nz
 
+    try:
+        args.compression = int(args.compression)
+    except ValueError:
+        pass
+
 
 def compute_absolute_positions(args, fm):
     xcorr_fm = XcorrFileMatrix()
@@ -251,7 +260,8 @@ def main():
     if args.output_filename is not None:
         fr = FuseRunner(fm)
 
-        keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel']
+        keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel',
+                'compression']
 
         for k in keys:
             setattr(fr, k, getattr(args, k))
