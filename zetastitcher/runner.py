@@ -21,7 +21,7 @@ from .version import __version__
 
 
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='DEBUG', fmt='%(levelname)s [%(name)s]: %(message)s')
+coloredlogs.install(level='INFO', fmt='%(levelname)s [%(name)s]: %(message)s')
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,

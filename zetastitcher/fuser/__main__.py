@@ -15,7 +15,7 @@ from .xcorr_filematrix import XcorrFileMatrix
 from .global_optimization import absolute_position_global_optimization
 
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='DEBUG', fmt='%(levelname)s [%(name)s]: %(message)s')
+coloredlogs.install(level='INFO', fmt='%(levelname)s [%(name)s]: %(message)s')
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
