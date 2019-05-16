@@ -81,7 +81,12 @@ class TiffWrapper(object):
             end_frame = start_frame + 1
 
         if not self.glob_mode:
-            a = self.tfile.asarray(slice(start_frame, end_frame))
+            if len(self.tfile.pages) == 1 and self.nfrms > 1:
+                a = self.tfile.asarray(0, memmap=True)
+                a = a[slice(start_frame, end_frame)]
+            else:
+                a = self.tfile.asarray(slice(start_frame, end_frame),
+                                       memmap=not copy)
         else:
             frames_per_file = self.nfrms // len(self.flist)
             start_file = start_frame // frames_per_file
