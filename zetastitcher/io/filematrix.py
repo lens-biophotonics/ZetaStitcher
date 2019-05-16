@@ -35,6 +35,8 @@ def parse_file_name(file_name):
     if m is None:
         m = re.search('^.*x_([-]?\d+).*y_([-]?\d+)', file_name)
     if m is None:
+        m = re.search('^.*x([-]?\d+).*y([-]?\d+)', file_name)
+    if m is None:
         m = re.search('^([-]?\d+)_([-]?\d+)_([-]?\d+)', file_name)
     if m is None:
         m = re.search('^([-]?\d+)_([-]?\d+)', file_name)
