@@ -10,6 +10,7 @@ except ImportError:
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
 from .zipwrapper import ZipWrapper
+from .mhdwrapper import MHDWrapper
 
 from zipfile import BadZipFile
 
@@ -162,6 +163,12 @@ class InputFile(object):
             self.wrapper = ZipWrapper(self.file_name)
             return
         except (NameError, BadZipFile):
+            pass
+
+        try:
+            self.wrapper = MHDWrapper(self.file_name)
+            return
+        except (ValueError, IndexError):
             pass
 
         try:
