@@ -115,7 +115,6 @@ Unless otherwise stated, all values are expected in px.
         setattr(args, 'overlap_h', args.overlap)
         setattr(args, 'overlap_v', args.overlap)
 
-
     channels = {
         's': -2,  # sum
         'r': 0,
@@ -138,6 +137,9 @@ Unless otherwise stated, all values are expected in px.
 
     args.overlap_v = int(round(args.overlap_v / args.px_size_xy))
     args.overlap_h = int(round(args.overlap_h / args.px_size_xy))
+
+    if args.max_dy > args.overlap_h or args.max_dy > args.overlap_v:
+        raise ValueError("dy can't be larger than overlap")
 
     setattr(args, 'ascending_tiles_x', not args.invert_x)
     setattr(args, 'ascending_tiles_y', not args.invert_y)
