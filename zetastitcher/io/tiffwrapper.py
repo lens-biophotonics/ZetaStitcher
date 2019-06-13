@@ -50,13 +50,6 @@ class TiffWrapper(object):
     def dtype(self):
         return np.dtype(self.tfile.pages[0].dtype)
 
-    @property
-    def shape(self):
-        if self.nchannels > 1:
-            return (self.nfrms, self.nchannels, self.ysize, self.xsize)
-        else:
-            return (self.nfrms, self.ysize, self.xsize)
-
     def open(self, file_name=None):
         if file_name is not None:
             self.file_name = file_name
@@ -92,9 +85,6 @@ class TiffWrapper(object):
             start_file = start_frame // frames_per_file
             end_file = end_frame // frames_per_file
             a = tiff.imread(self.flist[start_file:end_file], pattern='')
-
-        if end_frame - start_frame == 1:
-            a = np.expand_dims(a, axis=0)
 
         if self.axes == 'SYX':
             a = np.moveaxis(a, 1, -1)

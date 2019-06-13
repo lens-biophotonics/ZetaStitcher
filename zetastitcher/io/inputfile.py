@@ -216,27 +216,27 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
-        ok = False
-        try:
-            ok = callable(getattr(self.wrapper, 'zslice'))
-            if not ok:
-                raise AttributeError
-        except AttributeError:
+        ok = callable(getattr(self.wrapper, 'zslice'))
+        if ok:
+            a = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
+        else:
             s = list(self.shape)
             s[0] = end_frame - start_frame
-            l = np.zeros(s, dtype=self.dtype)
+            a = np.zeros(s, dtype=self.dtype)
             for i in range(start_frame, end_frame):
-                l[i - start_frame] = self.wrapper.frame(i)
-        if ok:
-            l = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
-        if self.channel == -2:
-            l = np.sum(l, axis=-1)
-        elif self.channel != -1:
-            l = l[..., self.channel]
-        elif self.nchannels > 1:
-            l = np.moveaxis(l, -1, -3)
+                a[i - start_frame] = self.wrapper.frame(i)
 
-        return l
+        if len(a.shape) < len(self.shape):
+            a = np.expand_dims(a, axis=0)
+
+        if self.channel == -2:
+            a = np.sum(a, axis=-1)
+        elif self.channel != -1:
+            a = a[..., self.channel]
+        elif self.nchannels > 1:
+            a = np.moveaxis(a, -1, -3)
+
+        return a
 
     def zslice_idx(self, index, frames_per_slice=1, dtype=None, copy=True):
         """Return a slice, i.e. a substack of frames, by index.
