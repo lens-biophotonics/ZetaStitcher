@@ -7,11 +7,13 @@
 alabaster==0.7.9          # via sphinx
 babel==2.3.4              # via sphinx
 click==6.7                # via pip-tools
-docutils==0.13.1          # via sphinx
+docutils==0.13.1          # via m2r, sphinx
 first==2.0.1              # via pip-tools
 imagesize==0.7.1          # via sphinx
 jinja2==2.9.5             # via sphinx
+m2r==0.2.1
 markupsafe==0.23          # via jinja2
+mistune==0.8.4            # via m2r
 numpydoc==0.6.0
 pip-tools==1.8.0
 pygments==2.2.0           # via sphinx

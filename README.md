@@ -22,3 +22,15 @@ sudo pip3 install zetastitcher
 ## Documentation
 Please read the documentation and follow the tutorial at this page:
 https://lens-biophotonics.github.io/ZetaStitcher/
+
+
+## Acknowledgements
+This open source software code was developed in whole in the Human
+Brain Project, funded from the European Union’s Horizon 2020 Framework
+Programme for Research and Innovation under Specific Grant Agreements
+No. 720270 and No. 785907 (Human Brain Project SGA1 and SGA2).
+
+<p align="center">
+<img height="100" style="max-height: 100px" src="https://europa.eu/european-union/sites/europaeu/files/docs/body/flag_yellow_low.jpg">
+Co-funded by the European Union
+</p>
