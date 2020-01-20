@@ -127,9 +127,9 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel,
             the `channels` dimension is squeezed.
         """
-        s = [self.nfrms, self.ysize, self.xsize]
-        if self.nchannels != 1 and self.channel == -1:
-            s.insert(1, self.nchannels)
+        s = [self.nfrms, self.nchannels, self.ysize, self.xsize]
+        if self.nchannels == 1 or self.channel != -1:
+            del s[1]
         return tuple(s)
 
     @property
@@ -226,15 +226,15 @@ class InputFile(object):
             for i in range(start_frame, end_frame):
                 a[i - start_frame] = self.wrapper.frame(i)
 
-        if len(a.shape) < len(self.shape):
-            a = np.expand_dims(a, axis=0)
-
         if self.channel == -2:
             a = np.sum(a, axis=-1)
         elif self.channel != -1:
             a = a[..., self.channel]
         elif self.nchannels > 1:
             a = np.moveaxis(a, -1, -3)
+
+        if len(a.shape) < len(self.shape):
+            a = np.expand_dims(a, axis=0)  # add dummy Z dimension
 
         return a
 
