@@ -12,7 +12,7 @@ class XcorrFileMatrix(object):
 
     def load_yaml(self, fname):
         with open(fname, 'r') as f:
-            y = yaml.load(f)
+            y = yaml.safe_load(f)
 
         attrs = ['ascending_tiles_x', 'ascending_tiles_y']
 

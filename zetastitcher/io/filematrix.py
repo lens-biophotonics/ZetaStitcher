@@ -150,7 +150,7 @@ class FileMatrix:
     def load_yaml(self, fname):
         logger.info('loading {}'.format(fname))
         with open(fname, 'r') as f:
-            y = yaml.load(f)
+            y = yaml.safe_load(f)
 
         self.data_frame = pd.DataFrame(y['filematrix']).set_index('filename')
         self.data_frame = self.data_frame.sort_values(['Z', 'Y', 'X'])
@@ -208,7 +208,7 @@ class FileMatrix:
 
         if mode == 'update':
             with open(filename, 'r') as f:
-                y = yaml.load(f)
+                y = yaml.safe_load(f)
 
             y['filematrix'] = j
 

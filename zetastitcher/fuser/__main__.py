@@ -137,7 +137,7 @@ def preprocess_and_check_args(args):
         # replace None args with values found in yml file
         if os.path.isfile(args.yml_file):
             with open(args.yml_file, 'r') as f:
-                y = yaml.load(f)
+                y = yaml.safe_load(f)
                 try:
                     old_abs_mode = y['fuser-options']['abs_mode']
                 except KeyError:
@@ -196,7 +196,7 @@ def compute_absolute_positions(args, fm):
 
 def append_fuser_options_to_yaml(yml_out_file, args):
     with open(yml_out_file, 'r') as f:
-        y = yaml.load(f)
+        y = yaml.safe_load(f)
     fr_options = {}
     keys = ['px_size_xy', 'px_size_z']
     if args.abs_mode == ABS_MODE_NOMINAL_POSITIONS:
