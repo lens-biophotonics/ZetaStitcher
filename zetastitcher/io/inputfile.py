@@ -36,6 +36,10 @@ class InputFile(object):
     def __exit__(self, *args):
         self.close()
 
+    def __repr__(self):
+        return '<InputFile file_name="{}" shape={} dtype={}>'.format(
+            self.file_name, self.shape, self.dtype)
+
     def __getitem__(self, item):
         try:
             return self.wrapper.__getitem__(item)
