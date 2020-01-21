@@ -110,7 +110,8 @@ class FuseRunner(object):
                                  args=(q, fused, frame_shape, self.debug))
             t.start()
 
-            for index, row in self.fm.data_frame.iterrows():
+            for row in self.fm.data_frame.itertuples():
+                index = row.Index
                 if self.zmax is None:
                     z_to = row.nfrms
                 else:
