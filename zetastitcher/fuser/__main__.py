@@ -8,6 +8,8 @@ import coloredlogs
 
 from ..version import __version__
 
+import numpy as np
+
 from . import absolute_positions
 from .fuse_runner import FuseRunner
 from ..io.filematrix import FileMatrix
@@ -257,8 +259,12 @@ def main():
     # =========================================================================
     # init FuseRunner
     # =========================================================================
+    fr = FuseRunner(fm)
+    gib = np.prod(fr.output_shape) * fr.dtype.itemsize / 1024**3
+    logger.info("fused shape, whole volume: {}, {:03,.3f} GiB"
+                .format(fr.output_shape, gib))
+
     if args.output_filename is not None:
-        fr = FuseRunner(fm)
 
         keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel',
                 'compression']
@@ -266,7 +272,9 @@ def main():
         for k in keys:
             setattr(fr, k, getattr(args, k))
 
-        logger.info("output shape: {}".format(fr.output_shape))
+        gib = np.prod(fr.output_shape) * fr.dtype.itemsize / 1024 ** 3
+        logger.info("output shape: {}, {:03,.3f} GiB"
+                    .format(fr.output_shape, gib))
 
         fr.run()
     else:
