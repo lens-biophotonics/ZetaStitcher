@@ -1,19 +1,19 @@
-import glob
-import os.path
+from pathlib import Path
 
 import numpy as np
 import skimage.external.tifffile as tiff
 
 
 class TiffWrapper(object):
-    def __init__(self, file_name=None):
-        self.file_name = file_name
+    def __init__(self, file_path=None):
+        self.file_path = file_path
 
         self.tfile = None
         self.flist = None
         self.glob_mode = False
 
-        if file_name is not None:
+        if file_path is not None:
+            self.file_path = Path(file_path)
             self.open()
 
     @property
@@ -50,23 +50,23 @@ class TiffWrapper(object):
     def dtype(self):
         return np.dtype(self.tfile.pages[0].dtype)
 
-    def open(self, file_name=None):
-        if file_name is not None:
-            self.file_name = file_name
+    def open(self, file_path=None):
+        if file_path is not None:
+            self.file_path = Path(file_path)
 
-        if os.path.isdir(self.file_name):
+        if self.file_path.is_dir():
             self.glob_mode = True
             flist = []
-            flist += glob.glob(os.path.join(self.file_name, '*.tif*'))
-            flist += glob.glob(os.path.join(self.file_name, '*.TIF*'))
+            flist += list(Path(self.file_path).glob('*.tif*'))
+            flist += list(Path(self.file_path).glob('*.TIF*'))
             flist = sorted(flist)
             fname = flist[0]
             self.flist = flist
         else:
             self.glob_mode = False
-            fname = self.file_name
+            fname = self.file_path
 
-        self.tfile = tiff.TiffFile(fname)
+        self.tfile = tiff.TiffFile(str(fname))
         setattr(self, 'close', getattr(self.tfile, 'close'))
 
     def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):

@@ -1,12 +1,12 @@
-import os
 import mmap
+from pathlib import Path
 
 import numpy as np
 
 
 class MHDWrapper(object):
-    def __init__(self, file_name=None):
-        self.file_name = file_name
+    def __init__(self, file_path=None):
+        self.file_path = file_path
         self.raw_file_name = None
 
         self.nfrms = -1
@@ -18,7 +18,8 @@ class MHDWrapper(object):
         self.mm = None
         self.file = None
 
-        if file_name is not None:
+        if file_path is not None:
+            self.file_path = Path(self.file_path)
             self.open()
 
     def __del__(self):
@@ -79,11 +80,11 @@ class MHDWrapper(object):
 
     def open(self, file_name=None):
         if file_name is not None:
-            self.file_name = file_name
+            self.file_path = file_name
 
         d = {}
 
-        with open(self.file_name, 'r') as f:
+        with self.file_path.open('r') as f:
             try:
                 for line in f.readlines():
                     k, v = map(str.strip, line.split('='))
@@ -123,8 +124,8 @@ class MHDWrapper(object):
             byte_depth
         ]
 
-        rawfile = os.path.join(os.path.dirname(self.file_name), d['ElementDataFile'])
-        self.file = open(rawfile, 'r')
+        rawfile = self.file_path.parent.joinpath(d['ElementDataFile'])
+        self.file = rawfile.open('r')
         self.mm = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_COPY)
         self.a = np.ndarray(self.shape, self.dtype, self.mm, 0, strides)
 

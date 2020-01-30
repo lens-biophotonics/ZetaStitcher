@@ -1,18 +1,20 @@
 import json
 import subprocess as sp
+from pathlib import Path
 
 import numpy as np
 
 
 class FFMPEGWrapper(object):
-    def __init__(self, file_name=None):
-        self.file_name = file_name
+    def __init__(self, file_path=None):
+        self.file_path = file_path
 
         self.proc = None
 
         self._probed_dict = None
 
-        if file_name is not None:
+        if file_path is not None:
+            self.file_path = Path(self.file_path)
             self.open()
 
     @property
@@ -53,14 +55,14 @@ class FFMPEGWrapper(object):
             s = s + (self.nchannels,)
         return s
 
-    def open(self, file_name=None):
-        if file_name is not None:
-            self.file_name = file_name
+    def open(self, file_path=None):
+        if file_path is not None:
+            self.file_path = Path(file_path)
 
         cmd = [
             'ffprobe',
             '-v', 'quiet',
-            '-i', self.file_name,
+            '-i', str(self.file_path),
             '-print_format', 'json',
             '-show_format',
             '-show_streams',
@@ -82,7 +84,7 @@ class FFMPEGWrapper(object):
 
         command = [
             'ffmpeg',
-            '-i', self.file_name,
+            '-i', str(self.file_path),
             '-f', 'image2pipe',
             '-vcodec', 'rawvideo',
             '-pix_fmt', 'gray' if 'gray' in self.pix_fmt else 'rgb24',

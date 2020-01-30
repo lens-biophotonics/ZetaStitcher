@@ -1,4 +1,4 @@
-import os.path
+from pathlib import Path
 
 import numpy as np
 
@@ -16,15 +16,16 @@ from zipfile import BadZipFile
 
 
 class InputFile(object):
-    def __init__(self, file_name=None):
-        self.file_name = file_name
+    def __init__(self, file_path=None):
+        self.file_path = file_path
         self.wrapper = None
         self._channel = -1
         self.nchannels = 1
 
         self.nfrms = None
 
-        if file_name is not None:
+        if file_path is not None:
+            self.file_path = Path(self.file_path)
             self.open()
 
     def __del__(self):
@@ -37,8 +38,8 @@ class InputFile(object):
         self.close()
 
     def __repr__(self):
-        return '<InputFile file_name="{}" shape={} dtype={}>'.format(
-            self.file_name, self.shape, self.dtype)
+        return '<InputFile file_path="{}" shape={} dtype={}>'.format(
+            self.file_path, self.shape, self.dtype)
 
     def __getitem__(self, item):
         try:
@@ -138,45 +139,47 @@ class InputFile(object):
 
     @property
     def file_size(self):
-        return os.path.getsize(self.file_name)
+        return self.path.stat().st_size
 
-    def open(self, file_name=None):
-        if file_name is not None:
-            self.file_name = file_name
+    def open(self, file_path=None):
+        if file_path is not None:
+            self.file_path = Path(file_path)
+
+        self.path = Path(self.file_path)
 
         self._open()
         self._setattrs()
 
     def _open(self):
-        if not os.path.exists(self.file_name):
-            raise FileNotFoundError(self.file_name)
+        if not self.path.exists():
+            raise FileNotFoundError(self.path)
 
         try:
-            self.wrapper = TiffWrapper(self.file_name)
+            self.wrapper = TiffWrapper(self.file_path)
             return
         except ValueError:
             pass
 
         try:
-            self.wrapper = dcimg.DCIMGFile(self.file_name)
+            self.wrapper = dcimg.DCIMGFile(self.file_path)
             return
-        except (NameError, ValueError):
+        except (NameError, ValueError, IsADirectoryError):
             pass
 
         try:
-            self.wrapper = ZipWrapper(self.file_name)
+            self.wrapper = ZipWrapper(self.file_path)
             return
-        except (NameError, BadZipFile):
+        except (AttributeError, NameError, BadZipFile):
             pass
 
         try:
-            self.wrapper = MHDWrapper(self.file_name)
+            self.wrapper = MHDWrapper(self.file_path)
             return
-        except (ValueError, IndexError):
+        except (ValueError, IndexError, IsADirectoryError):
             pass
 
         try:
-            self.wrapper = FFMPEGWrapper(self.file_name)
+            self.wrapper = FFMPEGWrapper(self.file_path)
             return
         except (ValueError, FileNotFoundError):
             pass

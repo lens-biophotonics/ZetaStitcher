@@ -1,11 +1,11 @@
 import gc
 import sys
 import ctypes
-import os.path
 import zipfile
 import threading
 import multiprocessing as mp
 from os import cpu_count
+from pathlib import Path
 
 import imageio
 import numpy as np
@@ -23,8 +23,8 @@ def get_typecodes():
 
 
 class ZipWrapper(object):
-    def __init__(self, file_name=None):
-        self.file_name = file_name
+    def __init__(self, file_path=None):
+        self.file_path = file_path
 
         self.zf = None
         self.file_name_fmt = ''
@@ -34,7 +34,9 @@ class ZipWrapper(object):
         self.dtype = None
         self.nchannels = 1
 
-        self.open()
+        if self.file_path is not None:
+            self.file_path = Path(self.file_path)
+            self.open()
 
     @property
     def shape(self):
@@ -43,11 +45,11 @@ class ZipWrapper(object):
         else:
             return self.nfrms, self.ysize, self.xsize
 
-    def open(self, file_name=None):
-        if file_name is not None:
-            self.file_name = file_name
+    def open(self, file_path=None):
+        if file_path is not None:
+            self.file_path = Path(file_path)
 
-        self.zf = zipfile.ZipFile(self.file_name, mode='r')
+        self.zf = zipfile.ZipFile(str(self.file_path), mode='r')
         names = self.zf.namelist()
 
         im = imageio.imread(self.zf.read(names[0]))
@@ -58,7 +60,7 @@ class ZipWrapper(object):
         self.dtype = im.dtype
         if len(im.shape) > 2:
             self.nchannels = im.shape[0]
-        fname, ext = os.path.splitext(names[0])
+        fname, ext = Path(names[0]).stem, Path(names[0]).suffix
         self.file_name_fmt = '{:0' + str(len(fname)) + '}' + ext
 
     def frame(self, index, dtype=None, copy=None):

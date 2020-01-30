@@ -62,8 +62,8 @@ def parse_args():
     group.add_argument('-c', type=str, default=0, dest='compression',
                        choices=[str(i) for i in range(10)] + ['lzma'],
                        help='compression')
-    group.add_argument('--downsample_xy', metavar='S', type=int, required=False,
-                       help='downsample xy plane by factor S')
+    group.add_argument('--downsample-xy', metavar='S', type=int, required=False,
+                       help='downsample XY plane by factor S')
 
     group.add_argument('--zmin', type=float, default=0,
                        help='start frame (in your units)')
