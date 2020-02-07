@@ -269,7 +269,6 @@ class FileMatrix:
     def Ny(self):
         return self.data_frame['Y'].unique().size
 
-    @property
     def slices(self):
         """A slice is a group of tiles that share at least a `z` frame.
 
@@ -292,7 +291,8 @@ class FileMatrix:
             G.add_edges_from(pairs)
             G.add_edge((view.index.values[0]), view.index.values[-1])
 
-        return nx.connected_component_subgraphs(G)
+        for c in nx.connected_components(G):
+            yield G.subgraph(c).copy()
 
     @property
     def tiles_along_dir(self):
@@ -309,7 +309,7 @@ class FileMatrix:
         :class:`pandas.DataFrame`
             A group of tiles
         """
-        for s in self.slices:
+        for s in self.slices():
             got = yield
             view = self.data_frame.loc[s.nodes()].sort_values(
                 got[0], ascending=True).groupby(got[1])

@@ -59,7 +59,7 @@ setup(
         'coloredlogs',
         'cvxpy',
         'imageio',
-        'networkx',
+        'networkx>=2.0',
         'numpy',
         'pandas',
         'psutil',
