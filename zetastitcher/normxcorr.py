@@ -17,6 +17,10 @@ def normxcorr2_fftw(aslice, bframe):
     -------
     :class:`numpy.ndarray`
     """
+
+    aslice = np.ascontiguousarray(aslice)
+    bframe = np.ascontiguousarray(bframe)
+
     if aslice.shape[-1] % 2:
         padding = [(0, 0) for _ in range(len(aslice.shape) - 1)]
         padding += [(1, 0)]
@@ -49,13 +53,13 @@ def normxcorr2_fftw(aslice, bframe):
                      (0, ashape[1] - b_old_shape[1]),
                      (0, ashape[2] - b_old_shape[2] + 2)), 'constant')
     b1_real_input = b1[..., :ashape[2]]
-    b1_complex_output = b1.view('complex64')
+    b1_complex_output = b1.view(np.complex64)
 
     # pad for in-place transform
     aslice = np.pad(aslice, ((0, 0), (0, 0), (0, 2)), 'constant')
 
     a_real_input = aslice[..., :ashape[2]]
-    a_complex_output = aslice.view('complex64')
+    a_complex_output = aslice.view(np.complex64)
 
     fft_a2 = pyfftw.empty_aligned(a_complex_output.shape, dtype='complex64')
     fft_object = pyfftw.FFTW(np.square(a_real_input), fft_a2, axes=(1, 2),
@@ -72,7 +76,7 @@ def normxcorr2_fftw(aslice, bframe):
 
     b_real_input = bframe[..., :ashape[2]]
     b_real_input[:] = bframe[..., :ashape[2]]
-    b_complex_output = bframe.view('complex64')
+    b_complex_output = bframe.view(np.complex64)
     fft_object = pyfftw.FFTW(b_real_input, b_complex_output, axes=(1, 2),
                              flags=['FFTW_ESTIMATE'])
     fft_object.execute()
