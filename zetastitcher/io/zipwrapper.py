@@ -122,7 +122,7 @@ class ZipWrapper(object):
         temp_s[0] = maxsize
 
         tc = get_typecodes()
-        typestr = tc[dtype.str]
+        typestr = tc[np.dtype(dtype).str]
 
         m_array = mp.Array(typestr, int(np.prod(temp_s)))
         a = np.frombuffer(m_array.get_obj(), dtype=typestr).reshape(temp_s)
