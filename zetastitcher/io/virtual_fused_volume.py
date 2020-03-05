@@ -189,7 +189,12 @@ class VirtualFusedVolume:
 
         t = threading.Thread(
             target=fuse_queue,
-            args=(q, fused, self.temp_shape[-2::], self._debug))
+            args=(q, fused, self.temp_shape[-2::]),
+            kwargs={
+                'downsample_xy': None,
+                'debug': self._debug,
+            }
+        )
         t.start()
 
         sl = myitem[:]

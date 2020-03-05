@@ -62,6 +62,8 @@ def parse_args():
     group.add_argument('-c', type=str, default=0, dest='compression',
                        choices=[str(i) for i in range(10)] + ['lzma'],
                        help='compression')
+    group.add_argument('--downsample_xy', metavar='S', type=int, required=False,
+                       help='downsample xy plane by factor S')
 
     group.add_argument('--zmin', type=float, default=0,
                        help='start frame (in your units)')
@@ -69,6 +71,8 @@ def parse_args():
     me_group.add_argument('--zmax', type=float,
                           help='end frame (noninclusive, in your units)')
     me_group.add_argument('--nz', type=int, help='number of z frames')
+
+
 
     group = parser.add_argument_group(
         'absolute positions', 'by default, absolute positions are computed by '
@@ -267,7 +271,7 @@ def main():
     if args.output_filename is not None:
 
         keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel',
-                'compression']
+                'compression', 'downsample_xy']
 
         for k in keys:
             setattr(fr, k, getattr(args, k))

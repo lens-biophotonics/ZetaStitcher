@@ -76,7 +76,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, frame_shape, debug=False):
+def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
     """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -93,6 +93,8 @@ def fuse_queue(q, dest, frame_shape, debug=False):
         overlaps with adjacent tiles.
     frame_shape : tuple
         Shape of a stack plane (XY).
+    downsample_xy : int
+        Downsample XY plane by factor
     dest : :class:`numpy.ndarray`
         Destination array.
     debug: bool
@@ -106,7 +108,6 @@ def fuse_queue(q, dest, frame_shape, debug=False):
             break
 
         slice, index_dbg, zfrom_dbg, sl, pos, overlaps = got
-
 
         z_from = pos[0]
         z_to = z_from + slice.shape[0]
@@ -168,6 +169,13 @@ def fuse_queue(q, dest, frame_shape, debug=False):
                     factor = factor[sl[-2::]]
 
                 slice[slice_index] *= factor
+
+        if downsample_xy:
+            slice = slice[..., ::downsample_xy, ::downsample_xy]
+            x_from //= downsample_xy
+            x_to //= downsample_xy
+            y_from //= downsample_xy
+            y_to //= downsample_xy
 
         if debug:
             overlay_debug(slice, index_dbg, zfrom_dbg)

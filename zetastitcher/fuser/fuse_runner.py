@@ -26,6 +26,7 @@ class FuseRunner(object):
 
         self.zmin = 0
         self.zmax = None
+        self.downsample_xy = None
         self.debug = False
         self.output_filename = None
         self.channel = -1
@@ -69,6 +70,10 @@ class FuseRunner(object):
         output_shape[-2] = self.fm.full_height
         output_shape[-1] = self.fm.full_width
 
+        if self.downsample_xy:
+            output_shape[-2] //= self.downsample_xy
+            output_shape[-1] //= self.downsample_xy
+
         return tuple(output_shape)
 
     def run(self):
@@ -106,8 +111,14 @@ class FuseRunner(object):
             fused = np.zeros(self.output_shape, dtype=np.float32)
             q = Queue(maxsize=20)
 
-            t = threading.Thread(target=fuse_queue,
-                                 args=(q, fused, frame_shape, self.debug))
+            t = threading.Thread(
+                target=fuse_queue,
+                args=(q, fused, frame_shape),
+                kwargs={
+                    'downsample_xy': self.downsample_xy,
+                    'debug': self.debug,
+                }
+            )
             t.start()
 
             for row in self.fm.data_frame.itertuples():
