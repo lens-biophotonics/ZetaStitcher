@@ -249,7 +249,7 @@ class VirtualFusedVolume:
 
         fused = to_dtype(fused, self.dtype)
 
-        ie = [slice(None, None, flip) for flip in flip_axis]
+        ie = tuple([slice(None, None, flip) for flip in flip_axis])
         fused = fused[ie]
 
         if self.squeeze_enabled:
