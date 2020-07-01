@@ -107,16 +107,16 @@ def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
         if got is None:
             break
 
-        slice, index_dbg, zfrom_dbg, sl, pos, overlaps = got
+        my_slice, index_dbg, zfrom_dbg, sl, pos, overlaps = got
 
         z_from = pos[0]
-        z_to = z_from + slice.shape[0]
+        z_to = z_from + my_slice.shape[0]
 
         y_from = pos[1]
-        y_to = y_from + slice.shape[-2]
+        y_to = y_from + my_slice.shape[-2]
 
         x_from = pos[2]
-        x_to = x_from + slice.shape[-1]
+        x_to = x_from + my_slice.shape[-1]
 
         if overlaps is not None:
             z = np.array(flatten(overlaps[['Z_from', 'Z_to']].values))
@@ -168,23 +168,23 @@ def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
                 if sl is not None:
                     factor = factor[sl[-2::]]
 
-                slice[slice_index] *= factor
+                my_slice[slice_index] *= factor
 
         if downsample_xy:
-            slice = slice[..., ::downsample_xy, ::downsample_xy]
+            my_slice = my_slice[..., ::downsample_xy, ::downsample_xy]
             x_from //= downsample_xy
             x_to //= downsample_xy
             y_from //= downsample_xy
             y_to //= downsample_xy
 
         if debug:
-            overlay_debug(slice, index_dbg, zfrom_dbg)
-            slice[..., -2:, :] = 65000
-            slice[..., -2:] = 65000
+            overlay_debug(my_slice, index_dbg, zfrom_dbg)
+            my_slice[..., -2:, :] = 65000
+            my_slice[..., -2:] = 65000
 
         output_roi_index = np.index_exp[z_from:z_to, ..., y_from:y_to,
                                         x_from:x_to]
-        dest[output_roi_index] += slice
+        dest[output_roi_index] += my_slice
 
         q.task_done()
 
