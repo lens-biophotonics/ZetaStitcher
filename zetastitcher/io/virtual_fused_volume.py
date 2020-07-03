@@ -220,8 +220,7 @@ class VirtualFusedVolume:
             logger.info('loading {}\t{}'.format(index, sl))
             with InputFile(os.path.join(self.path, index)) as f:
                 sl_a = np.copy(f[tuple(sl)]).astype(dtype)
-            sl_a.shape = ([1 for _ in range(0, len(sl) - len(sl_a.shape))]
-                          + list(sl_a.shape))
+            sl_a.shape = xto - xfrom
 
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
