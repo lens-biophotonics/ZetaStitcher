@@ -7,6 +7,6 @@ pandas
 psutil
 pyfftw
 pyyaml
-#qpsolvers
+qpsolvers
 scipy
-scikit-image
+tifffile

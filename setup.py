@@ -67,7 +67,7 @@ setup(
         'pyyaml',
         'qpsolvers',
         'scipy',
-        'scikit-image==0.16.1',
+        'tifffile',
     ],
 
     # List additional groups of dependencies here (e.g. development

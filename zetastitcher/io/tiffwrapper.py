@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import skimage.external.tifffile as tiff
+import tifffile as tiff
 
 
 class TiffWrapper(object):
@@ -28,11 +28,11 @@ class TiffWrapper(object):
 
     @property
     def xsize(self):
-        return self.tfile.pages[0].image_width
+        return self.tfile.pages[0].imagewidth
 
     @property
     def ysize(self):
-        return self.tfile.pages[0].image_length
+        return self.tfile.pages[0].imagelength
 
     @property
     def axes(self):
@@ -41,9 +41,9 @@ class TiffWrapper(object):
     @property
     def nchannels(self):
         if self.axes.startswith('YX') or self.axes.startswith('IYX'):
-            return self.tfile.pages[0]._shape[-1]
+            return self.tfile.pages[0].shaped[-1]
         elif self.axes == 'SYX':
-            return self.tfile.pages[0]._shape[1]
+            return self.tfile.pages[0].shaped[1]
         return 1
 
     @property
@@ -75,11 +75,11 @@ class TiffWrapper(object):
 
         if not self.glob_mode:
             if len(self.tfile.pages) == 1 and self.nfrms > 1:
-                a = self.tfile.asarray(0, memmap=True)
+                a = self.tfile.asarray(0, out='memmap')
                 a = a[slice(start_frame, end_frame)]
             else:
                 a = self.tfile.asarray(slice(start_frame, end_frame),
-                                       memmap=not copy)
+                                       out=None if copy else 'memmap')
         else:
             frames_per_file = self.nfrms // len(self.flist)
             start_file = start_frame // frames_per_file

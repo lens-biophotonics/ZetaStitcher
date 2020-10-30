@@ -9,6 +9,7 @@ except ImportError:
 
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
+from tifffile import TiffFileError
 from .zipwrapper import ZipWrapper
 from .mhdwrapper import MHDWrapper
 
@@ -157,7 +158,7 @@ class InputFile(object):
         try:
             self.wrapper = TiffWrapper(self.file_path)
             return
-        except ValueError:
+        except (ValueError, TiffFileError):
             pass
 
         try:

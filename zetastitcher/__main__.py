@@ -2,7 +2,7 @@ import sys
 import argparse
 
 import numpy as np
-import skimage.external.tifffile as tiff
+import tifffile as tiff
 
 from .normxcorr import normxcorr2_fftw
 from .io.inputfile import InputFile

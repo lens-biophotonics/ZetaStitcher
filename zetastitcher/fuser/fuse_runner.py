@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import psutil
 import numpy as np
-import skimage.external.tifffile as tiff
+import tifffile as tiff
 
 from .overlaps import Overlaps
 from .fuse import fuse_queue, to_dtype
@@ -172,7 +172,7 @@ class FuseRunner(object):
 
             fused = to_dtype(fused, self.dtype)
             logger.info('saving output to {}'.format(self.output_filename))
-            tiff.imsave(self.output_filename, fused, append=True,
-                        bigtiff=bigtiff, compress=self.compression)
+            tiff.imwrite(self.output_filename, fused, append=True,
+                         bigtiff=bigtiff, compress=self.compression)
 
             self.zmin += thickness
