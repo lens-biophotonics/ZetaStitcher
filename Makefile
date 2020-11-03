@@ -4,3 +4,6 @@ wheel:
 	python3 setup.py bdist_wheel sdist
 clean:
 	rm -fr build dist *.egg-info
+
+test:
+	python -m unittest discover
