@@ -27,7 +27,8 @@ def absolute_position_global_optimization(df, xcfm):
     max_dx = xcorr_options['max_dx']
     max_dy = xcorr_options['max_dy']
     max_dz = xcorr_options['max_dz']
-    overlap = xcorr_options['overlap_h']
+    overlap_h = xcorr_options['overlap_h']
+    overlap_v = xcorr_options['overlap_v']
 
     sdf = xcfm.stitch_data_frame
 
@@ -39,14 +40,14 @@ def absolute_position_global_optimization(df, xcfm):
         src_tile = df.loc[src]
         if row['axis'] == 1:
             lb = np.array(
-                [-max_dx, src_tile['ysize'] - overlap - max_dy, -max_dz])
+                [-max_dx, src_tile['ysize'] - overlap_v - max_dy, -max_dz])
             ub = np.array(
-                [max_dx, src_tile['ysize'] - overlap + max_dy, max_dz])
+                [max_dx, src_tile['ysize'] - overlap_v + max_dy, max_dz])
         elif row['axis'] == 2:
             lb = np.array(
-                [src_tile['xsize'] - overlap - max_dy, -max_dx, -max_dz])
+                [src_tile['xsize'] - overlap_h - max_dy, -max_dx, -max_dz])
             ub = np.array(
-                [src_tile['xsize'] - overlap + max_dy, max_dx, max_dz])
+                [src_tile['xsize'] - overlap_h + max_dy, max_dx, max_dz])
         else:
             raise ValueError('invalid axis {}'.format(row['axis']))
         data_in.append(CTND(src, dst, Eye3 * score, p, lb=lb, ub=ub))
