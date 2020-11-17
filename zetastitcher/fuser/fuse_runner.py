@@ -87,7 +87,7 @@ class FuseRunner(object):
 
         # size in bytes of an xy plane (including channels) (float32)
         xy_size = np.asscalar(np.prod(self.output_shape[1::]) * 4)
-        n_frames_in_ram = int(ram / xy_size / 1.5)
+        n_frames_in_ram = int(ram / xy_size / 1.8)
 
         n_loops = self.output_shape[0] // n_frames_in_ram
 
