@@ -15,7 +15,7 @@ import pandas as pd
 
 from .io.inputfile import InputFile
 from .io.filematrix import FileMatrix
-from .normxcorr import normxcorr2_fftw
+from .normxcorr import normxcorr2_cv
 
 from .version import __version__
 
@@ -241,7 +241,7 @@ class Runner(object):
                 bframe = item[4]
                 z_frame = item[5]
 
-                xcorr = normxcorr2_fftw(aslice, bframe)
+                xcorr = normxcorr2_cv(aslice, bframe)
 
                 shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
                 score = xcorr[tuple(shift)]
@@ -285,11 +285,13 @@ class Runner(object):
                     aslice = np.rot90(aslice, axes=(-1, -2))
                 aslice = aslice[..., -(overlap + self.max_dy):, :]
 
+                padding = [(0, 0), (0, 0), (self.max_dx, self.max_dx)]
+                aslice = np.pad(aslice, padding, 'constant')
+
                 bframe = b.zslice_idx(z_frame, copy=True)
                 if axis == 2:
                     bframe = np.rot90(bframe, axes=(-1, -2))
-                bframe = bframe[..., :overlap - self.max_dy,
-                                self.max_dx:-self.max_dx]
+                bframe = bframe[..., :overlap, :]
 
                 aslice = aslice.astype(np.float32)
                 bframe = bframe.astype(np.float32)
@@ -335,7 +337,7 @@ class Runner(object):
         df[['dx', 'dy']] *= self.px_size_xy
         df['dz'] *= self.px_size_z
 
-        cols = ['dx', 'dy', 'dz', 'score', 'dx_px', 'dy_px', 'dz_px']
+        cols = ['score', 'dx_px', 'dy_px', 'dz_px']
         print(df[cols].describe())
 
     def save_results_to_file(self):

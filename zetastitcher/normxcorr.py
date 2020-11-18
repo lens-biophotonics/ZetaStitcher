@@ -1,8 +1,34 @@
-import pyfftw
 import numpy as np
 
 
+def normxcorr2_cv(aslice, bframe):
+    import cv2 as cv
+    """Compute normalized cross correlation using OpenCV.
+
+    Parameters
+    ----------
+    aslice : :class:`numpy.ndarray`
+    bframe : :class:`numpy.ndarray`
+
+    Returns
+    -------
+    :class:`numpy.ndarray`
+    """
+
+    aslice = aslice.astype(np.float32)
+    bframe = bframe.astype(np.float32).squeeze()
+    output_shape = np.array(aslice.shape) - np.array((0,) + bframe.shape) + 1
+    output_shape[0] = aslice.shape[0]
+    xcorr = np.zeros(output_shape)
+
+    for i in range(xcorr.shape[0]):
+        xcorr[i] = cv.matchTemplate(aslice[i], bframe, cv.TM_CCOEFF_NORMED)
+
+    return xcorr
+
+
 def normxcorr2_fftw(aslice, bframe):
+    import pyfftw
     """Compute normalized cross correlation using fftw.
 
     .. DANGER::

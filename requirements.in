@@ -3,9 +3,9 @@ cvxpy
 imageio
 networkx
 numpy
+opencv-python
 pandas
 psutil
-pyfftw
 pyyaml
 qpsolvers
 scipy

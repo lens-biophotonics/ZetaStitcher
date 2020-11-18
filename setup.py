@@ -5,7 +5,6 @@ version = {}
 with open("zetastitcher/version.py") as fp:
     exec(fp.read(), version)
 __version__ = version['__version__']
-
 setup(
     name='zetastitcher',
     version=__version__,
@@ -61,9 +60,9 @@ setup(
         'imageio',
         'networkx>=2.0',
         'numpy',
+        'opencv-python',
         'pandas',
         'psutil',
-        'pyfftw',
         'pyyaml',
         'qpsolvers',
         'scipy',
@@ -106,3 +105,4 @@ setup(
 
     },
 )
+

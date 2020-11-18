@@ -1,10 +1,13 @@
+# The code in this file is used for debugging purposes only
+
 import sys
 import argparse
 
 import numpy as np
 import tifffile as tiff
 
-from .normxcorr import normxcorr2_fftw
+import cv2 as cv
+
 from .io.inputfile import InputFile
 
 
@@ -71,12 +74,21 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     bframe = b.zslice_idx(z_frame)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
-    b_roi = bframe[..., :overlap - max_shift_y, max_shift_x:-max_shift_x]
+    b_roi = bframe[..., :overlap, :].astype(np.float32)
+
+    padding = [(0, 0), (0, 0), (max_shift_x, max_shift_x)]
+
+    a_roi = np.pad(a_roi, padding, 'constant').astype(np.float32)
 
     tiff.imsave('aslice.tiff', a_roi.astype(np.float32))
     tiff.imsave('bframe.tiff', b_roi.astype(np.float32))
 
-    xcorr = normxcorr2_fftw(a_roi, b_roi)
+    output_shape = np.array(a_roi.shape) - np.array(b_roi.shape) + 1
+    output_shape[0] = a_roi.shape[0]
+    xcorr = np.zeros(output_shape)
+
+    for i in range(xcorr.shape[0]):
+        xcorr[i] = cv.matchTemplate(a_roi[i], b_roi[0], cv.TM_CCOEFF_NORMED)
     tiff.imsave('xcorr.tiff', xcorr.astype(np.float32))
 
     shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))

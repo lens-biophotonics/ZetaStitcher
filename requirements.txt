@@ -13,12 +13,12 @@ future==0.18.2            # via osqp
 humanfriendly==8.2        # via coloredlogs
 imageio==2.9.0            # via -r requirements.in
 networkx==2.5             # via -r requirements.in
-numpy==1.19.3             # via -r requirements.in, cvxpy, ecos, imageio, osqp, pandas, pyfftw, scipy, scs, tifffile
+numpy==1.19.4             # via -r requirements.in, cvxpy, ecos, imageio, opencv-python, osqp, pandas, scipy, scs, tifffile
+opencv-python==4.4.0.46   # via -r requirements.in
 osqp==0.6.1               # via cvxpy
 pandas==1.1.4             # via -r requirements.in
 pillow==8.0.1             # via imageio
 psutil==5.7.3             # via -r requirements.in
-pyfftw==0.12.0            # via -r requirements.in
 python-dateutil==2.8.1    # via pandas
 pytz==2020.4              # via pandas
 pyyaml==5.3.1             # via -r requirements.in
