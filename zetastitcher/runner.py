@@ -55,6 +55,8 @@ Unless otherwise stated, all values are expected in px.
     parser.add_argument('-j', type=int, dest='n_of_workers',
                         help='number of parallel jobs (defaults to number of system cores)')
     parser.add_argument('-r', action='store_true', dest='recursive', help='recursively look for files')
+    parser.add_argument('-e', action='store_true', dest='equal_shape',
+                        help='consider tiles of identical shape (results in slightly faster loading)')
 
     group = parser.add_argument_group(
         'pixel size', 'If specified, the corresponding options can be '
@@ -212,6 +214,7 @@ class Runner(object):
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
         self.recursive = False
+        self.equal_shape = False
         self.df = None
         self.fm = None
         self.px_size_xy = 1
@@ -223,8 +226,8 @@ class Runner(object):
         return {1: self.overlap_v, 2: self.overlap_h}
 
     def initialize_list(self):
-        fm = FileMatrix(self.input_folder, self.ascending_tiles_x,
-                        self.ascending_tiles_y, recursive=self.recursive)
+        fm = FileMatrix(self.input_folder, self.ascending_tiles_x, self.ascending_tiles_y,
+                        recursive=self.recursive, equal_shape=self.equal_shape)
         self.fm = fm
 
         stitch_X = {
@@ -353,7 +356,7 @@ def main():
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
             'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
-            'px_size_z', 'n_of_workers', 'recursive']
+            'px_size_z', 'n_of_workers', 'recursive', 'equal_shape']
 
     for key in keys:
         setattr(r, key, getattr(arg, key))

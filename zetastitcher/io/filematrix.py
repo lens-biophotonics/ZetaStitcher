@@ -64,7 +64,7 @@ def parse_file_name(file_name):
 class FileMatrix:
     """Data structures for a matrix of input files."""
     def __init__(self, input_path=None, ascending_tiles_x=True,
-                 ascending_tiles_y=True, recursive=False):
+                 ascending_tiles_y=True, recursive=False, equal_shape=False):
         """
         Construct a FileMatrix object from a directory path or a .yml file
         produced by the stitcher. Tile ordering parameters need to be
@@ -79,6 +79,8 @@ class FileMatrix:
             whether tiles are supposed to be read in ascending X order
         ascending_tiles_y : bool
             whether tiles are supposed to be read in ascending Y order
+        equal_shape : bool
+            if True, tiles are considered to be identical in shape (results in slightly faster loading)
         """
         self.input_path = input_path
 
@@ -89,6 +91,7 @@ class FileMatrix:
 
         self.ascending_tiles_x = ascending_tiles_x
         self.ascending_tiles_y = ascending_tiles_y
+        self.consider_equal = equal_shape
 
         self.name_array = None
 
@@ -107,11 +110,14 @@ class FileMatrix:
         ----------
         dir : path
         """
+
         def _process_list(root, mylist):
+            shape = None
             for f in mylist:
                 try:
-                    self.parse_and_append(os.path.join(root, f), flist)
-                    continue
+                    shape = self.parse_and_append(os.path.join(root, f), flist, shape)
+                    if not self.consider_equal:
+                        shape = None
                 except (RuntimeError, ValueError):
                     pass
 
@@ -122,12 +128,15 @@ class FileMatrix:
             return
 
         flist = []
+        shape = None
 
         if recursive:
             for root, dirs, files in os.walk(dir, followlinks=True):
                 if os.path.basename(root):
                     try:
-                        self.parse_and_append(root, flist)
+                        shape = self.parse_and_append(root, flist, shape)
+                        if not self.consider_equal:
+                            shape = None
                         continue
                     except (RuntimeError, ValueError):
                         pass
@@ -189,17 +198,17 @@ class FileMatrix:
         self.compute_end_pos()
         self.name_array = np.array(df.index.values).reshape(self.Ny, self.Nx)
 
-    def parse_and_append(self, name, flist):
+    def parse_and_append(self, name, flist, shape=None):
         try:
             fields = parse_file_name(name)
-            with InputFile(name) as infile:
-                fields.append(infile.nfrms)
-                fields.append(infile.ysize)
-                fields.append(infile.xsize)
-            flist += fields
+            if shape is None:
+                with InputFile(name) as infile:
+                    shape = [infile.nfrms, infile.ysize, infile.xsize]
+            flist += fields + shape
             flist.append(name)
         except (RuntimeError, ValueError):
             raise
+        return shape
 
     def get_json(self):
         keys = ['X', 'Y', 'Z', 'nfrms', 'xsize', 'ysize']
