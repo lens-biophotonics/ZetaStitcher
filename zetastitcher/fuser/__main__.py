@@ -56,8 +56,7 @@ def parse_args():
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
 
-    group.add_argument('--ch', type=int, default=-1, dest='channel',
-                       help='channel')
+    group.add_argument('--ch', type=int, dest='channel', help='channel')
 
     group.add_argument('-c', type=str, default=0, dest='compression',
                        choices=[str(i) for i in range(10)] + ['lzma'],

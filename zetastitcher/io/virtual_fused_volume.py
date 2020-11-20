@@ -1,5 +1,6 @@
 """API to query an arbitrary region in the stitched volume."""
 
+import math
 import os.path
 import logging
 import threading
@@ -12,10 +13,18 @@ import numpy as np
 from .filematrix import FileMatrix
 from .inputfile import InputFile
 from ..fuser.overlaps import Overlaps
-from ..fuser.fuse import fuse_queue, to_dtype
+from ..fuser.fuse import fuse_queue
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+
+
+def to_dtype(x, dtype):
+    if x.dtype == dtype:
+        return x
+    if np.issubdtype(dtype, np.integer):
+        np.rint(x, x)
+    return x.astype(dtype, copy=False)
 
 
 class VirtualFusedVolume:
@@ -164,8 +173,9 @@ class VirtualFusedVolume:
         xmax = myitem[-1].stop
 
         output_shape = [
-            (it.stop - it.start) // it.step for it in myitem
+            (it.stop - it.start) / it.step for it in myitem
         ]
+        output_shape = list(map(math.ceil, output_shape))
         if 0 in output_shape:
             return np.array([], dtype=self.dtype)
 
@@ -193,7 +203,6 @@ class VirtualFusedVolume:
             target=fuse_queue,
             args=(q, fused, self.temp_shape[-2::]),
             kwargs={
-                'downsample_xy': None,
                 'debug': self._debug,
             }
         )

@@ -1,18 +1,14 @@
+import math
 import logging
 import os.path
-import threading
 
-from queue import Queue
 from functools import lru_cache
 
 import psutil
 import numpy as np
 import tifffile as tiff
 
-from .overlaps import Overlaps
-from .fuse import fuse_queue, to_dtype
-
-from ..io.inputfile import InputFile
+from zetastitcher import VirtualFusedVolume
 
 
 logger = logging.getLogger(__name__)
@@ -27,58 +23,53 @@ class FuseRunner(object):
         self.zmin = 0
         self.zmax = None
         self.downsample_xy = None
-        self.debug = False
         self.output_filename = None
         self.channel = -1
         self.compression = 0
 
         self._is_multichannel = None
 
+        self.vfv = VirtualFusedVolume(file_matrix)
+
     @property
     @lru_cache()
     def dtype(self):
-        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
-        with InputFile(infile) as f:
-            return np.dtype(f.dtype)
+        return self.vfv.dtype
+
+    @property
+    def debug(self):
+        return self.vfv.overlay_debug_enabled
+
+    @debug.setter
+    def debug(self, value):
+        self.vfv.overlay_debug_enabled = value
 
     @property
     @lru_cache()
     def is_multichannel(self):
-        if self.channel != -1:
+        if self.channel is not None:
             return False
-        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
-        with InputFile(infile) as f:
-            if f.nchannels > 1:
-                multichannel = True
-            else:
-                multichannel = False
-        return multichannel
+
+        return self.vfv.nchannels > 1
 
     @property
     def output_shape(self):
-        thickness = self.fm.full_thickness
+        output_shape = list(self.vfv.shape)
+
+        thickness = output_shape[0]
         if self.zmax is not None:
             thickness -= (thickness - self.zmax)
         thickness -= self.zmin
 
-        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
-        with InputFile(infile) as f:
-            f.channel = self.channel
-            output_shape = list(f.shape)
-
         output_shape[0] = thickness
-        output_shape[-2] = self.fm.full_height
-        output_shape[-1] = self.fm.full_width
 
         if self.downsample_xy:
-            output_shape[-2] //= self.downsample_xy
-            output_shape[-1] //= self.downsample_xy
+            output_shape[-2] /= self.downsample_xy
+            output_shape[-1] /= self.downsample_xy
 
-        return tuple(output_shape)
+        return tuple(map(math.ceil, output_shape))
 
     def run(self):
-        ov = Overlaps(self.fm)
-
         total_byte_size = np.asscalar(np.prod(self.output_shape)
                                       * self.dtype.itemsize)
         bigtiff = total_byte_size > 2**31 - 1
@@ -101,76 +92,20 @@ class FuseRunner(object):
         except FileNotFoundError:
             pass
 
-        infile = os.path.join(self.path, self.fm.data_frame.iloc[0].name)
-        with InputFile(infile) as f:
-            f.channel = self.channel
-            frame_shape = list(f.shape)[-2::]
-
         for thickness in partial_thickness:
             self.zmax = self.zmin + thickness
-            fused = np.zeros(self.output_shape, dtype=np.float32)
-            q = Queue(maxsize=20)
+            ie = [
+                slice(self.zmin, self.zmax),
+                Ellipsis if self.channel is None else self.channel,
+            ]
+            if self.downsample_xy:
+                ie += [slice(None, None, self.downsample_xy)] * 2
 
-            t = threading.Thread(
-                target=fuse_queue,
-                args=(q, fused, frame_shape),
-                kwargs={
-                    'downsample_xy': self.downsample_xy,
-                    'debug': self.debug,
-                }
-            )
-            t.start()
-
-            for row in self.fm.data_frame.itertuples():
-                index = row.Index
-                if self.zmax is None:
-                    z_to = row.nfrms
-                else:
-                    z_to = self.zmax - row.Zs
-
-                if z_to > row.nfrms:
-                    z_to = row.nfrms
-
-                if z_to <= 0:
-                    continue
-
-                z_from = self.zmin - row.Zs
-
-                if z_from < 0:
-                    z_from = 0
-
-                if z_from >= z_to:
-                    continue
-
-                with InputFile(os.path.join(self.path, index)) as f:
-                    f.channel = self.channel
-                    logger.info(
-                        'loading {}\tz=[{}:{}]'.format(index, z_from, z_to))
-                    zslice = f.zslice(
-                        z_from, z_to, dtype=np.float32, copy=True)
-
-                top_left = [row.Zs + z_from - self.zmin, row.Ys, row.Xs]
-                overlaps = ov[index].copy()
-                overlaps = overlaps.loc[
-                    (overlaps['Z_from'] <= z_to) & (overlaps['Z_to'] >= z_from)
-                ]
-
-                overlaps['Z_from'] -= z_from
-                overlaps['Z_to'] -= z_from
-
-                overlaps.loc[overlaps['Z_from'] < 0, 'Z_from'] = 0
-
-                q.put([zslice, index, z_from, None, top_left, overlaps])
-
-            q.put(None)  # close queue
-
-            t.join()  # wait for fuse thread to finish
-            print('=================================')
+            fused = self.vfv[ie]
 
             if self.is_multichannel:
                 fused = np.moveaxis(fused, -3, -1)
 
-            fused = to_dtype(fused, self.dtype)
             logger.info('saving output to {}'.format(self.output_filename))
             tiff.imwrite(self.output_filename, fused, append=True,
                          bigtiff=bigtiff, compress=self.compression)

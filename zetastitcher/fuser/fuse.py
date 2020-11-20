@@ -11,14 +11,6 @@ def flatten(my_list):
     return [item for sublist in my_list for item in sublist]
 
 
-def to_dtype(x, dtype):
-    if x.dtype == dtype:
-        return x
-    if np.issubdtype(dtype, np.integer):
-        np.rint(x, x)
-    return x.astype(dtype, copy=False)
-
-
 @lru_cache()
 def squircle_alpha(height, width):
     squircle = np.zeros((height, width))
@@ -76,7 +68,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
+def fuse_queue(q, dest, frame_shape, debug=False):
     """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -93,8 +85,6 @@ def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
         overlaps with adjacent tiles.
     frame_shape : tuple
         Shape of a stack plane (XY).
-    downsample_xy : int
-        Downsample XY plane by factor
     dest : :class:`numpy.ndarray`
         Destination array.
     debug: bool
@@ -169,13 +159,6 @@ def fuse_queue(q, dest, frame_shape, downsample_xy=None, debug=False):
                     factor = factor[sl[-2::]]
 
                 my_slice[slice_index] *= factor
-
-        if downsample_xy:
-            my_slice = my_slice[..., ::downsample_xy, ::downsample_xy]
-            x_from //= downsample_xy
-            x_to //= downsample_xy
-            y_from //= downsample_xy
-            y_to //= downsample_xy
 
         if debug:
             overlay_debug(my_slice, index_dbg, zfrom_dbg)
