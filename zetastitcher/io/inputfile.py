@@ -22,6 +22,7 @@ class InputFile(object):
         self.wrapper = None
         self._channel = -1
         self.nchannels = 1
+        self.squeeze = True
 
         self.nfrms = None
 
@@ -100,7 +101,9 @@ class InputFile(object):
             myitem[0] = slice(None, None, 1)
         a = a[tuple(myitem)]
 
-        return np.squeeze(a)
+        if self.squeeze:
+            a = np.squeeze(a)
+        return a
 
     @property
     def channel(self):

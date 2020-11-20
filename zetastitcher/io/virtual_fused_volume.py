@@ -125,6 +125,8 @@ class VirtualFusedVolume:
                 start = 0 if step > 0 else curr_max
             elif start < 0:
                 start += curr_max
+                if stop is not None:
+                    stop += curr_max
             elif start > curr_max:
                 start = curr_max
 
@@ -219,8 +221,8 @@ class VirtualFusedVolume:
 
             logger.info('loading {}\t{}'.format(index, sl))
             with InputFile(os.path.join(self.path, index)) as f:
+                f.squeeze = False
                 sl_a = np.copy(f[tuple(sl)]).astype(dtype)
-            sl_a.shape = xto - xfrom
 
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
