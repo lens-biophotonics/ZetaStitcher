@@ -1,9 +1,12 @@
 import os
 import sys
+import time
 import queue
 import logging
 import argparse
 import threading
+import concurrent.futures
+from datetime import timedelta
 
 import json
 import yaml
@@ -47,14 +50,11 @@ Unless otherwise stated, all values are expected in px.
         formatter_class=CustomFormatter)
 
     parser.add_argument('input_folder', help='input folder')
-    parser.add_argument('-o', type=str, default='stitch.yml',
-                        dest='output_file', help='output file')
-    parser.add_argument('-c', type=str, default='s', dest='channel',
-                        choices=['r', 'g', 'b', 's'], help='color channel')
-    parser.add_argument('-n', type=int, default=8, dest='n_of_threads',
-                        help='number of parallel threads to use')
-    parser.add_argument('-r', action='store_true', dest='recursive',
-                        help='recursively look for files')
+    parser.add_argument('-o', type=str, default='stitch.yml', dest='output_file', help='output file')
+    parser.add_argument('-c', type=str, default='s', dest='channel', choices=['r', 'g', 'b', 's'], help='color channel')
+    parser.add_argument('-j', type=int, dest='n_of_workers',
+                        help='number of parallel jobs (defaults to number of system cores)')
+    parser.add_argument('-r', action='store_true', dest='recursive', help='recursively look for files')
 
     group = parser.add_argument_group(
         'pixel size', 'If specified, the corresponding options can be '
@@ -147,13 +147,58 @@ Unless otherwise stated, all values are expected in px.
     return args
 
 
+def worker(item, overlap_dict, channel, max_dz, max_dx, max_dy):
+    aname = item['aname']
+    bname = item['bname']
+    z_frame = item['z_frame']
+    axis = item['axis']
+    overlap = overlap_dict[axis]
+
+    a = InputFile(aname)
+    b = InputFile(bname)
+
+    a.channel = channel
+    b.channel = channel
+
+    z_min = z_frame - max_dz
+    z_max = z_frame + max_dz + 1
+
+    aslice = a.zslice(z_min, z_max, copy=True)
+    if axis == 2:
+        aslice = np.rot90(aslice, axes=(-1, -2))
+    aslice = aslice[..., -(overlap + max_dy):, :]
+
+    padding = [(0, 0), (0, 0), (max_dx, max_dx)]
+    aslice = np.pad(aslice, padding, 'constant')
+
+    bframe = b.zslice_idx(z_frame, copy=True)
+    if axis == 2:
+        bframe = np.rot90(bframe, axes=(-1, -2))
+    bframe = bframe[..., :overlap, :]
+
+    aslice = aslice.astype(np.float32)
+    bframe = bframe.astype(np.float32)
+
+    xcorr = normxcorr2_cv(aslice, bframe)
+    shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
+    score = xcorr[tuple(shift)]
+    if score < 0 or score > 1:
+        score = 0
+
+    item['score'] = score
+    item['dz'] = shift[0]
+    item['dy'] = shift[1]
+    item['dx'] = shift[2]
+
+    return item
+
+
 class Runner(object):
     def __init__(self):
         self.channel = None
-        self.q = None
+        self.processing_list = None
+        self.fut_q = None
         self.output_q = None
-        self.data_queue = None
-        self.initial_queue_length = None
         self.input_folder = None
         self.output_file = None
         self.z_samples = None
@@ -171,13 +216,13 @@ class Runner(object):
         self.fm = None
         self.px_size_xy = 1
         self.px_size_z = 1
-        self.n_of_threads = 1
+        self.n_of_workers = None
 
     @property
     def overlap_dict(self):
         return {1: self.overlap_v, 2: self.overlap_h}
 
-    def initialize_queue(self):
+    def initialize_list(self):
         fm = FileMatrix(self.input_folder, self.ascending_tiles_x,
                         self.ascending_tiles_y, recursive=self.recursive)
         self.fm = fm
@@ -194,7 +239,7 @@ class Runner(object):
             'groupby': 'X'
         }
 
-        q = queue.Queue()
+        mylist = []
 
         for s in fm.slices():
             df = fm.data_frame.loc[list(s.nodes())]
@@ -215,129 +260,70 @@ class Runner(object):
                             - (self.z_samples // 2 * self.z_stride)
                             + (0 if self.z_samples % 2 else self.z_stride // 2)
                         )
-                        z_frames = []
                         for i in range(0, self.z_samples):
-                            z_frames.append(start_frame + i * self.z_stride)
-                        params_dict = {
-                            'aname': atile.Index,
-                            'bname': btile.Index,
-                            'z_frames': z_frames,
-                            'axis': stitch_config['axis'],
-                        }
-                        q.put(params_dict)
+                            mylist.append({
+                                'aname': atile.Index,
+                                'bname': btile.Index,
+                                'z_frame': start_frame + i * self.z_stride,
+                                'axis': stitch_config['axis'],
+                            })
                         atile = btile
-        self.q = q
+        self.processing_list = mylist
 
-    def worker(self, initial_queue_length):
+    def keep_filling_fut_queue(self):
+        e = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_of_workers)
+
+        for item in self.processing_list:
+            self.fut_q.put(e.submit(worker, item, self.overlap_dict, self.channel, self.max_dz, self.max_dy, self.max_dx))
+
+        self.fut_q.put(None)
+
+    def output_worker(self):
+        i = 1
         while True:
-            item = self.data_queue.get()
-            if item is None:
+            fut = self.fut_q.get()
+            if fut is None:
+                self.fut_q.task_done()
                 break
-            try:
-                aname = item[0]
-                bname = item[1]
-                axis = item[2]
-                aslice = item[3]
-                bframe = item[4]
-                z_frame = item[5]
 
-                xcorr = normxcorr2_cv(aslice, bframe)
+            item = fut.result()
 
-                shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
-                score = xcorr[tuple(shift)]
-                if score < 0 or score > 1:
-                    score = 0
-
-                progress = 100 * (1 - self.q.qsize() / initial_queue_length)
-                logger.info('{progress:.2f}%\t{aname}\t{bname}\t{z_frame}\t'
-                            '{shift}\t{score:.3f}'.format(
-                    progress=progress, aname=aname, bname=bname,
-                    z_frame=z_frame, shift=shift, score=score))
-                self.output_q.put(
-                    [aname, bname, axis, z_frame] + shift + [score])
-            finally:
-                self.data_queue.task_done()
-
-    def keep_filling_data_queue(self):
-        while True:
-            try:
-                item = self.q.get_nowait()
-            except queue.Empty:
-                break
+            progress = 100 * i / len(self.processing_list)
             aname = item['aname']
             bname = item['bname']
-            z_frames = item['z_frames']
-            axis = item['axis']
-            overlap = self.overlap_dict[axis]
+            z_frame = item['z_frame']
+            shift = [item['dz'], item['dy'], item['dx']]
+            score = item['score']
+            logger.info(f'{progress:.0f}%\t{aname}\t{bname}\t{z_frame}\t{shift}\t{score:.3f}')
 
-            a = InputFile(aname)
-            b = InputFile(bname)
+            self.output_q.put(item)
+            self.fut_q.task_done()
 
-            a.channel = self.channel
-            b.channel = self.channel
-
-            for z_frame in z_frames:
-                z_min = z_frame - self.max_dz
-                z_max = z_frame + self.max_dz + 1
-
-                aslice = a.zslice(z_min, z_max, copy=True)
-                if axis == 2:
-                    aslice = np.rot90(aslice, axes=(-1, -2))
-                aslice = aslice[..., -(overlap + self.max_dy):, :]
-
-                padding = [(0, 0), (0, 0), (self.max_dx, self.max_dx)]
-                aslice = np.pad(aslice, padding, 'constant')
-
-                bframe = b.zslice_idx(z_frame, copy=True)
-                if axis == 2:
-                    bframe = np.rot90(bframe, axes=(-1, -2))
-                bframe = bframe[..., :overlap, :]
-
-                aslice = aslice.astype(np.float32)
-                bframe = bframe.astype(np.float32)
-
-                self.data_queue.put(
-                    [aname, bname, axis, aslice, bframe, z_frame])
-
-            self.q.task_done()
+            i += 1
 
     def run(self):
         out_dir = os.path.dirname(os.path.abspath(self.output_file))
         if not os.access(out_dir, os.W_OK):
             raise ValueError('cannot write to {}'.format(self.output_file))
 
-        self.initialize_queue()
-        self.data_queue = queue.Queue(maxsize=int(self.n_of_threads * 2))
+        self.initialize_list()
+        self.fut_q = queue.Queue()
         self.output_q = queue.Queue()
-        threads = []
-        for i in range(self.n_of_threads):
-            t = threading.Thread(target=self.worker, args=(self.q.qsize(),))
-            t.start()
-            threads.append(t)
 
-        self.keep_filling_data_queue()
+        t = threading.Thread(target=self.output_worker)
+        t.start()
+
+        self.keep_filling_fut_queue()
 
         # block until all tasks are done
-        self.data_queue.join()
+        self.fut_q.join()
 
-        # stop workers
-        for i in range(self.n_of_threads):
-            self.data_queue.put(None)
-        for t in threads:
-            t.join()
-
-        df = pd.DataFrame(list(self.output_q.queue))
-        df.columns = ['aname', 'bname', 'axis', 'z_frame', 'dz', 'dy', 'dx',
-                      'score']
+        df = pd.DataFrame(self.output_q.queue)
         self.df = df
 
         self.save_results_to_file()
 
-        df[['dx_px', 'dy_px', 'dz_px']] = df[['dx', 'dy', 'dz']]
-        df[['dx', 'dy']] *= self.px_size_xy
-        df['dz'] *= self.px_size_z
-
-        cols = ['score', 'dx_px', 'dy_px', 'dz_px']
+        cols = ['score', 'dz', 'dy', 'dx']
         print(df[cols].describe())
 
     def save_results_to_file(self):
@@ -367,12 +353,15 @@ def main():
     keys = ['input_folder', 'output_file', 'channel', 'max_dx', 'max_dy',
             'max_dz', 'z_samples', 'z_stride', 'overlap_v', 'overlap_h',
             'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
-            'px_size_z', 'n_of_threads', 'recursive']
+            'px_size_z', 'n_of_workers', 'recursive']
 
     for key in keys:
         setattr(r, key, getattr(arg, key))
 
+    t = time.time()
     r.run()
+    elapsed = timedelta(seconds=time.time() - t)
+    logger.info(f'elapsed  time: {elapsed}')
 
 
 if __name__ == '__main__':
