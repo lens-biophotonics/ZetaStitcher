@@ -195,7 +195,7 @@ def overlay_debug(slice, index, z_from):
             x_end = x + canvas_shape[1]
             ie = np.index_exp[f, ..., cy:cy + canvas_shape[0], x:x_end]
             if len(slice.shape) <= 3:
-                ie = list(ie)[1::]
+                ie = tuple(list(ie)[1::])
             try:
                 slice[ie] = numbers[int(l)]
             except ValueError:
