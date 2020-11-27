@@ -210,7 +210,8 @@ class VirtualFusedVolume:
 
         sl = myitem[:]
 
-        for index, row in df.iterrows():
+        for row in df.itertuples():
+            index = row.Index
             Xs = np.array([row.Zs, row.Ys, row.Xs])
             xsize = np.array([row.nfrms, row.ysize, row.xsize])
 
