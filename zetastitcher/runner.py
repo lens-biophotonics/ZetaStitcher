@@ -127,7 +127,7 @@ Unless otherwise stated, all values are expected in px.
     args.channel = channels[args.channel]
 
     if args.z_samples > 1 and args.z_stride is None:
-        args.z_stride = args.dz * 1.2
+        args.z_stride = args.max_dz * 1.2
 
     args.max_dx = int(round(args.max_dx / args.px_size_xy))
     args.max_dy = int(round(args.max_dy / args.px_size_xy))
