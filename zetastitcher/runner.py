@@ -252,8 +252,8 @@ class Runner(object):
                 view = view.groupby(stitch_config['groupby'])
 
                 for name, group in view:
-                    Z_from = int(max(group['Z']) / self.px_size_z)
-                    Z_to = int(min(group['Z_end']) / self.px_size_z)
+                    Z_from = int(max(group['Z']))
+                    Z_to = int(min(group['Z_end']))
                     tiles = list(group.itertuples())
                     atile = tiles[0]
                     for btile in tiles[1::]:
