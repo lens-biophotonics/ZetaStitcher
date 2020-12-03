@@ -32,7 +32,7 @@ def parse_file_name(file_name):
     """
     file_name = os.path.basename(file_name)
     d = {
-        'intfl': '[-]?\d+\.?\d+'  # int or float
+        'intfl': '[-]?\d+\.?\d*'  # int or float
     }
     m = re.search('^.*x_({intfl}).*y_({intfl}).*z_({intfl}).*'.format(**d),
                   file_name)
