@@ -227,6 +227,9 @@ class InputFile(object):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
+        if end_frame is None:
+            end_frame = start_frame + 1
+
         ok = callable(getattr(self.wrapper, 'zslice'))
         if ok:
             a = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
