@@ -70,14 +70,13 @@ class FuseRunner(object):
         return tuple(map(math.ceil, output_shape))
 
     def run(self):
-        total_byte_size = np.asscalar(np.prod(self.output_shape)
-                                      * self.dtype.itemsize)
+        total_byte_size = (np.prod(self.output_shape) * self.dtype.itemsize).item()
         bigtiff = total_byte_size > 2**31 - 1
 
         ram = psutil.virtual_memory().available
 
         # size in bytes of an xy plane (including channels) (float32)
-        xy_size = np.asscalar(np.prod(self.output_shape[1::]) * 4)
+        xy_size = (np.prod(self.output_shape[1::]) * 4).item()
         n_frames_in_ram = int(ram / xy_size / 1.8)
 
         n_loops = self.output_shape[0] // n_frames_in_ram

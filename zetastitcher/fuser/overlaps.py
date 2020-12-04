@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 
@@ -19,7 +20,7 @@ class Overlaps(object):
     def _compute_overlaps(self):
         def comp_diff(dest, row, other_name):
             other = fm_df.loc[other_name]
-            temp = pd.Series()
+            temp = pd.Series(dtype=np.int64)
             temp['Z_from'] = max(other['Zs'], row['Zs']) - row['Zs']
             temp['Z_to'] = min(other['Zs_end'], row['Zs_end']) - row['Zs']
 
