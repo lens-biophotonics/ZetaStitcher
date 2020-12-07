@@ -4,49 +4,22 @@ from pathlib import Path
 
 import numpy as np
 
+from zetastitcher.io.inputfile_mixin import InputFileMixin
 
-class FFMPEGWrapper(object):
+
+class FFMPEGWrapper(InputFileMixin):
     def __init__(self, file_path=None):
+        super().__init__()
         self.file_path = file_path
 
         self.proc = None
+        self.pix_fmt = None
 
         self._probed_dict = None
 
         if file_path is not None:
             self.file_path = Path(self.file_path)
             self.open()
-
-    @property
-    def nfrms(self):
-        return int(self._probed_dict['streams'][0]['nb_frames'])
-
-    @property
-    def xsize(self):
-        return self._probed_dict['streams'][0]['width']
-
-    @property
-    def ysize(self):
-        return self._probed_dict['streams'][0]['height']
-
-    @property
-    def pix_fmt(self):
-        return self._probed_dict['streams'][0]['pix_fmt']
-
-    @property
-    def nchannels(self):
-        pix_fmt = self.pix_fmt
-        if 'gray' in pix_fmt or 'mono' in pix_fmt or 'pal8' in pix_fmt:
-            return 1
-        elif 'yuva' in pix_fmt:
-            return 4
-        elif 'yuv' in pix_fmt or 'rgb' in pix_fmt or 'gbr' in pix_fmt or \
-                'bgr' in pix_fmt:
-            return 3
-
-    @property
-    def dtype(self):
-        return np.uint8
 
     @property
     def shape(self):
@@ -77,6 +50,22 @@ class FFMPEGWrapper(object):
             or 'mp4' not in self._probed_dict['format']['format_name']:
                 raise ValueError('Unrecognized format for FFMPEGWrapper')
 
+        self.nfrms = int(self._probed_dict['streams'][0]['nb_frames'])
+        self.xsize = self._probed_dict['streams'][0]['width']
+        self.ysize = self._probed_dict['streams'][0]['height']
+        pix_fmt = self._probed_dict['streams'][0]['pix_fmt']
+
+        if 'gray' in pix_fmt or 'mono' in pix_fmt or 'pal8' in pix_fmt:
+            self.nchannels = 1
+        elif 'yuva' in pix_fmt:
+            self.nchannels = 4
+        elif 'yuv' in pix_fmt or 'rgb' in pix_fmt or 'gbr' in pix_fmt or \
+                'bgr' in pix_fmt:
+            self.nchannels = 3
+        self.pix_fmt = pix_fmt
+        self.dtype = np.uint8
+
+
 
     def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
         if end_frame is None:
@@ -96,7 +85,7 @@ class FFMPEGWrapper(object):
 
         i = 0
         while i < start_frame:
-            pipe.stdout.read(self.ysize * self.xsize * dt.itemsize)
+            pipe.stdout.read(self.ysize * self.xsize * self.nchannels * dt.itemsize)
             i += 1
 
         shape = list(self.shape)

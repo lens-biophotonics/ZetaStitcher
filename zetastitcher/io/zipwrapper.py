@@ -10,6 +10,8 @@ from pathlib import Path
 import imageio
 import numpy as np
 
+from zetastitcher.io.inputfile_mixin import InputFileMixin
+
 
 def get_typecodes():
     ct = ctypes
@@ -38,34 +40,24 @@ def imread_wrapper(fname, internal_fname, dtype=None):
     return a
 
 
-class ZipWrapper(object):
+class ZipWrapper(InputFileMixin):
     def __init__(self, file_path=None):
+        super().__init__()
         self.file_path = file_path
 
         self.zf = None
         self.file_name_fmt = ''
-        self.xsize = None
-        self.ysize = None
-        self.nfrms = None
-        self.dtype = None
-        self.nchannels = 1
 
         if self.file_path is not None:
             self.file_path = Path(self.file_path)
             self.open()
-
-    @property
-    def shape(self):
-        if self.nchannels > 1:
-            return self.nfrms, self.nchannels, self.ysize, self.xsize
-        else:
-            return self.nfrms, self.ysize, self.xsize
 
     def open(self, file_path=None):
         if file_path is not None:
             self.file_path = Path(file_path)
 
         self.zf = zipfile.ZipFile(str(self.file_path), mode='r')
+        setattr(self, 'close', getattr(self.zf, 'close'))
         names = self.zf.namelist()
 
         im = imread_wrapper(self.file_path, names[0])
@@ -74,6 +66,7 @@ class ZipWrapper(object):
         self.ysize = im.shape[-2]
         self.nfrms = len(names)
         self.dtype = im.dtype
+
         if len(im.shape) > 2:
             self.nchannels = im.shape[0]
         fname, ext = Path(names[0]).stem, Path(names[0]).suffix

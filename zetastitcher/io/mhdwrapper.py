@@ -3,36 +3,23 @@ from pathlib import Path
 
 import numpy as np
 
+from zetastitcher.io.inputfile_mixin import InputFileMixin
 
-class MHDWrapper(object):
+
+class MHDWrapper(InputFileMixin):
     def __init__(self, file_path=None):
+        super().__init__()
         self.file_path = file_path
         self.raw_file_name = None
-
-        self.nfrms = -1
-        self.xsize = -1
-        self.ysize = -1
-        self.dtype = None
 
         self.a = None
         self.mm = None
         self.file = None
+        self.nchannels = 1
 
         if file_path is not None:
             self.file_path = Path(self.file_path)
             self.open()
-
-    def __del__(self):
-        self.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.close()
-
-    def __getitem__(self, item):
-        return self.a[item]
 
     @staticmethod
     def element_type_to_type_fmt(et):
@@ -66,17 +53,6 @@ class MHDWrapper(object):
                 type_fmt = 'i'
 
         return '{}{}'.format(type_fmt, byte_depth)
-
-    @property
-    def nchannels(self):
-        return 1
-
-    @property
-    def shape(self):
-        if self.nchannels > 1:
-            return self.nfrms, self.nchannels, self.ysize, self.xsize
-        else:
-            return self.nfrms, self.ysize, self.xsize
 
     def open(self, file_name=None):
         if file_name is not None:
@@ -128,6 +104,7 @@ class MHDWrapper(object):
         self.file = rawfile.open('r')
         self.mm = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_COPY)
         self.a = np.ndarray(self.shape, self.dtype, self.mm, 0, strides)
+        setattr(self, '__getitem__', getattr(self.a, '__getitem__'))
 
     def close(self):
         if self.mm is not None:
@@ -138,7 +115,7 @@ class MHDWrapper(object):
             self.file.close()
 
     def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
-        a = self.__getitem__(slice(start_frame, end_frame))
+        a = self.a[slice(start_frame, end_frame)]
         if dtype is not None:
             return a.astype(dtype)
         if copy:

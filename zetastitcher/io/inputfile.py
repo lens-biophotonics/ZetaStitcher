@@ -15,13 +15,15 @@ from .mhdwrapper import MHDWrapper
 
 from zipfile import BadZipFile
 
+from zetastitcher.io.inputfile_mixin import InputFileMixin
 
-class InputFile(object):
+
+class InputFile(InputFileMixin):
     def __init__(self, file_path=None):
+        super().__init__()
         self.file_path = file_path
         self.wrapper = None
         self._channel = -1
-        self.nchannels = 1
         self.squeeze = True
 
         self.nfrms = None
@@ -30,25 +32,11 @@ class InputFile(object):
             self.file_path = Path(self.file_path)
             self.open()
 
-    def __del__(self):
-        self.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.close()
-
     def __repr__(self):
         return '<InputFile file_path="{}" shape={} dtype={}>'.format(
             self.file_path, self.shape, self.dtype)
 
     def __getitem__(self, item):
-        try:
-            return self.wrapper.__getitem__(item)
-        except AttributeError:
-            pass
-
         item = np.index_exp[item]  # ensure item is a tuple
         myitem = list(item)
 
@@ -190,14 +178,9 @@ class InputFile(object):
 
         raise ValueError('Unsupported file type')
 
-    def close(self):
-        try:
-            self.wrapper.close()
-        except AttributeError:
-            pass
-
     def _setattrs(self):
-        l = ['nfrms', 'xsize', 'ysize', 'nchannels', 'dtype']
+        l = ['nfrms', 'xsize', 'ysize', 'nchannels', 'dtype', 'close',
+             '__getitem__']
 
         for a in l:
             try:
