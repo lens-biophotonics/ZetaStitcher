@@ -62,6 +62,7 @@ setup(
         'numpy',
         'opencv-python',
         'pandas',
+        'pims',
         'psutil',
         'pyyaml',
         'qpsolvers',

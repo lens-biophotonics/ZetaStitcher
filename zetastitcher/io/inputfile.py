@@ -127,7 +127,7 @@ class InputFile(InputFileMixin):
         try:
             self.wrapper = TiffWrapper(self.file_path)
             return
-        except (ValueError, TiffFileError):
+        except (ValueError, IndexError, TiffFileError):
             pass
 
         try:
@@ -139,7 +139,7 @@ class InputFile(InputFileMixin):
         try:
             self.wrapper = ZipWrapper(self.file_path)
             return
-        except (AttributeError, NameError, BadZipFile):
+        except (AttributeError, NameError, IsADirectoryError, BadZipFile):
             pass
 
         try:
@@ -152,6 +152,13 @@ class InputFile(InputFileMixin):
             self.wrapper = FFMPEGWrapper(self.file_path)
             return
         except (ValueError, FileNotFoundError):
+            pass
+
+        from .pims_wrapper import PimsWrapper
+        try:
+            self.wrapper = PimsWrapper(self.file_path)
+            return
+        except:
             pass
 
         raise ValueError('Unsupported file type')
@@ -195,15 +202,26 @@ class InputFile(InputFileMixin):
         if arg2 is None and step is None:
             myslice = slice(arg1)
 
-        ok = callable(getattr(self.wrapper, 'zslice'))
+        if dtype is None:
+            dtype = self.dtype
+
+        ok = False
+        try:
+            ok = callable(getattr(self.wrapper, 'zslice'))
+        except AttributeError:
+            pass
+
         if ok:
             a = self.wrapper.zslice(myslice.start, myslice.stop, myslice.step, dtype, copy)
         else:
+            myrange = list(self._args_to_range(arg1, arg2, step))
             s = list(self.shape)
-            s[0] = arg2 - arg1
-            a = np.zeros(s, dtype=self.dtype)
-            for i in range(arg1, arg2, step):
-                a[i - arg1] = self.wrapper.frame(i)
+            s[0] = len(myrange)
+            a = np.zeros(s, dtype=dtype)
+            z = 0
+            for i in myrange:
+                a[z] = self.wrapper.frame(i)
+                z += 1
 
         if self.channel == -2:
             a = np.sum(a, axis=-1)

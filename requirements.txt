@@ -10,21 +10,23 @@ cython==0.29.21           # via quadprog
 decorator==4.4.2          # via networkx
 ecos==2.0.7.post1         # via cvxpy
 future==0.18.2            # via osqp
-humanfriendly==8.2        # via coloredlogs
+humanfriendly==9.0        # via coloredlogs
 imageio==2.9.0            # via -r requirements.in
 networkx==2.5             # via -r requirements.in
-numpy==1.19.4             # via -r requirements.in, cvxpy, ecos, imageio, opencv-python, osqp, pandas, scipy, scs, tifffile
+numpy==1.19.4             # via -r requirements.in, cvxpy, ecos, imageio, opencv-python, osqp, pandas, pims, scipy, scs, tifffile
 opencv-python==4.4.0.46   # via -r requirements.in
 osqp==0.6.1               # via cvxpy
-pandas==1.1.4             # via -r requirements.in
+pandas==1.1.5             # via -r requirements.in
 pillow==8.0.1             # via imageio
+pims==0.5                 # via -r requirements.in
 psutil==5.7.3             # via -r requirements.in
 python-dateutil==2.8.1    # via pandas
 pytz==2020.4              # via pandas
 pyyaml==5.3.1             # via -r requirements.in
-qpsolvers==1.4            # via -r requirements.in
+qpsolvers==1.5            # via -r requirements.in
 quadprog==0.1.8           # via qpsolvers
 scipy==1.5.4              # via -r requirements.in, cvxpy, ecos, osqp, scs
 scs==2.1.2                # via cvxpy
-six==1.15.0               # via python-dateutil
-tifffile==2020.10.1       # via -r requirements.in
+six==1.15.0               # via pims, python-dateutil, slicerator
+slicerator==1.0.0         # via pims
+tifffile==2020.12.4       # via -r requirements.in
