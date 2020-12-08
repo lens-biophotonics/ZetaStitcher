@@ -65,11 +65,12 @@ class FFMPEGWrapper(InputFileMixin):
         self.pix_fmt = pix_fmt
         self.dtype = np.uint8
 
+    def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
+        myslice = self._args_to_slice(arg1, arg2, step)
+        norm_slice = self._normalize_slice(myslice)
 
-
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
-        if end_frame is None:
-            end_frame = start_frame + 1
+        if norm_slice.start >= norm_slice.stop:
+            return np.array([])
 
         command = [
             'ffmpeg',
@@ -84,24 +85,33 @@ class FFMPEGWrapper(InputFileMixin):
         dt = np.dtype(self.dtype)
 
         i = 0
-        while i < start_frame:
-            pipe.stdout.read(self.ysize * self.xsize * self.nchannels * dt.itemsize)
+        frame_shape = (1, self.ysize, self.xsize, self.nchannels)
+        frame_bytes = np.prod(frame_shape) * dt.itemsize
+
+        while i < norm_slice.start:  # skip initial frames
+            pipe.stdout.read(frame_bytes)
             i += 1
 
-        shape = list(self.shape)
-        shape[0] = end_frame - start_frame
+        shape = list(frame_shape)
+        shape[0] = len(self._slice_to_range(norm_slice))
 
         a = np.zeros(shape, dtype=self.dtype)
 
-        shape[0] = 1
-
-        while i < end_frame:
-            raw = pipe.stdout.read(np.prod(shape) * dt.itemsize)
-            a[i - start_frame] = \
-                np.fromstring(raw, dtype=self.dtype).reshape(shape)
-            i += 1
+        z = 0
+        while i < norm_slice.stop:
+            raw = pipe.stdout.read(frame_bytes)
+            a[z] = np.frombuffer(raw, dtype=self.dtype).reshape(frame_shape)[0]
+            for _ in range(norm_slice.step - 1):  # skip frames
+                pipe.stdout.read(frame_bytes)
+            i += norm_slice.step
+            z += 1
 
         pipe.communicate()
+
+        if myslice.step and myslice.step < 0:
+            a = a[::-1]
+
+        a = np.squeeze(a)
 
         if dtype is None:
             return a

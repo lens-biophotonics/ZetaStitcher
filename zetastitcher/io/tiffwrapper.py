@@ -60,23 +60,23 @@ class TiffWrapper(InputFileMixin):
         self.nfrms = nfrms
         self.axes = axes
 
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
-        if end_frame is None:
-            end_frame = start_frame + 1
+    def zslice(self, arg1, arg2=None, step=1, dtype=None, copy=True):
+        myslice = self._args_to_slice(arg1, arg2, step)
 
         if not self.glob_mode:
             if len(self.tfile.pages) == 1 and self.nfrms > 1:
                 a = self.tfile.asarray(0, out='memmap')
-                a = a[slice(start_frame, end_frame)]
+                a = a[myslice]
             else:
-                a = self.tfile.asarray(slice(start_frame, end_frame),
-                                       out=None if copy else 'memmap')
+                try:
+                    a = self.tfile.asarray(myslice, out=None if copy else 'memmap')
+                except StopIteration:
+                    return np.array([])
         else:
-            frames_per_file = self.nfrms // len(self.flist)
-            start_file = start_frame // frames_per_file
-            end_file = end_frame // frames_per_file
-            a = tiff.imread(list(map(str, self.flist[start_file:end_file])),
-                            pattern='')
+            flist = self.flist[myslice]
+            if not flist:
+                return np.array([])
+            a = tiff.imread(list(map(str, flist)))
 
         if self.axes == 'SYX':
             a = np.moveaxis(a, 1, -1)

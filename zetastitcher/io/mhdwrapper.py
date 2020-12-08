@@ -114,8 +114,8 @@ class MHDWrapper(InputFileMixin):
         if self.file is not None:
             self.file.close()
 
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
-        a = self.a[slice(start_frame, end_frame)]
+    def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
+        a = self.a[self._args_to_slice(arg1, arg2, step)]
         if dtype is not None:
             return a.astype(dtype)
         if copy:

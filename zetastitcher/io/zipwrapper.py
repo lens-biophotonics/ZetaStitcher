@@ -46,7 +46,7 @@ class ZipWrapper(InputFileMixin):
         self.file_path = file_path
 
         self.zf = None
-        self.file_name_fmt = ''
+        self.names = None
 
         if self.file_path is not None:
             self.file_path = Path(self.file_path)
@@ -59,6 +59,7 @@ class ZipWrapper(InputFileMixin):
         self.zf = zipfile.ZipFile(str(self.file_path), mode='r')
         setattr(self, 'close', getattr(self.zf, 'close'))
         names = self.zf.namelist()
+        names.sort()
 
         im = imread_wrapper(self.file_path, names[0])
 
@@ -69,22 +70,23 @@ class ZipWrapper(InputFileMixin):
 
         if len(im.shape) > 2:
             self.nchannels = im.shape[0]
-        fname, ext = Path(names[0]).stem, Path(names[0]).suffix
-        self.file_name_fmt = '{:0' + str(len(fname)) + '}' + ext
+
+        self.names = names
 
     def frame(self, index, dtype=None, copy=None):
-        a = imageio.imread(self.zf.read(self.file_name_fmt.format(index)))
+        a = imageio.imread(self.zf.read(self.names[index]))
 
         if dtype is not None:
             a = a.astype(dtype)
         return a
 
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=None):
+    def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=None):
         if dtype is None:
             dtype = self.dtype
 
         s = list(self.shape)
-        s[0] = end_frame - start_frame
+        zlist = list(self._args_to_range(arg1, arg2, step))
+        s[0] = len(zlist)
 
         out = np.zeros(s, dtype)
 
@@ -92,15 +94,12 @@ class ZipWrapper(InputFileMixin):
 
         my_futures = []
 
-        for c in range(s[0]):
-            internal_fname = self.file_name_fmt.format(start_frame + c)
-            fut = work(self.file_path, internal_fname, dtype)
+        for z in zlist:
+            fut = work(self.file_path, self.names[z], dtype)
             my_futures.append(fut)
 
-        for c, fut in zip(range(s[0]), my_futures):
-            out[c] = fut.result(None)
-
-        print(work.cache_info())
+        for z, fut in zip(range(s[0]), my_futures):
+            out[z] = fut.result(None)
 
         # force release of shared memory for Python < 3.8
         if sys.version_info < (3, 8):

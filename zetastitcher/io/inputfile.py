@@ -45,48 +45,26 @@ class InputFile(InputFileMixin):
         if isinstance(item[0], int):
             start = item[0]
             stop = item[0] + 1
-            step = 1
+            step = None
         elif item[0] is Ellipsis:
-            start = 0
+            start = None
             stop = self.shape[0]
-            step = 1
+            step = None
         elif isinstance(item[0], slice):
             start = item[0].start
             stop = item[0].stop
-            step = item[0].step if item[0].step is not None else 1
-
-            curr_max = self.shape[0]
-            if start is None:
-                start = 0 if step > 0 else curr_max
-            elif start < 0:
-                start += curr_max
-            elif start > curr_max:
-                start = curr_max
-
-            if stop is None:
-                stop = curr_max if step > 0 else 0
-            elif stop < 0:
-                stop += curr_max
-            elif stop > curr_max:
-                stop = curr_max
-
-            if step < 0:
-                temp = start
-                start = stop
-                stop = temp
-                if start > 0:
-                    start += abs(step) - (start - stop) % abs(step)
-                stop += 1
+            step = item[0].step
         else:
             raise TypeError("Invalid type: {}".format(type(item[0])))
 
-        a = self.zslice(start, stop)
-        if step < 0:
-            a = a[::-1]
-        a = a[::abs(step)]
+        a = self.zslice(start, stop, step)
+
+        if not a.size:
+            return a
 
         if item[0] is not Ellipsis:
-            myitem[0] = slice(None, None, 1)
+            myitem[0] = slice(None)
+
         a = a[tuple(myitem)]
 
         if self.squeeze:
@@ -188,16 +166,19 @@ class InputFile(InputFileMixin):
             except AttributeError:
                 pass
 
-    def zslice(self, start_frame, end_frame=None, dtype=None, copy=True):
+    def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
         """Return a slice, i.e. a substack of frames.
 
         Parameters
         ----------
-        start_frame : int
-            first frame to select
-        end_frame : int
-            last frame to select (noninclusive). If None, defaults to
-            :code:`start_frame + 1`
+        arg1 : int
+            Mandatory argument, will be passed to `python:slice`
+            If arg2 and step are both None, it will be passed as `slice(arg1)`,
+            i.e. it would act as the stop argument.
+        arg2 : int
+            If not null, will be passed as `slice(arg1, arg2, step)`
+        step : int
+            If not null, will be passed as `slice(arg1, arg2, step)`
         dtype
 
         Returns
@@ -210,24 +191,25 @@ class InputFile(InputFileMixin):
             :attr:`channel` is set or if there is only one channel, the
             `channels` dimension is squeezed.
         """
-        if end_frame is None:
-            end_frame = start_frame + 1
+        myslice = slice(arg1, arg2, step)
+        if arg2 is None and step is None:
+            myslice = slice(arg1)
 
         ok = callable(getattr(self.wrapper, 'zslice'))
         if ok:
-            a = self.wrapper.zslice(start_frame, end_frame, dtype, copy)
+            a = self.wrapper.zslice(myslice.start, myslice.stop, myslice.step, dtype, copy)
         else:
             s = list(self.shape)
-            s[0] = end_frame - start_frame
+            s[0] = arg2 - arg1
             a = np.zeros(s, dtype=self.dtype)
-            for i in range(start_frame, end_frame):
-                a[i - start_frame] = self.wrapper.frame(i)
+            for i in range(arg1, arg2, step):
+                a[i - arg1] = self.wrapper.frame(i)
 
         if self.channel == -2:
             a = np.sum(a, axis=-1)
         elif self.channel != -1:
             a = a[..., self.channel]
-        elif self.nchannels > 1:
+        elif self.nchannels > 1 and a.ndim >= 3:
             a = np.moveaxis(a, -1, -3)
 
         if len(a.shape) < len(self.shape):
@@ -253,7 +235,7 @@ class InputFile(InputFileMixin):
         """
         start_frame = index * frames_per_slice
         end_frame = start_frame + frames_per_slice
-        return self.zslice(start_frame, end_frame, dtype, copy)
+        return self.zslice(start_frame, end_frame, 1, dtype, copy)
 
     def whole(self, dtype=None, copy=True):
         """Convenience function to retrieve the whole stack.
