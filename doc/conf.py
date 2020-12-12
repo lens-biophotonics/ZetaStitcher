@@ -44,13 +44,13 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.intersphinx',
     'numpydoc',
-    'm2r'
+    'm2r2'
 ]
 
 intersphinx_mapping = {
-    'networkx': ('https://networkx.readthedocs.io/en/stable/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+    'networkx': ('https://networkx.org/documentation/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'python': ('https://docs.python.org/3', None),
 }
 
@@ -70,7 +70,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'ZetaStitcher'
-copyright = '2017, Giacomo Mazzamuto'
+copyright = '2017-2020, Giacomo Mazzamuto'
 author = 'Giacomo Mazzamuto'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -183,4 +183,4 @@ numpydoc_class_members_toctree = False
 
 
 def setup(app):
-    app.add_javascript('https://docs.python.org/3/_static/copybutton.js')
+    app.add_js_file('https://docs.python.org/3/_static/copybutton.js')

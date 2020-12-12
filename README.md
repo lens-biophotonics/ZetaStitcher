@@ -20,7 +20,7 @@ sudo pip3 install zetastitcher
 ```
 
 ## Documentation
-Please read the documentation and follow the tutorial at this page:
+Please read the documentation and follow the tutorial at this page:<br/>
 https://lens-biophotonics.github.io/ZetaStitcher/
 
 

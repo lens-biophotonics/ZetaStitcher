@@ -82,6 +82,7 @@ setup(
             'dcimg>=0.4.0'
         ],
         'doc': [
+            'm2r2',
             'numpydoc',
             'sphinx',
             'sphinx_rtd_theme',

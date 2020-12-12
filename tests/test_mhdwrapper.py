@@ -2,7 +2,7 @@ import unittest
 
 from ddt import ddt, data
 
-from mhdwrapper import MHDWrapper
+from zetastitcher.io.mhdwrapper import MHDWrapper
 
 test_vectors_element_type = [
     ['MET_CHAR', 'i1'],

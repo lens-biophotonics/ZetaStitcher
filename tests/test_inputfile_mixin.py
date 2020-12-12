@@ -4,7 +4,7 @@ from ddt import ddt, data
 
 import numpy as np
 
-from inputfile_mixin import InputFileMixin
+from zetastitcher.io.inputfile_mixin import InputFileMixin
 
 test_vectors = [
     [np.index_exp[1:100:1], np.index_exp[1:100]],

@@ -1,4 +1,5 @@
 .. _tutorial:
+
 Tutorial
 =================
 In this tutorial we will see how to use ZetaStitcher for stitching large 3D
@@ -53,7 +54,7 @@ output stack. We therefore limit the output to one frame (``--nz``) starting at
 output image will contain one frame only (i.e. we are producing a 2D image).
 Note the trailing dot in the command line: that's the path to the directory
 containing the input stacks (in this case, that means the current directory).
- You can now inspect the result of this *nominal stitching*.
+You can now inspect the result of this *nominal stitching*.
 
 
 Global optimal alignment and fusion
