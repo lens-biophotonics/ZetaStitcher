@@ -20,6 +20,7 @@ html: Makefile generate_rst
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	cp _build/html/py-modindex.html _build/html/module_index.html
 	cp ../dist/zetastitcher-`python -c 'import zetastitcher; print(zetastitcher.__version__)'`-py3-none-any.whl _build/html
+	sed -i 's|doc/_static|_static|' _build/html/index.html
 
 generate_rst:
 	sphinx-apidoc -faM --separate -o generated ../zetastitcher
