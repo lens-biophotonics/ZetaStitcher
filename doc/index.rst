@@ -9,6 +9,12 @@ Welcome to ZetaStitcher's documentation!
 .. mdinclude:: ../README.md
 
 
+Latest package
+--------------
+.. exec::
+    from zetastitcher import __version__ as ver
+    print(f'The latest built package can be downloaded from `here <zetastitcher-{ver}-py3-none-any.whl>`_ (version {ver}).')
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
