@@ -1,10 +1,10 @@
 major = 0
-minor = 5
+minor = 6
 micro = 0
 
 pre_release = ''
 post_release = ''
-dev_release = ''
+dev_release = 3
 
 __version__ = ''
 
