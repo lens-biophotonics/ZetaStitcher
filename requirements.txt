@@ -4,6 +4,7 @@
 #
 #    pip-compile requirements.in
 #
+cachetools==4.2.0         # via -r requirements.in
 coloredlogs==14.0         # via -r requirements.in
 cvxpy==1.1.7              # via -r requirements.in
 cython==0.29.21           # via quadprog

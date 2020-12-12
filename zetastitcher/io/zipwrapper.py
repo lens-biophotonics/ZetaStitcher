@@ -1,16 +1,52 @@
+"""
+This module provides `ZipWrapper`, a class for accessing a stack of images
+stored in a .zip file one frame per file. Files inside the .zip archive must
+will be accessed in alphabetical order.
+
+For faster access when using compressed formats (such as JPEG2000), a cache can
+optionally be anabled using `set_cache()`.
+"""
+
 import gc
 import sys
 import ctypes
 import zipfile
-import functools
 import concurrent.futures
-import multiprocessing.heap as mph
 from pathlib import Path
+from cachetools import LRUCache
 
 import imageio
 import numpy as np
 
 from zetastitcher.io.inputfile_mixin import InputFileMixin
+
+_cache = None
+
+
+def set_cache(cache):
+    """
+    Set a cache for `ZipWrapper.zslice`.
+
+    Example:
+
+    .. code-block:: python
+
+       import zetastitcher.io.zipwrapper as zw
+       from cachetools import LRUCache
+       zw.set_cache(LRUCache(maxsize=32))
+
+    Parameters
+    ----------
+    cache : `cachetools:cachetools.Cache`
+        The cache instance to use.
+    """
+    global _cache
+    _cache = cache
+    _cache.hits = 0
+    _cache.misses = 0
+
+
+set_cache(LRUCache(maxsize=0))  # disable cache
 
 
 def get_typecodes():
@@ -22,14 +58,6 @@ def get_typecodes():
     ]
 
     return {np.dtype(ctype).str: ctype for ctype in simple_types}
-
-
-e = concurrent.futures.ProcessPoolExecutor()
-
-
-@functools.lru_cache(2000)
-def work(fname, internal_fname, dtype=None):
-    return e.submit(imread_wrapper, fname, internal_fname, dtype)
 
 
 def imread_wrapper(fname, internal_fname, dtype=None):
@@ -94,15 +122,28 @@ class ZipWrapper(InputFileMixin):
 
         my_futures = []
 
-        for z in zlist:
-            fut = work(self.file_path, self.names[z], dtype)
-            my_futures.append(fut)
+        e = concurrent.futures.ProcessPoolExecutor()
 
-        for z, fut in zip(range(s[0]), my_futures):
+        for i, z in zip(range(s[0]), zlist):
+            cache_key = f'{self.file_path}__{self.names[z]}'
+            cached = _cache.get(cache_key)
+
+            if cached is not None:
+                _cache.hits += 1
+                out[i] = cached
+            else:
+                _cache.misses += 1
+                fut = e.submit(imread_wrapper, self.file_path, self.names[z], dtype)
+                my_futures.append((i, cache_key, fut))
+
+        for z, key, fut in my_futures:
+            if _cache.maxsize > 0:
+                _cache[key] = fut.result(None)
             out[z] = fut.result(None)
 
         # force release of shared memory for Python < 3.8
         if sys.version_info < (3, 8):
+            import multiprocessing.heap as mph
             mph.BufferWrapper._heap = mph.Heap()
             gc.collect()
 

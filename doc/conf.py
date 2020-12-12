@@ -52,6 +52,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'python': ('https://docs.python.org/3', None),
+    'cachetools': ('https://cachetools.readthedocs.io/en/stable/', None),
 }
 
 default_role = 'any'
