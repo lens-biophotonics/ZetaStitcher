@@ -34,6 +34,7 @@ sphinxcontrib-jsmath==1.0.1  # via sphinx
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 urllib3==1.26.2           # via requests
+wheel==0.36.1             # via -r requirements.dev.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
