@@ -63,7 +63,7 @@ class FFMPEGWrapper(InputFileMixin):
                 'bgr' in pix_fmt:
             self.nchannels = 3
         self.pix_fmt = pix_fmt
-        self.dtype = np.uint8
+        self.dtype = np.dtype(np.uint8)
 
     def zslice(self, arg1, arg2=None, step=None, dtype=None, copy=True):
         myslice = self._args_to_slice(arg1, arg2, step)
@@ -82,11 +82,9 @@ class FFMPEGWrapper(InputFileMixin):
         ]
         pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, bufsize=10**8)
 
-        dt = np.dtype(self.dtype)
-
         i = 0
         frame_shape = (1, self.ysize, self.xsize, self.nchannels)
-        frame_bytes = np.prod(frame_shape) * dt.itemsize
+        frame_bytes = np.prod(frame_shape) * self.dtype.itemsize
 
         while i < norm_slice.start:  # skip initial frames
             pipe.stdout.read(frame_bytes)

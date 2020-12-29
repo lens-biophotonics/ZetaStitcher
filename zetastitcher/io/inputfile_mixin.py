@@ -1,5 +1,9 @@
+import numpy as np
+
+
 class InputFileMixin:
     def __init__(self):
+        self.path = None
         self.xsize = None
         self.ysize = None
         self.nfrms = None
@@ -34,6 +38,20 @@ class InputFileMixin:
         if self.nchannels == 1:
             s = s[:-1]
         return tuple(s)
+
+    @property
+    def file_size(self):
+        return self.path.stat().st_size
+
+    @property
+    def array_size(self):
+        """Size in bytes of the whole virtual array"""
+        return np.prod(self.shape).item() * self.dtype.itemsize
+
+    @property
+    def frame_size(self):
+        """Size in bytes of a single frame"""
+        return self.xsize * self.ysize * self.nchannels * self.dtype.itemsize
 
     def _normalize_slice(self, myslice):
         """
