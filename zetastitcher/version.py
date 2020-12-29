@@ -2,26 +2,26 @@ major = 0
 minor = 6
 micro = 0
 
-pre_release = ''
-post_release = ''
+pre_release = None
+post_release = None
 dev_release = 3
 
 __version__ = ''
 
-if major != '':
-    __version__ += '{}'.format(major)
+if major is not None:
+    __version__ += f'{major}'
 
-if minor != '':
-    __version__ += '.{}'.format(minor)
+if minor is not None:
+    __version__ += f'.{minor}'
 
-if micro != '':
-    __version__ += '.{}'.format(micro)
+if micro is not None:
+    __version__ += f'.{micro}'
 
-if pre_release != '':
-    __version__ += '{}'.format(pre_release)
+if pre_release is not None:
+    __version__ += f'{pre_release}'
 
-if post_release != '':
-    __version__ += '.post{}'.format(post_release)
+if post_release is not None:
+    __version__ += f'.post{post_release}'
 
-if dev_release != '':
-    __version__ += '.dev{}'.format(dev_release)
+if dev_release is not None:
+    __version__ += f'.dev{dev_release}'
