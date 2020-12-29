@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
 
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+
 version = {}
 with open("zetastitcher/version.py") as fp:
     exec(fp.read(), version)
@@ -8,10 +12,11 @@ __version__ = version['__version__']
 setup(
     name='zetastitcher',
     version=__version__,
-    description='Stitch large volumetric images (3D stacks)',
-    long_description='ZetaStitcher is a tool designed to stitch large '
-                     'volumetric images such as those produced by Light-Sheet '
-                     'Fluorescence Microscopes.',
+    description='ZetaStitcher is a tool designed to stitch large '
+                 'volumetric images such as those produced by Light-Sheet '
+                 'Fluorescence Microscopes.',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='Giacomo Mazzamuto',
     author_email='mazzamuto@lens.unifi.it',
     url='https://github.com/lens-biophotonics/ZetaStitcher',
