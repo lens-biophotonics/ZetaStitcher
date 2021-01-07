@@ -14,7 +14,6 @@ from . import absolute_positions
 from .fuse_runner import FuseRunner
 from ..io.filematrix import FileMatrix
 from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
-from .global_optimization import absolute_position_global_optimization
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO', fmt='%(levelname)s [%(name)s]: %(message)s')
@@ -194,8 +193,7 @@ def compute_absolute_positions(args, fm):
     absolute_positions.compute_shift_vectors(fm.data_frame, sdf)
 
     if not args.no_global:
-        logger.info('performing global optimization...')
-        absolute_position_global_optimization(fm.data_frame, xcorr_fm)
+        absolute_positions.global_optimization(fm.data_frame, xcorr_fm)
 
 
 def append_fuser_options_to_yaml(yml_out_file, args):
