@@ -10,23 +10,35 @@ class XcorrFileMatrix(object):
 
         self.stitch_data_frame = None
 
-    def load_yaml(self, fname):
-        with open(fname, 'r') as f:
-            y = yaml.safe_load(f)
+        self.ascending_tiles_x = None
+        self.ascending_tiles_y = None
+
+    @classmethod
+    def from_data(cls, xcorr_options, xcorr_df):
+        inst = cls()
 
         attrs = ['ascending_tiles_x', 'ascending_tiles_y']
 
         for attr in attrs:
-            setattr(self, attr, y['xcorr-options'][attr])
+            setattr(inst, attr, xcorr_options[attr])
 
-        self.stitch_data_frame = pd.DataFrame(y['xcorr'])
-        self.stitch_data_frame = self.stitch_data_frame.rename(
-            columns={'aname': 'filename'})
-        self.stitch_data_frame = self.stitch_data_frame.set_index('filename')
+        stitch_data_frame = xcorr_df
+        stitch_data_frame = stitch_data_frame.rename(columns={'aname': 'filename'})
+        stitch_data_frame = stitch_data_frame.set_index('filename')
 
-        self.xcorr_options = y['xcorr-options']
+        inst.stitch_data_frame = stitch_data_frame
+        inst.xcorr_options = xcorr_options
 
-    def aggregate_results(self, compute_average):
+        return inst
+
+    @classmethod
+    def from_yaml(cls, fname):
+        with open(fname, 'r') as f:
+            y = yaml.safe_load(f)
+
+        return XcorrFileMatrix.from_data(y['xcorr-options'], pd.DataFrame(y['xcorr']))
+
+    def aggregate_results(self, compute_average=False):
         sdf = self.stitch_data_frame.reset_index()
 
         if compute_average:

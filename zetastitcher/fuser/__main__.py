@@ -13,7 +13,7 @@ import numpy as np
 from . import absolute_positions
 from .fuse_runner import FuseRunner
 from ..io.filematrix import FileMatrix
-from .xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
 from .global_optimization import absolute_position_global_optimization
 
 logger = logging.getLogger(__name__)
@@ -184,8 +184,7 @@ def preprocess_and_check_args(args):
 
 
 def compute_absolute_positions(args, fm):
-    xcorr_fm = XcorrFileMatrix()
-    xcorr_fm.load_yaml(fm.input_path)
+    xcorr_fm = XcorrFileMatrix.from_yaml(fm.input_path)
     compute_average = \
         True if args.abs_mode == ABS_MODE_WEIGHTED_AVERAGE else False
     xcorr_fm.aggregate_results(compute_average=compute_average)
