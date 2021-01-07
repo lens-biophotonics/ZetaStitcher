@@ -18,6 +18,9 @@ import pandas as pd
 
 from .io.inputfile import InputFile
 from .io.filematrix import FileMatrix
+from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.fuser import absolute_positions
+from zetastitcher.fuser.__main__ import ABS_MODE_MAXIMUM_SCORE
 from .normxcorr import normxcorr2_cv
 
 from .version import __version__
@@ -324,14 +327,21 @@ class Runner(object):
         df = pd.DataFrame(self.output_q.queue)
         self.df = df
 
+        xcorr_fm = XcorrFileMatrix.from_data(self.xcorr_options, self.df)
+        xcorr_fm.aggregate_results()
+
+        sdf = xcorr_fm.stitch_data_frame
+
+        absolute_positions.compute_shift_vectors(self.fm.data_frame, sdf)
+        absolute_positions.global_optimization(self.fm.data_frame, xcorr_fm)
+
         self.save_results_to_file()
 
         cols = ['score', 'dz', 'dy', 'dx']
         print(df[cols].describe())
 
-    def save_results_to_file(self):
-        self.fm.save_to_yaml(self.output_file, 'w')
-
+    @property
+    def xcorr_options(self):
         attrs = ['max_dx', 'max_dy', 'max_dz', 'overlap_v', 'overlap_h',
                  'ascending_tiles_x', 'ascending_tiles_y', 'px_size_xy',
                  'px_size_z', 'z_samples', 'z_stride']
@@ -340,11 +350,17 @@ class Runner(object):
         for attr in attrs:
             options[attr] = getattr(self, attr)
 
+        return options
+
+    def save_results_to_file(self):
+        self.fm.save_to_yaml(self.output_file, 'w')
+
         with open(self.output_file, 'a') as f:
             yaml.dump(
                 {
-                    'xcorr-options': options,
-                    'xcorr': json.loads(self.df.to_json(orient='records'))
+                    'xcorr-options': self.xcorr_options,
+                    'xcorr': json.loads(self.df.to_json(orient='records')),
+                    'fuser-options': {'abs_mode': ABS_MODE_MAXIMUM_SCORE},
                 }, f, default_flow_style=False)
 
 
