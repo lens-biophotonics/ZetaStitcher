@@ -74,7 +74,7 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     bframe = b.zslice_idx(z_frame)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
-    b_roi = bframe[..., :overlap, :].astype(np.float32)
+    b_roi = bframe[..., :overlap - max_shift_y, :].astype(np.float32)
 
     padding = [(0, 0), (0, 0), (max_shift_x, max_shift_x)]
 

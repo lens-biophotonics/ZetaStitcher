@@ -174,7 +174,7 @@ def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
     bframe = b.zslice_idx(z_frame, copy=True)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
-    bframe = bframe[..., :overlap, :]
+    bframe = bframe[..., :overlap - max_dy, :]
 
     aslice = aslice.astype(np.float32)
     bframe = bframe.astype(np.float32)
