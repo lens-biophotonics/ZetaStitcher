@@ -4,6 +4,7 @@ import logging
 import argparse
 
 import yaml
+import humanize
 import coloredlogs
 
 from ..version import __version__
@@ -242,10 +243,8 @@ def main():
     # init FuseRunner
     # =========================================================================
     fr = FuseRunner(fm)
-    gib = np.prod(fr.output_shape) * fr.dtype.itemsize / 1024**3
-    logger.info("fused shape, whole volume: {}, {:03,.3f} GiB"
-                .format(fr.output_shape, gib))
-
+    bytes_human = humanize.naturalsize(np.prod(fr.output_shape) * fr.dtype.itemsize, binary=True)
+    logger.info(f'fused shape, whole volume: {fr.output_shape}, {bytes_human}')
     if args.output_filename is not None:
 
         keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel',
@@ -254,9 +253,8 @@ def main():
         for k in keys:
             setattr(fr, k, getattr(args, k))
 
-        gib = np.prod(fr.output_shape) * fr.dtype.itemsize / 1024 ** 3
-        logger.info("output shape: {}, {:03,.3f} GiB"
-                    .format(fr.output_shape, gib))
+        bytes_human = humanize.naturalsize(np.prod(fr.output_shape) * fr.dtype.itemsize, binary=True)
+        logger.info(f'output shape: {fr.output_shape}, {bytes_human}')
 
         fr.run()
     else:

@@ -1,6 +1,7 @@
 cachetools
 coloredlogs
 cvxpy
+humanize
 imageio
 networkx
 numpy

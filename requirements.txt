@@ -18,6 +18,8 @@ ecos==2.0.7.post1
     # via cvxpy
 humanfriendly==9.1
     # via coloredlogs
+humanize==3.2.0
+    # via -r requirements.in
 imageio==2.9.0
     # via -r requirements.in
 networkx==2.5
@@ -77,3 +79,6 @@ slicerator==1.0.0
     # via pims
 tifffile==2021.1.8
     # via -r requirements.in
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
