@@ -129,16 +129,11 @@ Unless otherwise stated, all values are expected in px.
 
     args.channel = channels[args.channel]
 
-    if args.z_samples > 1 and args.z_stride is None:
-        args.z_stride = args.max_dz * 1.2
-
     args.max_dx = int(round(args.max_dx / args.px_size_xy))
     args.max_dy = int(round(args.max_dy / args.px_size_xy))
     args.max_dz = int(round(args.max_dz / args.px_size_z))
     if args.z_stride is not None:
         args.z_stride = int(round(args.z_stride / args.px_size_z))
-    else:
-        args.z_stride = 0
 
     args.overlap_v = int(round(args.overlap_v / args.px_size_xy))
     args.overlap_h = int(round(args.overlap_h / args.px_size_xy))
@@ -232,6 +227,12 @@ class Runner(object):
         fm = FileMatrix(self.input_folder, self.ascending_tiles_x, self.ascending_tiles_y,
                         recursive=self.recursive, equal_shape=self.equal_shape)
         self.fm = fm
+
+        if self.z_samples > 1 and self.z_stride is None:
+            self.z_stride = ((fm.data_frame.iloc[0].nfrms - self.max_dz * self.z_samples) // self.z_samples).item()
+
+        if self.z_stride is None:
+            self.z_stride = 0
 
         stitch_X = {
             'axis': 2,
