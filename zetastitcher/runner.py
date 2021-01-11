@@ -152,7 +152,7 @@ Unless otherwise stated, all values are expected in px.
     return args
 
 
-def worker(item, overlap_dict, channel, max_dz, max_dx, max_dy):
+def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
     aname = item['aname']
     bname = item['bname']
     z_frame = item['z_frame']
