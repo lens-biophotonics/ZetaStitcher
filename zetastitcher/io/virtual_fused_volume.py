@@ -38,7 +38,16 @@ class VirtualFusedVolume:
 
     Axis order is ZCYX.
 
-    >>> subvolume = vfv[40, ..., 1000:1500, 2000:2400]
+    >>> subvolume = vfv[40, ..., 1000:1500, 1800:2400]
+
+    Use `peek` to get a list of tiles that would be accessed for a given query:
+
+    >>> vfv.peek[40, ..., 1000:1500, 1800:2400]
+    [
+        ('0000_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(1800, 2048, 1)],
+        ('0100_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1)]
+    ]
+
 
     """
     def __init__(self, file_or_matrix):
@@ -102,7 +111,7 @@ class VirtualFusedVolume:
 
         return tuple(output_shape)
 
-    def __getitem__(self, item):
+    def _compute_vars(self, item):
         # ensure item is a tuple
         if isinstance(item, list):
             item = tuple(item)
@@ -172,13 +181,6 @@ class VirtualFusedVolume:
         xmin = myitem[-1].start
         xmax = myitem[-1].stop
 
-        output_shape = [
-            (it.stop - it.start) / it.step for it in myitem
-        ]
-        output_shape = list(map(math.ceil, output_shape))
-        if 0 in output_shape:
-            return np.array([], dtype=self.dtype)
-
         X_min = np.array([myitem[i].start for i in [0, -2, -1]])
         X_stop = np.array([myitem[i].stop for i in [0, -2, -1]])
         steps = np.array([myitem[i].step for i in [0, -2, -1]])
@@ -190,10 +192,36 @@ class VirtualFusedVolume:
             & (df['Xs_end'] > xmin) & (df['Xs'] < xmax)
         ]
 
+        return df, myitem, X_min, X_stop, steps, flip_axis
+
+    @property
+    def peek(self):
+        class WrapperClass:
+            def __init__(self, obj):
+                self.obj = obj
+
+            def __getitem__(self, item):
+                df, myitem, X_min, X_stop, steps, flip_axis = self.obj._compute_vars(item)
+                sl = myitem[:]
+
+                return [(index, sl) for index, _, sl in self.obj._my_gen(df, X_min, X_stop, steps, sl)]
+
+        return WrapperClass(self)
+
+    def __getitem__(self, item):
+        df, myitem, X_min, X_stop, steps, flip_axis = self._compute_vars(item)
+
         if self.ov is None or df.shape[0] == 1:
             dtype = self.dtype
         else:
             dtype = np.float32
+
+        output_shape = [
+            (it.stop - it.start) / it.step for it in myitem
+        ]
+        output_shape = list(map(math.ceil, output_shape))
+        if 0 in output_shape:
+            return np.array([], dtype=self.dtype)
 
         fused = np.zeros(output_shape, dtype=dtype)
 
@@ -210,29 +238,16 @@ class VirtualFusedVolume:
 
         sl = myitem[:]
 
-        for row in df.itertuples():
-            index = row.Index
-            Xs = np.array([row.Zs, row.Ys, row.Xs])
-            xsize = np.array([row.nfrms, row.ysize, row.xsize])
-
-            xto = X_stop - Xs
-            xto[xto > xsize] = xsize[xto > xsize]
-            xfrom = X_min - Xs
-            xfrom[xfrom < 0] = 0
-            xfrom = xfrom + (Xs + xfrom - X_min) % steps
-
-            for i in [0, -2, -1]:
-                sl[i] = slice(xfrom[i], xto[i], steps[i])
+        for index, Xs, sl in self._my_gen(df, X_min, X_stop, steps, sl):
+            logger.info('loading {}\t{}'.format(index, sl))
+            with InputFile(os.path.join(self.path, index)) as f:
+                f.squeeze = False
+                sl_a = np.copy(f[tuple(sl)]).astype(dtype)
 
             z_from = sl[0].start
             z_to = sl[0].stop
 
             x_from = np.array([sl[i].start for i in [0, -2, -1]])
-
-            logger.info('loading {}\t{}'.format(index, sl))
-            with InputFile(os.path.join(self.path, index)) as f:
-                f.squeeze = False
-                sl_a = np.copy(f[tuple(sl)]).astype(dtype)
 
             Top_left = Xs + x_from
             top_left = (Top_left - X_min) // steps
@@ -266,3 +281,21 @@ class VirtualFusedVolume:
         if self.squeeze_enabled:
             return np.squeeze(fused)
         return fused
+
+    @staticmethod
+    def _my_gen(df, X_min, X_stop, steps, sl):
+        for row in df.itertuples():
+            index = row.Index
+            Xs = np.array([row.Zs, row.Ys, row.Xs])
+            xsize = np.array([row.nfrms, row.ysize, row.xsize])
+
+            xto = X_stop - Xs
+            xto[xto > xsize] = xsize[xto > xsize]
+            xfrom = X_min - Xs
+            xfrom[xfrom < 0] = 0
+            xfrom = xfrom + (Xs + xfrom - X_min) % steps
+
+            for i in [0, -2, -1]:
+                sl[i] = slice(xfrom[i], xto[i], steps[i])
+
+            yield index, Xs, sl
