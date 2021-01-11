@@ -208,7 +208,6 @@ class Runner(object):
         self.max_dx = None
         self.max_dy = None
         self.max_dz = None
-        self.compute_average = False
         self.ascending_tiles_x = True
         self.ascending_tiles_y = True
         self.recursive = False

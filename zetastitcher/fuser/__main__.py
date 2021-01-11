@@ -26,7 +26,6 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
 
 ABS_MODE_NOMINAL_POSITIONS = 'nominal_positions'
 ABS_MODE_MAXIMUM_SCORE = 'maximum_score'
-ABS_MODE_WEIGHTED_AVERAGE = 'maximum_score'
 
 
 def parse_args():
@@ -70,24 +69,9 @@ def parse_args():
                           help='end frame (noninclusive, in your units)')
     me_group.add_argument('--nz', type=int, help='number of z frames')
 
-
-
-    group = parser.add_argument_group(
-        'absolute positions', 'by default, absolute positions are computed by '
-                              'taking the maximum score in cross correlations')
-    me_group = group.add_mutually_exclusive_group()
-    me_group.add_argument('-m', dest='abs_mode', action='store_const',
-                          const=ABS_MODE_MAXIMUM_SCORE,
-                          help='take the maximum score in cross correlations '
-                               '(default)')
-
-    me_group.add_argument('-a', dest='abs_mode', action='store_const',
-                          const=ABS_MODE_WEIGHTED_AVERAGE,
-                          help='take the average result weighted by the score')
-
-    me_group.add_argument('-s', dest='abs_mode', action='store_const',
-                          const=ABS_MODE_NOMINAL_POSITIONS,
-                          help='use nominal stage positions')
+    group.add_argument('-s', dest='abs_mode', action='store_const',
+                       const=ABS_MODE_NOMINAL_POSITIONS,
+                       help='use nominal stage positions')
 
     group.add_argument('-f', action='store_true', default=False,
                        dest='force_recomputation',
@@ -184,9 +168,7 @@ def preprocess_and_check_args(args):
 
 def compute_absolute_positions(args, fm):
     xcorr_fm = XcorrFileMatrix.from_yaml(fm.input_path)
-    compute_average = \
-        True if args.abs_mode == ABS_MODE_WEIGHTED_AVERAGE else False
-    xcorr_fm.aggregate_results(compute_average=compute_average)
+    xcorr_fm.aggregate_results()
 
     sdf = xcorr_fm.stitch_data_frame
 
@@ -233,12 +215,12 @@ def main():
         fm.clear_absolute_positions()
 
     cols = fm.data_frame.columns
-    logger.info('absolute positions mode: {}'.format(args.abs_mode))
 
     if 'Xs' in cols and 'Ys' in cols and 'Zs' in cols:
         logger.info('using absolute positions from {}'.format(args.yml_file))
     else:
         if args.abs_mode == ABS_MODE_NOMINAL_POSITIONS:
+            logger.info('absolute positions mode: using nominal stage coordinates')
             fm.compute_nominal_positions(args.px_size_z, args.px_size_xy)
             yml_out_file = args.yml_out_file
         else:
