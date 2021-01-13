@@ -4,6 +4,8 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open('requirements.in') as f:
+    install_requires = f.read().split()
 
 version = {}
 with open("zetastitcher/version.py") as fp:
@@ -59,22 +61,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        'cachetools',
-        'coloredlogs',
-        'cvxpy',
-        'imageio',
-        'networkx>=2.0',
-        'numpy',
-        'opencv-python',
-        'pandas',
-        'pims',
-        'psutil',
-        'pyyaml',
-        'qpsolvers',
-        'scipy',
-        'tifffile',
-    ],
+    install_requires=install_requires,
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

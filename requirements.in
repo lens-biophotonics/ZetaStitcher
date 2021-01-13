@@ -3,7 +3,7 @@ coloredlogs
 cvxpy
 humanize
 imageio
-networkx
+networkx>=2.0
 numpy
 opencv-python
 pandas
