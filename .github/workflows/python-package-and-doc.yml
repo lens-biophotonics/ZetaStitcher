@@ -2,7 +2,9 @@ name: Python package and documentation
 
 on:
   push:
-    branches: [master]
+  pull_request:
+    branches:
+      - '**:**'  # run only for PR from forked repos
   workflow_dispatch:
 
 jobs:
@@ -33,11 +35,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install . && stitch-align -h && stitch-fuse -h
         pip uninstall -y zetastitcher
-        pip install -r requirements.txt -r requirements-dev.txt
+        pip install -r requirements-dev.txt
     - name: Test
       run: make test
     - name: Build wheel
-      run: make
+      run: pip install wheel && make
     - name: sphinx
       working-directory: ./doc
       env:
@@ -45,6 +47,7 @@ jobs:
       run: make html
     - name: GitHub Pages
       uses: crazy-max/ghaction-github-pages@v2.2.0
+      if: github.ref == 'refs/heads/master'
       with:
         build_dir: doc/_build/html
       env:
