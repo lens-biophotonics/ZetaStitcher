@@ -4,7 +4,7 @@ micro = 0
 
 pre_release = None
 post_release = None
-dev_release = 3
+dev_release = 4
 
 __version__ = ''
 
