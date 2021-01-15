@@ -44,11 +44,9 @@ class VirtualFusedVolume:
 
     >>> vfv.peek[40, ..., 1000:1500, 1800:2400]
     [
-        ('0000_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(1800, 2048, 1)],
-        ('0100_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1)]
+        ('0000_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(1800, 2048, 1)]),
+        ('0100_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1)]),
     ]
-
-
     """
     def __init__(self, file_or_matrix):
         if isinstance(file_or_matrix, str):
