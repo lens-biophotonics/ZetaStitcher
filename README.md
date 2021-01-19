@@ -13,9 +13,9 @@ Key features:
 volume
 
 ## How to install
-On Ubuntu 16.04 LTS, run these commands:
+On Ubuntu 20.04 LTS, run these commands:
 ```
-sudo apt-get install cython3 python3-numpy
+sudo apt-get install python3-pip libgl1 libglib2.0-0
 sudo pip3 install zetastitcher
 ```
 
