@@ -7,3 +7,8 @@ clean:
 
 test:
 	python -m unittest discover
+
+docker: clean wheel docker-image
+
+docker-image:
+	docker build -t zetastitcher -f docker/Dockerfile dist

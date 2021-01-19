@@ -19,6 +19,17 @@ sudo apt-get install cython3 python3-numpy
 sudo pip3 install zetastitcher
 ```
 
+## Docker image
+To build a docker image with ZetaStitcher:
+```
+make docker
+```
+You can call the stitching commands using an ephemeral container like this:
+```
+docker run -it -v`pwd`:/home --rm zetastitcher stitch-align -h
+docker run -it -v`pwd`:/home --rm zetastitcher stitch-fuse -h
+```
+
 ## Documentation
 Please read the documentation and follow the tutorial at this page:<br/>
 https://lens-biophotonics.github.io/ZetaStitcher/
