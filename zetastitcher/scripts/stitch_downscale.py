@@ -8,7 +8,7 @@ import coloredlogs
 import numpy as np
 
 from zetastitcher import VirtualFusedVolume, FileMatrix
-from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.align.xcorr_filematrix import XcorrFileMatrix
 
 
 logger = logging.getLogger(__name__)

@@ -13,8 +13,8 @@ import numpy as np
 
 from . import absolute_positions
 from .fuse_runner import FuseRunner
-from ..io.filematrix import FileMatrix
-from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.align.filematrix import FileMatrix
+from zetastitcher.align.xcorr_filematrix import XcorrFileMatrix
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO', fmt='%(levelname)s [%(name)s]: %(message)s')

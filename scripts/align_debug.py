@@ -8,7 +8,7 @@ import tifffile as tiff
 
 import cv2 as cv
 
-from .io.inputfile import InputFile
+from zetastitcher.io.inputfile import InputFile
 
 
 def to_dtype(x, dtype):

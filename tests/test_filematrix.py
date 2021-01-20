@@ -4,7 +4,7 @@ import numpy as np
 
 from ddt import ddt, data
 
-from zetastitcher.io.filematrix import parse_file_name
+from zetastitcher.align.filematrix import parse_file_name
 
 
 test_vectors = [

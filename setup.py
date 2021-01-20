@@ -94,7 +94,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'stitch-align = zetastitcher.runner:main',
+            'stitch-align = zetastitcher.align.__main__:main',
             'stitch-fuse = zetastitcher.fuse.__main__:main',
             'stitch-downscale = zetastitcher.scripts.stitch_downscale:main',
         ],

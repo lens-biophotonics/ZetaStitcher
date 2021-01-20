@@ -16,14 +16,14 @@ import coloredlogs
 import numpy as np
 import pandas as pd
 
-from .io.inputfile import InputFile
-from .io.filematrix import FileMatrix
-from zetastitcher.io.xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.io.inputfile import InputFile
+from zetastitcher.align.filematrix import FileMatrix
+from zetastitcher.align.xcorr_filematrix import XcorrFileMatrix
 from zetastitcher.fuse import absolute_positions
 from zetastitcher.fuse.__main__ import ABS_MODE_MAXIMUM_SCORE
 from .normxcorr import normxcorr2_cv
 
-from .version import __version__
+from zetastitcher.version import __version__
 
 
 logger = logging.getLogger(__name__)

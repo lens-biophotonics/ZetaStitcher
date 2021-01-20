@@ -10,7 +10,7 @@ from functools import lru_cache
 
 import numpy as np
 
-from .filematrix import FileMatrix
+from zetastitcher.align.filematrix import FileMatrix
 from .inputfile import InputFile
 from ..fuse.overlaps import Overlaps
 from ..fuse.fuse import fuse_queue

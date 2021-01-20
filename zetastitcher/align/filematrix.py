@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 
-from .inputfile import InputFile
+from zetastitcher.io.inputfile import InputFile
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
