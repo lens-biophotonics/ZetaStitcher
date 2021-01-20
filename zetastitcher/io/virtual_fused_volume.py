@@ -12,8 +12,8 @@ import numpy as np
 
 from .filematrix import FileMatrix
 from .inputfile import InputFile
-from ..fuser.overlaps import Overlaps
-from ..fuser.fuse import fuse_queue
+from ..fuse.overlaps import Overlaps
+from ..fuse.fuse import fuse_queue
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())

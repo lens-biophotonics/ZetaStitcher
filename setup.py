@@ -95,7 +95,7 @@ setup(
     entry_points={
         'console_scripts': [
             'stitch-align = zetastitcher.runner:main',
-            'stitch-fuse = zetastitcher.fuser.__main__:main',
+            'stitch-fuse = zetastitcher.fuse.__main__:main',
             'stitch-downscale = zetastitcher.scripts.stitch_downscale:main',
         ],
 
