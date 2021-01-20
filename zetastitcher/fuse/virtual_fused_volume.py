@@ -11,9 +11,9 @@ from functools import lru_cache
 import numpy as np
 
 from zetastitcher.align.filematrix import FileMatrix
-from .inputfile import InputFile
-from ..fuse.overlaps import Overlaps
-from ..fuse.fuse import fuse_queue
+from zetastitcher.io.inputfile import InputFile
+from zetastitcher.fuse.overlaps import Overlaps
+from zetastitcher.fuse.fuse import fuse_queue
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
