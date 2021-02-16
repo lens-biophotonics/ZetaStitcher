@@ -44,8 +44,8 @@ class VirtualFusedVolume:
 
     >>> vfv.peek[40, ..., 1000:1500, 1800:2400]
     [
-        ('0000_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(1800, 2048, 1)]),
-        ('0100_0000.tiff', [slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1)]),
+        ('0000_0000.tiff', (slice(40, 41, 1), slice(1000, 1500, 1), slice(1800, 2048, 1))),
+        ('0100_0000.tiff', (slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1))),
     ]
     """
     def __init__(self, file_or_matrix):
@@ -200,9 +200,8 @@ class VirtualFusedVolume:
 
             def __getitem__(self, item):
                 df, myitem, X_min, X_stop, steps, flip_axis = self.obj._compute_vars(item)
-                sl = myitem[:]
 
-                return [(index, sl) for index, _, sl in self.obj._my_gen(df, X_min, X_stop, steps, sl)]
+                return [(index, tuple(sl)) for index, _, sl in self.obj._my_gen(df, X_min, X_stop, steps, myitem[:])]
 
         return WrapperClass(self)
 
@@ -234,9 +233,7 @@ class VirtualFusedVolume:
         )
         t.start()
 
-        sl = myitem[:]
-
-        for index, Xs, sl in self._my_gen(df, X_min, X_stop, steps, sl):
+        for index, Xs, sl in self._my_gen(df, X_min, X_stop, steps, myitem[:]):
             logger.info('loading {}\t{}'.format(index, sl))
             with InputFile(os.path.join(self.path, index)) as f:
                 f.squeeze = False
