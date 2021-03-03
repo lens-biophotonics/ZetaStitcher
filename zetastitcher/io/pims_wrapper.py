@@ -3,6 +3,7 @@
 import matplotlib as mpl
 mpl.use('Agg')
 
+from pathlib import Path
 from pims import ImageSequence
 
 from zetastitcher.io.inputfile_mixin import InputFileMixin
@@ -18,9 +19,12 @@ class PimsWrapper(InputFileMixin):
         if self.initializer is not None:
             self.open()
 
-    def open(self, initializer=None):
+    def open(self, initializer: Path=None):
         if initializer is not None:
             self.initializer = initializer
+
+        if not self.initializer.is_dir():
+            raise ValueError(f'{self.initializer} must be a directory')
 
         self.imseq = ImageSequence(str(self.initializer))
         setattr(self, 'close', getattr(self.imseq, 'close'))
