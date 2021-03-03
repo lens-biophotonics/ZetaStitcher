@@ -1,4 +1,5 @@
 import json
+import mimetypes
 import subprocess as sp
 from pathlib import Path
 
@@ -31,6 +32,10 @@ class FFMPEGWrapper(InputFileMixin):
     def open(self, file_path=None):
         if file_path is not None:
             self.file_path = Path(file_path)
+
+        mtype = mimetypes.guess_type(self.file_path)[0]
+        if mtype is None or not mtype.startswith('video'):
+            raise ValueError(f'Invalid MIME type:{mtype}')
 
         cmd = [
             'ffprobe',
