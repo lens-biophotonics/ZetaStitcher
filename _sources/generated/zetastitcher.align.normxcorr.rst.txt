@@ -1,0 +1,7 @@
+zetastitcher.align.normxcorr module
+===================================
+
+.. automodule:: zetastitcher.align.normxcorr
+   :members:
+   :undoc-members:
+   :show-inheritance:

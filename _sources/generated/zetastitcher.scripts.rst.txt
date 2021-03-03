@@ -1,0 +1,15 @@
+zetastitcher.scripts package
+============================
+
+.. automodule:: zetastitcher.scripts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.scripts.stitch_downscale

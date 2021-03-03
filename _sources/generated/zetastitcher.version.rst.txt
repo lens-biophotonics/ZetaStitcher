@@ -1,0 +1,7 @@
+zetastitcher.version module
+===========================
+
+.. automodule:: zetastitcher.version
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+zetastitcher.io.mhdwrapper module
+=================================
+
+.. automodule:: zetastitcher.io.mhdwrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

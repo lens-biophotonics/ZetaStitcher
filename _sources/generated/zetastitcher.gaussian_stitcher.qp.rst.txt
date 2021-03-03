@@ -1,0 +1,17 @@
+zetastitcher.gaussian\_stitcher.qp package
+==========================================
+
+.. automodule:: zetastitcher.gaussian_stitcher.qp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.gaussian_stitcher.qp.mapper
+   zetastitcher.gaussian_stitcher.qp.stitching
+   zetastitcher.gaussian_stitcher.qp.util_debug

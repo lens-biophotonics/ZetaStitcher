@@ -1,0 +1,7 @@
+zetastitcher.gaussian\_stitcher.qp.stitching module
+===================================================
+
+.. automodule:: zetastitcher.gaussian_stitcher.qp.stitching
+   :members:
+   :undoc-members:
+   :show-inheritance:

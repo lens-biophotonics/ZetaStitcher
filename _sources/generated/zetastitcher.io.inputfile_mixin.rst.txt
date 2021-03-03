@@ -1,0 +1,7 @@
+zetastitcher.io.inputfile\_mixin module
+=======================================
+
+.. automodule:: zetastitcher.io.inputfile_mixin
+   :members:
+   :undoc-members:
+   :show-inheritance:

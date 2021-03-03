@@ -1,0 +1,7 @@
+zetastitcher.fuse.fuse module
+=============================
+
+.. automodule:: zetastitcher.fuse.fuse
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,21 @@
+zetastitcher.io package
+=======================
+
+.. automodule:: zetastitcher.io
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.io.ffmpeg_wrapper
+   zetastitcher.io.inputfile
+   zetastitcher.io.inputfile_mixin
+   zetastitcher.io.mhdwrapper
+   zetastitcher.io.pims_wrapper
+   zetastitcher.io.tiffwrapper
+   zetastitcher.io.zipwrapper

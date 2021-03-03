@@ -1,0 +1,4 @@
+Module reference
+================
+
+`modindex`
