@@ -57,7 +57,6 @@ def parse_file_name(file_name):
         except IndexError:
             fields.append(0)
 
-    logger.info('adding {} \tX={} Y={} Z={}'.format(file_name, *fields))
     return fields
 
 
@@ -206,6 +205,7 @@ class FileMatrix:
                     shape = [infile.nfrms, infile.ysize, infile.xsize]
             flist += fields + shape
             flist.append(name)
+            logger.info('adding {} \tX={} Y={} Z={}'.format(name, *fields))
         except (RuntimeError, ValueError):
             raise
         return shape
