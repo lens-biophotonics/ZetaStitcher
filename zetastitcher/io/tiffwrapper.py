@@ -43,17 +43,19 @@ class TiffWrapper(InputFileMixin):
         self.xsize = self.tfile.pages[0].imagewidth
         self.ysize = self.tfile.pages[0].imagelength
 
-        axes = self.tfile.pages[0].axes
+        axes = self.tfile.series[0].axes
 
-        if axes.startswith('YX') or axes.startswith('IYX'):
-            self.nchannels = self.tfile.pages[0].shaped[-1]
-        elif axes == 'SYX':
-            self.nchannels = self.tfile.pages[0].shaped[1]
+        if 'C' in axes:
+            self.nchannels = self.tfile.series[0].shape[axes.index('C')]
+        elif 'S' in axes:
+            self.nchannels = self.tfile.series[0].shape[axes.index('S')]
 
-        if axes.startswith('IYX'):
-            nfrms = self.tfile.pages[0]._shape[0]
-        else:
+        if 'Z' in axes:
+            nfrms = self.tfile.series[0].shape[axes.index('Z')]
+        elif not 'C' in axes:
             nfrms = len(self.tfile.pages)
+        else:
+            nfrms = 1
         if self.glob_mode:
             nfrms *= len(self.flist)
 
