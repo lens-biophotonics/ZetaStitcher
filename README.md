@@ -1,5 +1,5 @@
 <p align="center">
-<img src="doc/_static/zetastitcher.svg", height="150">
+<img src="https://raw.githubusercontent.com/lens-biophotonics/ZetaStitcher/master/doc/_static/zetastitcher.svg", height="150">
 </p>
 
 ZetaStitcher is a tool designed to stitch large volumetric images such as
@@ -16,7 +16,7 @@ volume
 On Ubuntu 20.04 LTS, run these commands:
 ```
 sudo apt-get install python3-pip libgl1 libglib2.0-0
-sudo pip3 install zetastitcher
+pip3 install zetastitcher
 ```
 
 ## Docker image
