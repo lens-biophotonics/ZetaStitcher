@@ -57,9 +57,6 @@ def parse_args():
 
     group.add_argument('--ch', type=int, dest='channel', help='channel')
 
-    group.add_argument('-c', type=str, default=0, dest='compression',
-                       choices=[str(i) for i in range(10)] + ['lzma'],
-                       help='compression')
     group.add_argument('--downsample-xy', metavar='S', type=int, required=False,
                        help='downsample XY plane by factor S')
 
@@ -161,11 +158,6 @@ def preprocess_and_check_args(args):
     elif args.nz is not None:
         args.zmax = args.zmin + args.nz
 
-    try:
-        args.compression = int(args.compression)
-    except ValueError:
-        pass
-
 
 def compute_absolute_positions(args, fm):
     xcorr_fm = XcorrFileMatrix.from_yaml(fm.input_path)
@@ -247,8 +239,7 @@ def main():
     logger.info(f'fused shape, whole volume: {fr.output_shape}, {bytes_human}')
     if args.output_filename is not None:
 
-        keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel',
-                'compression', 'downsample_xy']
+        keys = ['zmin', 'zmax', 'output_filename', 'debug', 'channel', 'downsample_xy']
 
         for k in keys:
             setattr(fr, k, getattr(args, k))

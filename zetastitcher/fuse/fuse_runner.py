@@ -106,7 +106,6 @@ class FuseRunner(object):
                 fused = np.moveaxis(fused, -3, -1)
 
             logger.info('saving output to {}'.format(self.output_filename))
-            tiff.imwrite(self.output_filename, fused, append=True,
-                         bigtiff=bigtiff, compress=self.compression)
+            tiff.imwrite(self.output_filename, fused, append=True, bigtiff=bigtiff, compression='zlib')
 
             self.zmin += thickness
