@@ -4,27 +4,25 @@
 #
 #    pip-compile requirements.in
 #
-cachetools==4.2.0
+cachetools==4.2.4
     # via -r requirements.in
-coloredlogs==15.0
+coloredlogs==15.0.1
     # via -r requirements.in
-cvxpy==1.1.7
+cvxpy==1.1.15
     # via -r requirements.in
-cython==0.29.21
-    # via quadprog
-decorator==4.4.2
-    # via networkx
+cython==0.29.24
+    # via qpsolvers
 ecos==2.0.7.post1
     # via cvxpy
-humanfriendly==9.1
+humanfriendly==10.0
     # via coloredlogs
-humanize==3.2.0
+humanize==3.12.0
     # via -r requirements.in
 imageio==2.9.0
     # via -r requirements.in
-networkx==2.5
+networkx==2.6.3
     # via -r requirements.in
-numpy==1.19.5
+numpy==1.21.2
     # via
     #   -r requirements.in
     #   cvxpy
@@ -34,50 +32,57 @@ numpy==1.19.5
     #   osqp
     #   pandas
     #   pims
+    #   qdldl
+    #   qpsolvers
+    #   quadprog
     #   scipy
     #   scs
     #   tifffile
-opencv-python==4.5.1.48
+opencv-python==4.5.3.56
     # via -r requirements.in
-osqp==0.6.2
+osqp==0.6.2.post0
     # via cvxpy
-pandas==1.2.0
+pandas==1.3.3
     # via -r requirements.in
-pillow==8.1.0
+pillow==8.3.2
     # via imageio
 pims==0.5
     # via -r requirements.in
 psutil==5.8.0
     # via -r requirements.in
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via pandas
-pytz==2020.5
+pytz==2021.3
     # via pandas
-pyyaml==5.3.1
+pyyaml==5.4.1
     # via -r requirements.in
 qdldl==0.1.5.post0
-    # via osqp
-qpsolvers==1.5
+    # via
+    #   osqp
+    #   qpsolvers
+qpsolvers==1.7.1
     # via -r requirements.in
-quadprog==0.1.8
+quadprog==0.1.10
     # via qpsolvers
-scipy==1.6.0
+scipy==1.7.1
     # via
     #   -r requirements.in
     #   cvxpy
     #   ecos
     #   osqp
+    #   qdldl
+    #   qpsolvers
     #   scs
-scs==2.1.2
+scs==2.1.4
     # via cvxpy
-six==1.15.0
+six==1.16.0
     # via
     #   pims
     #   python-dateutil
     #   slicerator
 slicerator==1.0.0
     # via pims
-tifffile==2021.1.8
+tifffile==2021.8.30
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
