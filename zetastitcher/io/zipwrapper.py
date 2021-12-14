@@ -20,7 +20,10 @@ import numpy as np
 
 from zetastitcher.io.inputfile_mixin import InputFileMixin
 
-_cache = None
+# disable cache
+_cache = LRUCache(maxsize=0)
+_cache.hits = 0
+_cache.misses = 0
 
 
 def set_cache(cache):
@@ -44,9 +47,6 @@ def set_cache(cache):
     _cache = cache
     _cache.hits = 0
     _cache.misses = 0
-
-
-set_cache(LRUCache(maxsize=0))  # disable cache
 
 
 def get_typecodes():
