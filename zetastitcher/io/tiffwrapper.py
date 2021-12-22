@@ -65,23 +65,28 @@ class TiffWrapper(InputFileMixin):
     def zslice(self, arg1, arg2=None, step=1, dtype=None, copy=True):
         myslice = self._args_to_slice(arg1, arg2, step)
 
-        if not self.glob_mode:
-            if len(self.tfile.pages) == 1 and self.nfrms > 1:
-                a = self.tfile.asarray(0, out='memmap')
-                a = a[myslice]
-            else:
-                try:
-                    a = self.tfile.asarray(myslice, out=None if copy else 'memmap')
-                except StopIteration:
-                    return np.array([])
-        else:
+        if self.glob_mode:
             flist = self.flist[myslice]
             if not flist:
                 return np.array([])
             a = tiff.imread(list(map(str, flist)))
+        else:
+            mma = self.tfile.asarray(out='memmap')
+            a = mma
 
-        if self.axes == 'SYX':
-            a = np.moveaxis(a, 1, -1)
+            for letter in 'ZQ':
+                if letter in self.axes:
+                    # take only first element of left-most axes (e.g. time)
+                    mma = mma[tuple(0 for _ in range(self.axes.index(letter)))]
+                    if len(mma.shape) >= 3:
+                        a = mma[myslice]
+                    break
+
+            if copy:
+                a = np.copy(a)
+
+        if 'C' in self.axes:
+            a = np.moveaxis(a, self.axes.index('C') - len(self.axes), -1)
 
         if dtype is None:
             return a
