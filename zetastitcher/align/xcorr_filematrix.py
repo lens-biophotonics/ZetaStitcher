@@ -2,7 +2,7 @@ import yaml
 import pandas as pd
 
 
-class XcorrFileMatrix(object):
+class XcorrFileMatrix:
     def __init__(self):
         self.xcorr_options = None
 
