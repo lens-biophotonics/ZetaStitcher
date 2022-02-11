@@ -4,23 +4,23 @@
 #
 #    pip-compile requirements.in
 #
-cachetools==4.2.4
+cachetools==5.0.0
     # via -r requirements.in
 coloredlogs==15.0.1
     # via -r requirements.in
-cvxpy==1.1.17
+cvxpy==1.1.18
     # via -r requirements.in
-ecos==2.0.8
+ecos==2.0.10
     # via cvxpy
 humanfriendly==10.0
     # via coloredlogs
-humanize==3.13.1
+humanize==3.14.0
     # via -r requirements.in
-imageio==2.13.3
+imageio==2.15.0
     # via -r requirements.in
 networkx==2.6.3
     # via -r requirements.in
-numpy==1.21.4
+numpy==1.22.2
     # via
     #   -r requirements.in
     #   cvxpy
@@ -34,17 +34,17 @@ numpy==1.21.4
     #   scipy
     #   scs
     #   tifffile
-opencv-python==4.5.4.60
+opencv-python==4.5.5.62
     # via -r requirements.in
-osqp==0.6.2.post0
+osqp==0.6.2.post5
     # via cvxpy
-pandas==1.3.5
+pandas==1.4.0
     # via -r requirements.in
-pillow==8.4.0
+pillow==9.0.1
     # via imageio
 pims==0.5
     # via -r requirements.in
-psutil==5.8.0
+psutil==5.9.0
     # via -r requirements.in
 python-dateutil==2.8.2
     # via pandas
@@ -54,11 +54,11 @@ pyyaml==6.0
     # via -r requirements.in
 qdldl==0.1.5.post0
     # via osqp
-qpsolvers==1.7.2
+qpsolvers==1.8.0
     # via -r requirements.in
 quadprog==0.1.11
     # via qpsolvers
-scipy==1.7.3
+scipy==1.8.0
     # via
     #   -r requirements.in
     #   cvxpy
@@ -66,7 +66,7 @@ scipy==1.7.3
     #   osqp
     #   qpsolvers
     #   scs
-scs==2.1.4
+scs==3.1.0
     # via cvxpy
 six==1.16.0
     # via
@@ -75,5 +75,5 @@ six==1.16.0
     #   slicerator
 slicerator==1.0.0
     # via pims
-tifffile==2021.11.2
+tifffile==2022.2.9
     # via -r requirements.in
