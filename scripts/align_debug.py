@@ -122,7 +122,12 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
     if axis == 2:
         fused = np.rot90(fused, axes=(-1, -2), k=3)
 
+    composite = np.zeros(a_roi.shape + (3,), dtype=a_roi.dtype)
+    composite[..., 0] = a_roi
+    composite[..., 1] = b_roi
+
     tiff.imsave('fused.tiff', fused.astype(np.float32))
+    tiff.imsave('composite.tiff', composite.astype(np.float32))
     return shift + [score]
 
 
