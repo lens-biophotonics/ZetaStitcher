@@ -19,9 +19,9 @@ import pandas as pd
 from zetastitcher.io.inputfile import InputFile
 from zetastitcher.align.filematrix import FileMatrix
 from zetastitcher.align.xcorr_filematrix import XcorrFileMatrix
+from zetastitcher.align.dog import align_dog
 from zetastitcher.fuse import absolute_positions
 from zetastitcher.fuse.__main__ import ABS_MODE_MAXIMUM_SCORE
-from .normxcorr import normxcorr2_cv
 
 from zetastitcher.version import __version__
 
@@ -168,9 +168,6 @@ def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
         aslice = np.rot90(aslice, axes=(-1, -2))
     aslice = aslice[..., -(overlap + max_dy):, :]
 
-    padding = [(0, 0), (0, 0), (max_dx, max_dx)]
-    aslice = np.pad(aslice, padding, 'constant')
-
     bframe = b.zslice_idx(z_frame, copy=True)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
@@ -179,7 +176,14 @@ def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
     aslice = aslice.astype(np.float32)
     bframe = bframe.astype(np.float32)
 
-    xcorr = normxcorr2_cv(aslice, bframe)
+    output_shape = np.array(aslice.shape) + np.array((0, 0, 2 * max_dx)) - np.array(bframe.shape) + 1
+    output_shape[0] = aslice.shape[0]
+    xcorr = np.zeros(output_shape)
+
+    for i in range(xcorr.shape[0]):
+        cc, max_loc = align_dog(aslice[i], bframe[0], 0, max_dx)
+        xcorr[i] = cc
+
     shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
     score = xcorr[tuple(shift)]
     if score < 0 or score > 1:

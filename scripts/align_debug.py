@@ -6,9 +6,9 @@ import argparse
 import numpy as np
 import tifffile as tiff
 
-import cv2 as cv
-
 from zetastitcher.io.inputfile import InputFile
+
+from zetastitcher.align.dog import align_dog
 
 
 def to_dtype(x, dtype):
@@ -76,19 +76,16 @@ def stitch(aname, bname, z_frame, axis, overlap, max_shift_z=20,
         bframe = np.rot90(bframe, axes=(-1, -2))
     b_roi = bframe[..., :overlap - max_shift_y, :].astype(np.float32)
 
-    padding = [(0, 0), (0, 0), (max_shift_x, max_shift_x)]
-
-    a_roi = np.pad(a_roi, padding, 'constant').astype(np.float32)
-
     tiff.imsave('aslice.tiff', a_roi.astype(np.float32))
     tiff.imsave('bframe.tiff', b_roi.astype(np.float32))
 
-    output_shape = np.array(a_roi.shape) - np.array(b_roi.shape) + 1
+    output_shape = np.array(a_roi.shape) + np.array((0, 0, 2 * max_shift_x)) - np.array(b_roi.shape) + 1
     output_shape[0] = a_roi.shape[0]
     xcorr = np.zeros(output_shape)
 
     for i in range(xcorr.shape[0]):
-        xcorr[i] = cv.matchTemplate(a_roi[i], b_roi[0], cv.TM_CCOEFF_NORMED)
+        cc, max_loc = align_dog(a_roi[i], b_roi[0], 0, max_shift_x)
+        xcorr[i] = cc
     tiff.imsave('xcorr.tiff', xcorr.astype(np.float32))
 
     shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
