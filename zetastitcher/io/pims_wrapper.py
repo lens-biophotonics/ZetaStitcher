@@ -1,7 +1,10 @@
-# Suppress warnings when importing pims on a machine without display server
-# The warnings are due to import matplotlib.pyplot as plt in pim's display.py
-import matplotlib as mpl
-mpl.use('Agg')
+try:
+    # Suppress warnings when importing pims on a machine without display server
+    # The warnings are due to import matplotlib.pyplot as plt in pim's display.py
+    import matplotlib as mpl
+    mpl.use('Agg')
+except ModuleNotFoundError:
+    pass
 
 from pathlib import Path
 from pims import ImageSequence
