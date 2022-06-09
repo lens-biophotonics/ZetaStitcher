@@ -24,7 +24,7 @@ class FuseRunner(object):
         self.zmax = None
         self.downsample_xy = None
         self.output_filename = None
-        self.channel = -1
+        self.channel = None
         self.compression = 'zlib'
 
         self._is_multichannel = None
@@ -45,7 +45,6 @@ class FuseRunner(object):
         self.vfv.overlay_debug_enabled = value
 
     @property
-    @lru_cache()
     def is_multichannel(self):
         if self.channel is not None:
             return False
@@ -66,6 +65,9 @@ class FuseRunner(object):
         if self.downsample_xy:
             output_shape[-2] /= self.downsample_xy
             output_shape[-1] /= self.downsample_xy
+
+        if self.vfv.nchannels > 1 and not self.is_multichannel:
+            del output_shape[1]
 
         return tuple(map(math.ceil, output_shape))
 
