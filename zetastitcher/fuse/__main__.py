@@ -55,7 +55,7 @@ def parse_args():
     group.add_argument('-d', dest='debug', action='store_true',
                        help='overlay debug info')
 
-    group.add_argument('--ch', type=int, dest='channel', help='channel')
+    group.add_argument('-c', '--ch', type=int, dest='channel', help='channel')
 
     group.add_argument('--downsample-xy', metavar='S', type=int, required=False,
                        help='downsample XY plane by factor S')

@@ -23,7 +23,7 @@ class InputFile(InputFileMixin):
         super().__init__()
         self.file_path = file_path
         self.wrapper = None
-        self._channel = -1
+        self._channel = None
         self.squeeze = True
 
         self.nfrms = None
@@ -103,7 +103,7 @@ class InputFile(InputFileMixin):
             the `channels` dimension is squeezed.
         """
         s = [self.nfrms, self.nchannels, self.ysize, self.xsize]
-        if self.nchannels == 1 or self.channel != -1:
+        if self.nchannels == 1 or self.channel is not None:
             del s[1]
         return tuple(s)
 
@@ -223,9 +223,7 @@ class InputFile(InputFileMixin):
                 a[z] = self.wrapper.frame(i)
                 z += 1
 
-        if self.channel == -2:
-            a = np.sum(a, axis=-1)
-        elif self.channel != -1:
+        if self.channel is not None:
             a = a[..., self.channel]
         elif self.nchannels > 1 and a.ndim >= 3:
             a = np.moveaxis(a, -1, -3)

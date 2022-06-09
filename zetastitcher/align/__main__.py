@@ -54,7 +54,7 @@ Unless otherwise stated, all values are expected in px.
 
     parser.add_argument('input_folder', help='input folder')
     parser.add_argument('-o', type=str, default='stitch.yml', dest='output_file', help='output file')
-    parser.add_argument('-c', type=str, default='s', dest='channel', choices=['r', 'g', 'b', 's'], help='color channel')
+    parser.add_argument('-c', '--ch', type=int, dest='channel', help='color channel')
     parser.add_argument('-j', type=int, dest='n_of_workers',
                         help='number of parallel jobs (defaults to number of system cores)')
     parser.add_argument('-r', action='store_true', dest='recursive', help='recursively look for files')
@@ -120,15 +120,6 @@ Unless otherwise stated, all values are expected in px.
         setattr(args, 'overlap_h', args.overlap)
         setattr(args, 'overlap_v', args.overlap)
 
-    channels = {
-        's': -2,  # sum
-        'r': 0,
-        'g': 1,
-        'b': 2
-    }
-
-    args.channel = channels[args.channel]
-
     args.max_dx = int(round(args.max_dx / args.px_size_xy))
     args.max_dy = int(round(args.max_dy / args.px_size_xy))
     args.max_dz = int(round(args.max_dz / args.px_size_z))
@@ -157,18 +148,25 @@ def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
     a = InputFile(aname)
     b = InputFile(bname)
 
-    a.channel = channel
-    b.channel = channel
-
     z_min = z_frame - max_dz
     z_max = z_frame + max_dz + 1
 
     aslice = a.zslice(z_min, z_max, copy=True)
+    if a.nchannels > 1:
+        if channel is not None:
+            aslice = aslice[:, channel]
+        else:
+            aslice = np.sum(aslice.astype(np.float32), axis=1)
     if axis == 2:
         aslice = np.rot90(aslice, axes=(-1, -2))
     aslice = aslice[..., -(overlap + max_dy):, :]
 
     bframe = b.zslice_idx(z_frame, copy=True)
+    if b.nchannels > 1:
+        if channel is not None:
+            bframe = bframe[:, channel]
+        else:
+            bframe = np.sum(bframe.astype(np.float32), axis=1)
     if axis == 2:
         bframe = np.rot90(bframe, axes=(-1, -2))
     bframe = bframe[..., :overlap - max_dy, :]
