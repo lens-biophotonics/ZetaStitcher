@@ -1,9 +1,9 @@
 major = 0
-minor = 6
+minor = 7
 micro = 0
 
 pre_release = None
-post_release = None
+post_release = 1
 dev_release = None
 
 __version__ = ''
