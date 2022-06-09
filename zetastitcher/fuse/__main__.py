@@ -57,9 +57,8 @@ def parse_args():
 
     group.add_argument('-c', '--ch', type=int, dest='channel', help='channel')
 
-    group.add_argument('-c', type=str, default=0, dest='compression',
-                       choices=[str(i) for i in range(10)] + ['lzma'],
-                       help='compression')
+    group.add_argument('--compression', type=str, default='zlib', help='int or string')
+
     group.add_argument('--downsample-xy', metavar='S', type=int, required=False,
                        help='downsample XY plane by factor S')
 
