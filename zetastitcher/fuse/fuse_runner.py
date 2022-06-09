@@ -25,7 +25,7 @@ class FuseRunner(object):
         self.downsample_xy = None
         self.output_filename = None
         self.channel = -1
-        self.compression = 0
+        self.compression = 'zlib'
 
         self._is_multichannel = None
 
@@ -106,6 +106,6 @@ class FuseRunner(object):
                 fused = np.moveaxis(fused, -3, -1)
 
             logger.info('saving output to {}'.format(self.output_filename))
-            tiff.imwrite(self.output_filename, fused, append=True, bigtiff=bigtiff, compression='zlib')
+            tiff.imwrite(self.output_filename, fused, append=True, bigtiff=bigtiff, compression=self.compression)
 
             self.zmin += thickness
