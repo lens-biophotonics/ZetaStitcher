@@ -1,0 +1,7 @@
+zetastitcher
+============
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher

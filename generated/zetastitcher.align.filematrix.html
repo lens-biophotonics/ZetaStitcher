@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zetastitcher.align.filematrix module &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>zetastitcher.align.filematrix module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/zetastitcher.align.filematrix.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-zetastitcher.align.filematrix">
+<span id="zetastitcher-align-filematrix-module"></span><h1>zetastitcher.align.filematrix module<a class="headerlink" href="#module-zetastitcher.align.filematrix" title="Permalink to this headline">¶</a></h1>
+<p>Parse input file names, compute tile coordinates.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">zetastitcher.align.filematrix.</span></span><span class="sig-name descname"><span class="pre">FileMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascending_tiles_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascending_tiles_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equal_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Data structures for a matrix of input files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Nx</strong></dt><dd></dd>
+<dt><strong>Ny</strong></dt><dd></dd>
+<dt><strong>full_height</strong></dt><dd></dd>
+<dt><strong>full_thickness</strong></dt><dd></dd>
+<dt><strong>full_width</strong></dt><dd></dd>
+<dt><a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_X" title="zetastitcher.align.filematrix.FileMatrix.tiles_along_X"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tiles_along_X</span></code></a></dt><dd><p>Groups of tiles to be stitched along <code class="xref any docutils literal notranslate"><span class="pre">X</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_Y" title="zetastitcher.align.filematrix.FileMatrix.tiles_along_Y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tiles_along_Y</span></code></a></dt><dd><p>Groups of tiles to be stitched along <code class="xref any docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_dir" title="zetastitcher.align.filematrix.FileMatrix.tiles_along_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tiles_along_dir</span></code></a></dt><dd><p>Groups of tiles to be stitched along a given direction.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.load_dir" title="zetastitcher.align.filematrix.FileMatrix.load_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_dir</span></code></a>([dir, recursive])</p></td>
+<td><p>Look for files in <a class="reference external" href="https://docs.python.org/3/library/functions.html#dir" title="(in Python v3.10)"><code class="xref any docutils literal notranslate"><span class="pre">dir</span></code></a> recursively and populate data structures.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.slices" title="zetastitcher.align.filematrix.FileMatrix.slices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slices</span></code></a>()</p></td>
+<td><p>A slice is a group of tiles that share at least a <code class="xref any docutils literal notranslate"><span class="pre">z</span></code> frame.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 74%" />
+<col style="width: 26%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>clear_absolute_positions</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>compute_end_pos</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>compute_nominal_positions</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_json</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>load_yaml</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>parse_and_append</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>process_data_frame</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>save_to_yaml</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.Nx">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">Nx</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.Nx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.Ny">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">Ny</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.Ny" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.clear_absolute_positions">
+<span class="sig-name descname"><span class="pre">clear_absolute_positions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.clear_absolute_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.compute_end_pos">
+<span class="sig-name descname"><span class="pre">compute_end_pos</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.compute_end_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.compute_nominal_positions">
+<span class="sig-name descname"><span class="pre">compute_nominal_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">px_size_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px_size_xy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.compute_nominal_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.data_frame">
+<span class="sig-name descname"><span class="pre">data_frame</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.data_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> object. Contains the following
+columns: <code class="xref any docutils literal notranslate"><span class="pre">X</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Y</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Z</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Z_end</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">ysize</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">nfrms</span></code>,
+<code class="xref any docutils literal notranslate"><span class="pre">filename</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.full_height">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">full_height</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.full_height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.full_thickness">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">full_thickness</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.full_thickness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.full_width">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">full_width</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.full_width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.get_json">
+<span class="sig-name descname"><span class="pre">get_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.get_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.load_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look for files in <a class="reference external" href="https://docs.python.org/3/library/functions.html#dir" title="(in Python v3.10)"><code class="xref any docutils literal notranslate"><span class="pre">dir</span></code></a> recursively and populate data structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dir</strong><span class="classifier">path</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.load_yaml">
+<span class="sig-name descname"><span class="pre">load_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.load_yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.parse_and_append">
+<span class="sig-name descname"><span class="pre">parse_and_append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.parse_and_append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.process_data_frame">
+<span class="sig-name descname"><span class="pre">process_data_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.process_data_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.save_to_yaml">
+<span class="sig-name descname"><span class="pre">save_to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.save_to_yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.slices">
+<span class="sig-name descname"><span class="pre">slices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>A slice is a group of tiles that share at least a <code class="xref any docutils literal notranslate"><span class="pre">z</span></code> frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>comp</strong><span class="classifier">generator</span></dt><dd><p>A generator of graphs, one for each connected component of G,
+where G is the graph of tiles connected by at least a <code class="xref any docutils literal notranslate"><span class="pre">z</span></code> frame.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.tiles_along_X">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">tiles_along_X</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_X" title="Permalink to this definition">¶</a></dt>
+<dd><p>Groups of tiles to be stitched along <code class="xref any docutils literal notranslate"><span class="pre">X</span></code>.</p>
+<p>Equivalent to <a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_dir" title="zetastitcher.align.filematrix.FileMatrix.tiles_along_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tiles_along_dir</span></code></a> having sent the following
+tuple: <code class="code docutils literal notranslate"><span class="pre">(['Z',</span> <span class="pre">'X',</span> <span class="pre">'Y'],</span> <span class="pre">'Y')</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a></dt><dd><p>A group of tiles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.tiles_along_Y">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">tiles_along_Y</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_Y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Groups of tiles to be stitched along <code class="xref any docutils literal notranslate"><span class="pre">Y</span></code>.</p>
+<p>Equivalent to <a class="reference internal" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_dir" title="zetastitcher.align.filematrix.FileMatrix.tiles_along_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tiles_along_dir</span></code></a> having sent the following
+tuple: <code class="code docutils literal notranslate"><span class="pre">(['Z',</span> <span class="pre">'Y',</span> <span class="pre">'X'],</span> <span class="pre">'X')</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a></dt><dd><p>A group of tiles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.FileMatrix.tiles_along_dir">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">tiles_along_dir</span></span><a class="headerlink" href="#zetastitcher.align.filematrix.FileMatrix.tiles_along_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Groups of tiles to be stitched along a given direction.</p>
+<dl class="simple">
+<dt>You need to send to this generator a tuple containing:</dt><dd><ul class="simple">
+<li><p>a list for sorting the <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>, such as             <code class="code docutils literal notranslate"><span class="pre">['Z',</span> <span class="pre">'Y',</span> <span class="pre">'X']</span></code></p></li>
+<li><p>an axis for grouping, such as <code class="code docutils literal notranslate"><span class="pre">'Y'</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a></dt><dd><p>A group of tiles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.align.filematrix.parse_file_name">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.align.filematrix.</span></span><span class="sig-name descname"><span class="pre">parse_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.align.filematrix.parse_file_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse fields (stage coordinates) contained in <code class="xref any docutils literal notranslate"><span class="pre">file_name</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>file_name</strong><span class="classifier">str</span></dt><dd><p>The string to be parsed</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>x, y, z</strong><span class="classifier">int</span></dt><dd><p>The parsed stage coordinates.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+zetastitcher.io.pims\_wrapper module
+====================================
+
+.. automodule:: zetastitcher.io.pims_wrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

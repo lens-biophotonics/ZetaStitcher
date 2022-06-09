@@ -1,0 +1,7 @@
+zetastitcher.align.dog module
+=============================
+
+.. automodule:: zetastitcher.align.dog
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zetastitcher.io.zipwrapper module &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>zetastitcher.io.zipwrapper module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/zetastitcher.io.zipwrapper.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-zetastitcher.io.zipwrapper">
+<span id="zetastitcher-io-zipwrapper-module"></span><h1>zetastitcher.io.zipwrapper module<a class="headerlink" href="#module-zetastitcher.io.zipwrapper" title="Permalink to this headline">¶</a></h1>
+<p>This module provides <a class="reference internal" href="#zetastitcher.io.zipwrapper.ZipWrapper" title="zetastitcher.io.zipwrapper.ZipWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ZipWrapper</span></code></a>, a class for accessing a stack of images
+stored in a .zip file one frame per file. Files inside the .zip archive must
+will be accessed in alphabetical order.</p>
+<p>For faster access when using compressed formats (such as JPEG2000), a cache can
+optionally be anabled using <a class="reference internal" href="#zetastitcher.io.zipwrapper.set_cache" title="zetastitcher.io.zipwrapper.set_cache"><code class="xref any py py-func docutils literal notranslate"><span class="pre">set_cache()</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.ZipWrapper">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">zetastitcher.io.zipwrapper.</span></span><span class="sig-name descname"><span class="pre">ZipWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.ZipWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="zetastitcher.io.inputfile_mixin.html#zetastitcher.io.inputfile_mixin.InputFileMixin" title="zetastitcher.io.inputfile_mixin.InputFileMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">zetastitcher.io.inputfile_mixin.InputFileMixin</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_size</span></code></dt><dd><p>Size in bytes of the whole virtual array</p>
+</dd>
+<dt><strong>file_size</strong></dt><dd></dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">frame_size</span></code></dt><dd><p>Size in bytes of a single frame</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></dt><dd><p>Shape of the whole image stack.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>close</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>frame</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>open</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>zslice</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.ZipWrapper.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.ZipWrapper.frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.ZipWrapper.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.ZipWrapper.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.ZipWrapper.zslice">
+<span class="sig-name descname"><span class="pre">zslice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.ZipWrapper.zslice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.get_typecodes">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.io.zipwrapper.</span></span><span class="sig-name descname"><span class="pre">get_typecodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.get_typecodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.imread_wrapper">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.io.zipwrapper.</span></span><span class="sig-name descname"><span class="pre">imread_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">internal_fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.imread_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.io.zipwrapper.set_cache">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.io.zipwrapper.</span></span><span class="sig-name descname"><span class="pre">set_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.zipwrapper.set_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a cache for <a class="reference internal" href="#zetastitcher.io.zipwrapper.ZipWrapper.zslice" title="zetastitcher.io.zipwrapper.ZipWrapper.zslice"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ZipWrapper.zslice</span></code></a>.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">zetastitcher.io.zipwrapper</span> <span class="k">as</span> <span class="nn">zw</span>
+<span class="kn">from</span> <span class="nn">cachetools</span> <span class="kn">import</span> <span class="n">LRUCache</span>
+<span class="n">zw</span><span class="o">.</span><span class="n">set_cache</span><span class="p">(</span><span class="n">LRUCache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">32</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>cache</strong><span class="classifier"><a class="reference external" href="https://cachetools.readthedocs.io/en/stable/index.html#cachetools.Cache" title="(in cachetools vattr: cachetools.__version__)"><code class="docutils literal notranslate"><span class="pre">cachetools.Cache</span></code></a></span></dt><dd><p>The cache instance to use.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

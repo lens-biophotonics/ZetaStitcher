@@ -1,0 +1,7 @@
+zetastitcher.io.inputfile module
+================================
+
+.. automodule:: zetastitcher.io.inputfile
+   :members:
+   :undoc-members:
+   :show-inheritance:

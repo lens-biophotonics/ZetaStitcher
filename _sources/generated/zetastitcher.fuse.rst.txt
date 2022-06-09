@@ -1,0 +1,20 @@
+zetastitcher.fuse package
+=========================
+
+.. automodule:: zetastitcher.fuse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.fuse.absolute_positions
+   zetastitcher.fuse.fuse
+   zetastitcher.fuse.fuse_runner
+   zetastitcher.fuse.lcd_numbers
+   zetastitcher.fuse.overlaps
+   zetastitcher.fuse.virtual_fused_volume

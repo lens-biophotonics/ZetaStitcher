@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zetastitcher.fuse.fuse module &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>zetastitcher.fuse.fuse module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/zetastitcher.fuse.fuse.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-zetastitcher.fuse.fuse">
+<span id="zetastitcher-fuse-fuse-module"></span><h1>zetastitcher.fuse.fuse module<a class="headerlink" href="#module-zetastitcher.fuse.fuse" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.fuse.fuse.flatten">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.fuse.fuse.</span></span><span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">my_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.fuse.fuse.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.fuse.fuse.fuse_queue">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.fuse.fuse.</span></span><span class="sig-name descname"><span class="pre">fuse_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.fuse.fuse.fuse_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fuse a queue of images along Y, optionally applying padding.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>q</strong><span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/queue.html#queue.Queue" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a></span></dt><dd><p>A queue containing elements in the form <code class="docutils literal notranslate"><span class="pre">[hyperslice,</span> <span class="pre">index,</span> <span class="pre">zfrom,</span>
+<span class="pre">offset_idx,</span> <span class="pre">top_left,</span> <span class="pre">overlaps]</span></code> where <code class="xref any docutils literal notranslate"><span class="pre">hyperslice</span></code> is a
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref any docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/index.html" title="(in pandas v1.4.2)"><code class="docutils literal notranslate"><span class="pre">pandas</span> <span class="pre">documentation</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">zfrom</span></code> are the tile index in the
+pandas dataframe and the starting frame in the original stack (these
+two are used for debugging purposes only), <code class="xref any docutils literal notranslate"><span class="pre">offset_idx</span></code> is a
+tuple of <a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">slice</span></code></a> objects with the slice offset inside a single
+stack, <code class="xref any docutils literal notranslate"><span class="pre">top_left</span></code> is a list specifying the image position in the form
+<code class="docutils literal notranslate"><span class="pre">[Z,</span> <span class="pre">Y,</span> <span class="pre">X]</span></code>, <a class="reference internal" href="zetastitcher.fuse.overlaps.html#module-zetastitcher.fuse.overlaps" title="zetastitcher.fuse.overlaps"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">overlaps</span></code></a> is a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> specifying
+overlaps with adjacent tiles.</p>
+</dd>
+<dt><strong>frame_shape</strong><span class="classifier">tuple</span></dt><dd><p>Shape of a stack plane (XY).</p>
+</dd>
+<dt><strong>dest</strong><span class="classifier"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></span></dt><dd><p>Destination array.</p>
+</dd>
+<dt><strong>debug: bool</strong></dt><dd><p>Whether to overlay debug information (tile edges and numbers).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.fuse.fuse.overlay_debug">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.fuse.fuse.</span></span><span class="sig-name descname"><span class="pre">overlay_debug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_from</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.fuse.fuse.overlay_debug" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="zetastitcher.fuse.fuse.squircle_alpha">
+<span class="sig-prename descclassname"><span class="pre">zetastitcher.fuse.fuse.</span></span><span class="sig-name descname"><span class="pre">squircle_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.fuse.fuse.squircle_alpha" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

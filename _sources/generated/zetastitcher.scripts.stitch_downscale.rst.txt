@@ -1,0 +1,7 @@
+zetastitcher.scripts.stitch\_downscale module
+=============================================
+
+.. automodule:: zetastitcher.scripts.stitch_downscale
+   :members:
+   :undoc-members:
+   :show-inheritance:

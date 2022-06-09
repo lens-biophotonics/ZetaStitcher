@@ -1,0 +1,17 @@
+zetastitcher.gaussian\_stitcher.linear package
+==============================================
+
+.. automodule:: zetastitcher.gaussian_stitcher.linear
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.gaussian_stitcher.linear.mapper
+   zetastitcher.gaussian_stitcher.linear.solver
+   zetastitcher.gaussian_stitcher.linear.stitching

@@ -1,0 +1,7 @@
+zetastitcher.gaussian\_stitcher.qp.util\_debug module
+=====================================================
+
+.. automodule:: zetastitcher.gaussian_stitcher.qp.util_debug
+   :members:
+   :undoc-members:
+   :show-inheritance:

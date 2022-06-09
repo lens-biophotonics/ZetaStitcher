@@ -1,0 +1,7 @@
+zetastitcher.io.zipwrapper module
+=================================
+
+.. automodule:: zetastitcher.io.zipwrapper
+   :members:
+   :undoc-members:
+   :show-inheritance:

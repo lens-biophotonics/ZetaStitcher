@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to ZetaStitcher’s documentation! &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>Welcome to ZetaStitcher’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-zetastitcher-s-documentation">
+<h1>Welcome to ZetaStitcher’s documentation!<a class="headerlink" href="#welcome-to-zetastitcher-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p align="center">
+<img src="https://raw.githubusercontent.com/lens-biophotonics/ZetaStitcher/master/_static/zetastitcher.svg", height="150">
+</p><p>ZetaStitcher is a tool designed to stitch large volumetric images such as
+those produced by Light-Sheet Fluorescence Microscopes.</p>
+<p>Key features:</p>
+<ul class="simple">
+<li><p>able to handle datasets as big as 10<span class="raw-html-m2r"><sup>12</sup></span> voxels</p></li>
+<li><p>multichannel images</p></li>
+<li><p>powerful and simple Python API to query arbitrary regions within the fused
+volume</p></li>
+</ul>
+<section id="how-to-install">
+<h2>How to install<a class="headerlink" href="#how-to-install" title="Permalink to this headline">¶</a></h2>
+<p>On Ubuntu 20.04 LTS, run these commands:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span> <span class="n">libgl1</span> <span class="n">libglib2</span><span class="mf">.0</span><span class="o">-</span><span class="mi">0</span>
+<span class="n">pip3</span> <span class="n">install</span> <span class="n">zetastitcher</span>
+</pre></div>
+</div>
+</section>
+<section id="docker-image">
+<h2>Docker image<a class="headerlink" href="#docker-image" title="Permalink to this headline">¶</a></h2>
+<p>To build a docker image with ZetaStitcher:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">docker</span>
+</pre></div>
+</div>
+<p>You can call the stitching commands using an ephemeral container like this:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span>docker run -it -v`pwd`:/home --rm zetastitcher stitch-align -h
+docker run -it -v`pwd`:/home --rm zetastitcher stitch-fuse -h
+</pre></div>
+</div>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>Please read the documentation and follow the tutorial at this page:<span class="raw-html-m2r"><br/></span>
+<a class="reference external" href="https://lens-biophotonics.github.io/ZetaStitcher/">https://lens-biophotonics.github.io/ZetaStitcher/</a></p>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">¶</a></h2>
+<p>This open source software code was developed in whole in the Human
+Brain Project, funded from the European Union’s Horizon 2020 Framework
+Programme for Research and Innovation under Specific Grant Agreements
+No. 720270 and No. 785907 (Human Brain Project SGA1 and SGA2).</p>
+<p align="center">
+<img height="100" style="max-height: 100px" src="https://europa.eu/european-union/sites/europaeu/files/docs/body/flag_yellow_low.jpg">
+Co-funded by the European Union
+</p></section>
+<section id="latest-package">
+<h2>Latest package<a class="headerlink" href="#latest-package" title="Permalink to this headline">¶</a></h2>
+<p>The latest built package can be downloaded from <a class="reference external" href="zetastitcher-0.7.0.post1-py3-none-any.whl">here</a> (version 0.7.0.post1).</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#nominal-stitching">Nominal stitching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#global-optimal-alignment-and-fusion">Global optimal alignment and fusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#accessing-the-fused-volume-programmatically">Accessing the fused volume programmatically</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_index.html">Module reference</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

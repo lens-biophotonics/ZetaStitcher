@@ -1,0 +1,27 @@
+zetastitcher package
+====================
+
+.. automodule:: zetastitcher
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.align
+   zetastitcher.fuse
+   zetastitcher.gaussian_stitcher
+   zetastitcher.io
+   zetastitcher.scripts
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.version

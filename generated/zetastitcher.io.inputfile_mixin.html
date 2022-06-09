@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>zetastitcher.io.inputfile_mixin module &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>zetastitcher.io.inputfile_mixin module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/generated/zetastitcher.io.inputfile_mixin.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-zetastitcher.io.inputfile_mixin">
+<span id="zetastitcher-io-inputfile-mixin-module"></span><h1>zetastitcher.io.inputfile_mixin module<a class="headerlink" href="#module-zetastitcher.io.inputfile_mixin" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">zetastitcher.io.inputfile_mixin.</span></span><span class="sig-name descname"><span class="pre">InputFileMixin</span></span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.array_size" title="zetastitcher.io.inputfile_mixin.InputFileMixin.array_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_size</span></code></a></dt><dd><p>Size in bytes of the whole virtual array</p>
+</dd>
+<dt><strong>file_size</strong></dt><dd></dd>
+<dt><a class="reference internal" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.frame_size" title="zetastitcher.io.inputfile_mixin.InputFileMixin.frame_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frame_size</span></code></a></dt><dd><p>Size in bytes of a single frame</p>
+</dd>
+<dt><a class="reference internal" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.shape" title="zetastitcher.io.inputfile_mixin.InputFileMixin.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></a></dt><dd><p>Shape of the whole image stack.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 53%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>close</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin.array_size">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">array_size</span></span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.array_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size in bytes of the whole virtual array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin.file_size">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">file_size</span></span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.file_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin.frame_size">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">frame_size</span></span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.frame_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size in bytes of a single frame</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="zetastitcher.io.inputfile_mixin.InputFileMixin.shape">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#zetastitcher.io.inputfile_mixin.InputFileMixin.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shape of the whole image stack.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>tuple</dt><dd><p>(<code class="xref py py-attr docutils literal notranslate"><span class="pre">nfrms</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">ysize</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">channels</span></code>) where
+<code class="xref any docutils literal notranslate"><span class="pre">channels</span></code> is the number of color channels in the image. If
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">channel</span></code> is set or if there is only one channel,
+the <code class="xref any docutils literal notranslate"><span class="pre">channels</span></code> dimension is squeezed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

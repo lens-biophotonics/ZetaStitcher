@@ -1,0 +1,7 @@
+zetastitcher.align.xcorr\_filematrix module
+===========================================
+
+.. automodule:: zetastitcher.align.xcorr_filematrix
+   :members:
+   :undoc-members:
+   :show-inheritance:

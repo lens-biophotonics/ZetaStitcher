@@ -1,0 +1,7 @@
+zetastitcher.gaussian\_stitcher.utils module
+============================================
+
+.. automodule:: zetastitcher.gaussian_stitcher.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

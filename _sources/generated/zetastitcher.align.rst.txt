@@ -1,0 +1,17 @@
+zetastitcher.align package
+==========================
+
+.. automodule:: zetastitcher.align
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   zetastitcher.align.dog
+   zetastitcher.align.filematrix
+   zetastitcher.align.xcorr_filematrix

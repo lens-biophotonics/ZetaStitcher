@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorial &mdash; ZetaStitcher 0.7.0.post1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="https://docs.python.org/3/_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module reference" href="module_index.html" />
+    <link rel="prev" title="Welcome to ZetaStitcher’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> ZetaStitcher
+          </a>
+              <div class="version">
+                0.7.0.post1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nominal-stitching">Nominal stitching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#global-optimal-alignment-and-fusion">Global optimal alignment and fusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-the-fused-volume-programmatically">Accessing the fused volume programmatically</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_index.html">Module reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ZetaStitcher</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tutorial">
+<span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>In this tutorial we will see how to use ZetaStitcher for stitching large 3D
+datasets.</p>
+<p>The dataset is expected to be composed of a collection of 3D stacks, with
+adjacent stacks featuring an overlapping region in the XY plane. First of all,
+make sure your files are named according to the following convention:
+<code class="docutils literal notranslate"><span class="pre">X_Y.tiff</span></code> where <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are the stage coordinates.</p>
+<p>The following naming conventions are used:</p>
+<ul class="simple">
+<li><p>Z is the direction along the stack height,</p></li>
+<li><p>(X, Y) is the frame plane,</p></li>
+<li><p>y is the direction along which frames are supposed to overlap,</p></li>
+<li><p>x is the direction orthogonal to y in the frame plane (X, Y).</p></li>
+</ul>
+<p>We will perform the stitching process in two steps:</p>
+<ol class="arabic simple">
+<li><p>we first run the command <code class="docutils literal notranslate"><span class="pre">stitch-align</span></code> in order to find the best
+alignment of all pairs of adjacent stacks. The results are saved to a small
+text file, usually named <code class="docutils literal notranslate"><span class="pre">stitch.yml</span></code></p></li>
+<li><p>we then run the command <code class="docutils literal notranslate"><span class="pre">stitch-fuse</span></code> in order to produce the resulting
+fused 3D image.</p></li>
+</ol>
+<p>Both commands can be run with the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option to print a detailed help
+message.</p>
+<section id="nominal-stitching">
+<h2>Nominal stitching<a class="headerlink" href="#nominal-stitching" title="Permalink to this headline">¶</a></h2>
+<p>Before we get started, it might be a good idea to produce a fused image where
+the stacks are positioned at their nominal <em>stage</em> coordinates as specified in
+the file names, i.e. we skip step 1 altogether for the moment. Open a terminal
+and <code class="docutils literal notranslate"><span class="pre">cd</span></code> to the directory containing your collection of files. Then run the
+following command:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stitch</span><span class="o">-</span><span class="n">fuse</span> <span class="o">-</span><span class="n">s</span> <span class="o">--</span><span class="n">px</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">xy</span> <span class="mf">0.5</span> <span class="o">--</span><span class="n">px</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">z</span> <span class="mi">2</span> <span class="o">-</span><span class="n">o</span> <span class="n">nominal200</span><span class="o">.</span><span class="n">tiff</span> <span class="o">--</span><span class="n">zmin</span> <span class="mi">200</span> <span class="o">--</span><span class="n">nz</span> <span class="mi">1</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>Let’s break down the options used in the command above. The <code class="docutils literal notranslate"><span class="pre">-s</span></code> option tells
+<code class="docutils literal notranslate"><span class="pre">stitch-fuse</span></code> to use the nominal stage coordinates to produce the final
+image. When working in this mode, it is mandatory to specify the pixel size
+(this is needed to determine the size of the overlapping area between adjacent
+stacks). We do so with the <code class="docutils literal notranslate"><span class="pre">--px-size-xy</span></code> and <code class="docutils literal notranslate"><span class="pre">--px-size-z</span></code> options. Pixel
+sizes must be specified in the same units as the <code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">Y</span></code> coordinates in
+the file name (say, microns). The input stacks are read in the order of
+increasing <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code>. If this is not the case (i.e. one or more axes of
+your translational stage are inverted), use options <code class="docutils literal notranslate"><span class="pre">--iX</span></code> and <code class="docutils literal notranslate"><span class="pre">--iY</span></code> to
+specify axis inversion. We then specify an output file name using the <code class="docutils literal notranslate"><span class="pre">-o</span></code>
+option. Finally, for this testing run, we don’t want to produce the whole
+output stack. We therefore limit the output to one frame (<code class="docutils literal notranslate"><span class="pre">--nz</span></code>) starting at
+200 um (<code class="docutils literal notranslate"><span class="pre">--zmin</span></code>). Since we have specified a voxel size of 2 along Z, the
+output image will contain one frame only (i.e. we are producing a 2D image).
+Note the trailing dot in the command line: that’s the path to the directory
+containing the input stacks (in this case, that means the current directory).
+You can now inspect the result of this <em>nominal stitching</em>.</p>
+</section>
+<section id="global-optimal-alignment-and-fusion">
+<h2>Global optimal alignment and fusion<a class="headerlink" href="#global-optimal-alignment-and-fusion" title="Permalink to this headline">¶</a></h2>
+<p>We now proceed with the complete alignment and fusion pipeline.</p>
+<p>First, we compute pairwise optimal alignment of adjacent stacks:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stitch</span><span class="o">-</span><span class="n">align</span> <span class="o">--</span><span class="n">px</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">xy</span> <span class="mf">0.5</span> <span class="o">--</span><span class="n">px</span><span class="o">-</span><span class="n">size</span><span class="o">-</span><span class="n">z</span> <span class="mi">2</span> <span class="o">--</span><span class="n">overlap</span><span class="o">-</span><span class="n">h</span> <span class="mi">40</span> <span class="o">--</span><span class="n">overlap</span><span class="o">-</span><span class="n">v</span> <span class="mi">40</span> <span class="o">--</span><span class="n">dx</span> <span class="mi">10</span> <span class="o">--</span><span class="n">dy</span> <span class="mi">10</span> <span class="o">--</span><span class="n">dz</span> <span class="mi">8</span> <span class="o">--</span><span class="n">z</span><span class="o">-</span><span class="n">samples</span> <span class="mi">10</span> <span class="o">--</span><span class="n">z</span><span class="o">-</span><span class="n">stride</span> <span class="mi">50</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>We are again specifying the voxel size for our own convenience. This is not
+mandatory; if omitted, subsequent options are expected to be specified in pixel
+units. As described above, use <code class="docutils literal notranslate"><span class="pre">--iX</span></code> and <code class="docutils literal notranslate"><span class="pre">--iY</span></code> if you need to invert one
+axis compared to what is specified in the file names. We then specify the
+nominal overlap along the horizontal and vertical directions (i.e. X and Y).
+This specifies the size of the nominal overlapping area that adjacent tiles
+are <em>expected</em> to share. Relative to this nominal overlap, the program will try
+to find the best alignment within a region specified by these options:
+<code class="docutils literal notranslate"><span class="pre">--dx</span></code>, <code class="docutils literal notranslate"><span class="pre">--dy</span></code>, <code class="docutils literal notranslate"><span class="pre">--dz</span></code>. Note the lowercase letters: <code class="docutils literal notranslate"><span class="pre">--dy</span></code> specifies
+the maximum allowed shift <em>along the stitching axis</em>, whereas <code class="docutils literal notranslate"><span class="pre">--dx</span></code>
+specifies the maximum allowed lateral shift. For example, if two tiles are being
+stitched horizontally (i.e. along X) and we have specified a <code class="docutils literal notranslate"><span class="pre">--dy</span></code> of 10um,
+then the optimal position of the second tile will be searched in a region that
+is 20um wide along X, centered on top of the nominal overlap. In the
+transversal direction (i.e. the vertical direction, Y), the search range is
+also +/- 10 microns as specified by <code class="docutils literal notranslate"><span class="pre">--dx</span></code>. Finally we need to specify at how
+many depths along the stack we want the best alignment to be computed. The
+<code class="docutils literal notranslate"><span class="pre">--z-samples</span></code> and <code class="docutils literal notranslate"><span class="pre">--z-stride</span></code> options that are used in the command above
+mean that we want to take 10 samples along the stack depth (5 above and 5
+below the stack center) at 50um of distance from one another. The trailing dot
+in the command line is again the path to the current directory.</p>
+<p>The command above prints some progress information and creates a file named
+<code class="docutils literal notranslate"><span class="pre">stitch.yml</span></code> in the current directory. We now want to inspect the result of
+the alignment by taking a look at a fused frame:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stitch</span><span class="o">-</span><span class="n">fuse</span> <span class="o">-</span><span class="n">o</span> <span class="n">test200</span><span class="o">.</span><span class="n">tiff</span> <span class="o">--</span><span class="n">zmin</span> <span class="mi">200</span> <span class="o">--</span><span class="n">nz</span> <span class="mi">1</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>This will save the frame located at a depth of 200um in the stack to a file
+named <code class="docutils literal notranslate"><span class="pre">test200.tiff</span></code>. Note that there is no need to specify the pixel size
+again, since that information is stored in the yml file from the previous
+command. The first time that the program is run, a global optimization
+algorithm (simulated annealing) is run in order to optimize the position of all
+stacks within the mosaic. If we are happy with the result, we can proceed and
+fuse the whole volume with the following command:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stitch</span><span class="o">-</span><span class="n">fuse</span> <span class="o">-</span><span class="n">o</span> <span class="n">fused</span><span class="o">.</span><span class="n">tiff</span> <span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="accessing-the-fused-volume-programmatically">
+<h2>Accessing the fused volume programmatically<a class="headerlink" href="#accessing-the-fused-volume-programmatically" title="Permalink to this headline">¶</a></h2>
+<p>If the resulting fused volume is too big, such that it is impractical to
+produce the output file, consider accessing portions of your volume
+programmatically. To do so, use the <a class="reference internal" href="generated/zetastitcher.fuse.virtual_fused_volume.html#zetastitcher.fuse.virtual_fused_volume.VirtualFusedVolume" title="zetastitcher.fuse.virtual_fused_volume.VirtualFusedVolume"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VirtualFusedVolume</span></code></a> class:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">zetastitcher</span> <span class="kn">import</span> <span class="n">VirtualFusedVolume</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vfv</span> <span class="o">=</span> <span class="n">VirtualFusedVolume</span><span class="p">(</span><span class="s1">&#39;stitch.yml&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vfv</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(2955, 15738, 18963)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">subvolume</span> <span class="o">=</span> <span class="n">vfv</span><span class="p">[</span><span class="mi">1500</span><span class="p">,</span> <span class="mi">15500</span><span class="p">:</span><span class="mi">16000</span><span class="p">,</span> <span class="mi">18000</span><span class="p">:</span><span class="mi">19500</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Axis order is ZYX.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">subvolume</span></code> variable is a <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a> that you can use as
+you like. If you want to save the subvolume to a tiff file:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">skimage.external.tifffile</span> <span class="k">as</span> <span class="nn">tiff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tiff</span><span class="o">.</span><span class="n">imsave</span><span class="p">(</span><span class="s1">&#39;subvolume.tiff&#39;</span><span class="p">,</span> <span class="n">subvolume</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to ZetaStitcher’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="module_index.html" class="btn btn-neutral float-right" title="Module reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017-2020, Giacomo Mazzamuto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
