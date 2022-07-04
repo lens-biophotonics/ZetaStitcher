@@ -71,16 +71,19 @@ class TiffWrapper(InputFileMixin):
                 return np.array([])
             a = tiff.imread(list(map(str, flist)))
         else:
-            mma = self.tfile.asarray(out='memmap')
-            a = mma
-
             for letter in 'ZQ':
-                if letter in self.axes:
+                if letter in self.axes and self.axes.index(letter) > 0:
                     # take only first element of left-most axes (e.g. time)
+                    mma = self.tfile.asarray(out='memmap')
                     mma = mma[tuple(0 for _ in range(self.axes.index(letter)))]
                     if len(mma.shape) >= 3:
                         a = mma[myslice]
                     break
+            else:
+                try:
+                    a = self.tfile.asarray(myslice, out=None if copy else 'memmap')
+                except StopIteration:
+                    return np.array([])
 
             if copy:
                 a = np.copy(a)
