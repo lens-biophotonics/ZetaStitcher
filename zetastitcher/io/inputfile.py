@@ -12,6 +12,7 @@ from .tiffwrapper import TiffWrapper
 from tifffile import TiffFileError
 from .zipwrapper import ZipWrapper
 from .mhdwrapper import MHDWrapper
+from .imagesequencewrapper import ImageSequenceWrapper
 
 from zipfile import BadZipFile
 
@@ -124,6 +125,12 @@ class InputFile(InputFileMixin):
         if not self.path.exists():
             raise FileNotFoundError(self.path)
 
+        if self.path.is_dir():
+            try:
+                self.wrapper = ImageSequenceWrapper(self.file_path)
+                return
+            except:
+                pass
         try:
             self.wrapper = TiffWrapper(self.file_path)
             return
@@ -160,6 +167,7 @@ class InputFile(InputFileMixin):
             return
         except:
             pass
+        
 
         raise ValueError('Unsupported file type')
 
