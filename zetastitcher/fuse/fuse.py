@@ -144,7 +144,7 @@ def fuse_queue(q, dest, frame_shape, weighting_mode="squircle_alpha", debug=Fals
                     if not area:
                         continue
                     
-                    w = xy_weights(*frame_shape)[:height, :width]
+                    w = xy_weights[:height, :width]
 
                     if row.X_from == 0:
                         w = np.fliplr(w)
