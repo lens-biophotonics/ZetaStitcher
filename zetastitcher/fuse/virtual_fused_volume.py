@@ -48,7 +48,7 @@ class VirtualFusedVolume:
         ('0100_0000.tiff', (slice(40, 41, 1), slice(1000, 1500, 1), slice(0, 453, 1))),
     ]
     """
-    def __init__(self, file_or_matrix):
+    def __init__(self, file_or_matrix, weighting_mode: str = 'squircle_alpha'):
         if isinstance(file_or_matrix, str):
             self.path, _ = os.path.split(file_or_matrix)
             self.fm = FileMatrix(file_or_matrix)
@@ -78,7 +78,10 @@ class VirtualFusedVolume:
             self.nchannels = f.nchannels
 
         self.squeeze_enabled = True
-
+        self.weighting_mode = weighting_mode
+        if self.weighting_mode not in ['squircle_alpha', 'none']:
+            raise ValueError('Invalid weighting mode: {}'.format(self.weighting_mode))
+    
     @property
     def overlay_debug_enabled(self):
         """Whether to overlay debug information (tile edges and numbers).
@@ -229,6 +232,7 @@ class VirtualFusedVolume:
             args=(q, fused, self.temp_shape[-2::]),
             kwargs={
                 'debug': self._debug,
+                'weighting_mode': self.weighting_mode,
             }
         )
         t.start()

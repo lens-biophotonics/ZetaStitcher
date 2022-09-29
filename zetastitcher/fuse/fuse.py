@@ -68,7 +68,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, frame_shape, debug=False):
+def fuse_queue(q, dest, frame_shape, weighting_mode="squircle_alpha", debug=False):
     """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -87,6 +87,9 @@ def fuse_queue(q, dest, frame_shape, debug=False):
         Shape of a stack plane (XY).
     dest : :class:`numpy.ndarray`
         Destination array.
+    weighting_mode : str
+        Weighting mode, defines the weighting window used to fuse overlapping slices.
+        Currently only ``squircle_alpha`` and ``none`` are supported.
     debug: bool
         Whether to overlay debug information (tile edges and numbers).
     """
@@ -113,7 +116,12 @@ def fuse_queue(q, dest, frame_shape, debug=False):
             z = np.unique(z)
             z = np.sort(z)
 
-            xy_weights = squircle_alpha(*frame_shape)
+            if weighting_mode == "squircle_alpha":
+                xy_weights = squircle_alpha(*frame_shape)
+            elif weighting_mode == "none":
+                xy_weights = np.ones(frame_shape)
+            else:
+                raise ValueError("Unknown weighting mode: {}".format(weighting_mode))
 
             z_list = list(zip(z, z[1::]))
             try:
@@ -135,8 +143,8 @@ def fuse_queue(q, dest, frame_shape, debug=False):
                     area = width * height
                     if not area:
                         continue
-
-                    w = squircle_alpha(*frame_shape)[:height, :width]
+                    
+                    w = xy_weights[:height, :width]
 
                     if row.X_from == 0:
                         w = np.fliplr(w)

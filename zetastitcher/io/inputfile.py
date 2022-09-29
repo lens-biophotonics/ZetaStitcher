@@ -56,20 +56,45 @@ class InputFile(InputFileMixin):
             step = item[0].step
         else:
             raise TypeError("Invalid type: {}".format(type(item[0])))
+        try:
+            a = self.zslice(start, stop, step)
 
-        a = self.zslice(start, stop, step)
+            if not a.size:
+                return a
 
-        if not a.size:
-            return a
+            if item[0] is not Ellipsis:
+                myitem[0] = slice(None)
 
-        if item[0] is not Ellipsis:
-            myitem[0] = slice(None)
+            a = a[tuple(myitem)]
+        except np.core._exceptions._ArrayMemoryError:
+            z_start, z_stop, z_step, z_width = self._slice_to_idxs(myitem[0],0)
+            y_start, y_stop, y_step, y_width = self._slice_to_idxs(myitem[1],1)
+            x_start, x_stop, x_step, x_width = self._slice_to_idxs(myitem[2],2)
+            a = None
+            for idx, i in enumerate(range(z_start, z_stop, z_step)):
+                frame = self.zslice_idx(i)[0]
+                if a is None:
+                    a = np.zeros((z_width, y_width, x_width), dtype=self.dtype)
+                a[slice(idx,idx+1,1), myitem[1], myitem[2]] = frame[myitem[1], myitem[2]]
 
-        a = a[tuple(myitem)]
+            #raise MemoryError('Not enough memory to load the requested data')
 
         if self.squeeze:
             a = np.squeeze(a)
         return a
+
+    def _slice_to_idxs(self, _slice, idx=0):
+        start = _slice.start if _slice.start is not None else 0
+        if start < 0:
+            start += self.shape[idx]
+        stop = _slice.stop if _slice.stop is not None else self.shape[idx]
+        if stop < 0:
+            stop += self.shape[idx]
+        step = _slice.step if _slice.step is not None else 1
+        slice_width = (stop - start) // step
+        
+        return start, stop, step, slice_width
+
 
     @property
     def channel(self):
