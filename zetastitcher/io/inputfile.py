@@ -10,6 +10,7 @@ except ImportError:
 from .ffmpeg_wrapper import FFMPEGWrapper
 from .tiffwrapper import TiffWrapper
 from tifffile import TiffFileError
+from .zarr_wrapper import ZarrWrapper
 from .zipwrapper import ZipWrapper
 from .mhdwrapper import MHDWrapper
 
@@ -123,6 +124,13 @@ class InputFile(InputFileMixin):
     def _open(self):
         if not self.path.exists():
             raise FileNotFoundError(self.path)
+
+        if '.zarr' in str(self.path):
+            try:
+                self.wrapper = ZarrWrapper(self.file_path)
+                return
+            except:
+                pass
 
         try:
             self.wrapper = TiffWrapper(self.file_path)
