@@ -6,7 +6,7 @@ import logging
 import threading
 
 from queue import Queue
-from functools import lru_cache
+from functools import cached_property
 
 import numpy as np
 
@@ -90,8 +90,7 @@ class VirtualFusedVolume:
     def overlay_debug_enabled(self, value):
         self._debug = value
 
-    @property
-    @lru_cache()
+    @cached_property
     def shape(self):
         """Shape of the whole stitched volume.
 

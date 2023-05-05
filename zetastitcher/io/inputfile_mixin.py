@@ -1,14 +1,10 @@
 import numpy as np
+from functools import cached_property
 
 
 class InputFileMixin:
     def __init__(self):
         self.path = None
-        self.xsize = None
-        self.ysize = None
-        self.nfrms = None
-        self.dtype = None
-        self.nchannels = 1
 
     def __del__(self):
         self.close()
@@ -18,6 +14,26 @@ class InputFileMixin:
 
     def __exit__(self, *args):
         self.close()
+
+    @cached_property
+    def xsize(self):
+        pass
+
+    @cached_property
+    def ysize(self):
+        pass
+
+    @cached_property
+    def nfrms(self):
+        pass
+
+    @cached_property
+    def dtype(self):
+        pass
+
+    @cached_property
+    def nchannels(self):
+        return 1
 
     def close(self):
         pass
