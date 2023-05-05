@@ -7,15 +7,18 @@ For faster access when using compressed formats (such as JPEG2000), a cache can
 optionally be anabled using `set_cache()`.
 """
 
+import os
 import gc
 import sys
 import ctypes
 import zipfile
-import concurrent.futures
 from pathlib import Path
 from cachetools import LRUCache
+from functools import cached_property
 
-import imageio
+
+from imagecodecs import imread
+
 import numpy as np
 
 from zetastitcher.io.inputfile_mixin import InputFileMixin
@@ -24,6 +27,11 @@ from zetastitcher.io.inputfile_mixin import InputFileMixin
 _cache = LRUCache(maxsize=0)
 _cache.hits = 0
 _cache.misses = 0
+
+try:
+    numthreads = int(os.environ['OMP_NUM_THREADS'])
+except:
+    numthreads = None
 
 
 def set_cache(cache):
@@ -61,10 +69,18 @@ def get_typecodes():
 
 
 def imread_wrapper(fname, internal_fname, dtype=None):
+    cache_key = f'{fname}__{internal_fname}__{dtype}'
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        _cache.hits += 1
+        return cached
+    _cache.misses += 1
     zf = zipfile.ZipFile(str(fname), mode='r')
-    a = imageio.imread(zf.read(internal_fname))
+    a = imread(zf.read(internal_fname), numthreads=numthreads)
     if dtype is not None:
         a = a.astype(dtype)
+    if _cache.maxsize > 0:
+        _cache[cache_key] = a
     return a
 
 
@@ -89,20 +105,38 @@ class ZipWrapper(InputFileMixin):
         names = self.zf.namelist()
         names.sort()
 
-        im = imread_wrapper(self.file_path, names[0])
-
-        self.xsize = im.shape[-1]
-        self.ysize = im.shape[-2]
         self.nfrms = len(names)
-        self.dtype = im.dtype
-
-        if len(im.shape) > 2:
-            self.nchannels = im.shape[0]
+        # self.dtype = im.dtype
+        #
+        # if len(im.shape) > 2:
+        #     self.nchannels = im.shape[0]
 
         self.names = names
 
+    @cached_property
+    def xsize(self):
+        im = imread_wrapper(self.file_path, self.names[0])
+        return im.shape[-1]
+
+    @ cached_property
+    def ysize(self):
+        im = imread_wrapper(self.file_path, self.names[0])
+        return im.shape[-2]
+
+    @ cached_property
+    def dtype(self):
+        im = imread_wrapper(self.file_path, self.names[0])
+        return im.dtype
+
+    @ cached_property
+    def nchannels(self):
+        im = imread_wrapper(self.file_path, self.names[0])
+        if len(im.shape) > 2:
+            return im.shape[0]
+        return 1
+
     def frame(self, index, dtype=None, copy=None):
-        a = imageio.imread(self.zf.read(self.names[index]))
+        a = imread(self.zf.read(self.names[index]), numthreads=numthreads)
 
         if dtype is not None:
             a = a.astype(dtype)
@@ -118,33 +152,7 @@ class ZipWrapper(InputFileMixin):
 
         out = np.zeros(s, dtype)
 
-        # NEW ##################################
-
-        my_futures = []
-
-        e = concurrent.futures.ProcessPoolExecutor()
-
         for i, z in zip(range(s[0]), zlist):
-            cache_key = f'{self.file_path}__{self.names[z]}'
-            cached = _cache.get(cache_key)
-
-            if cached is not None:
-                _cache.hits += 1
-                out[i] = cached
-            else:
-                _cache.misses += 1
-                fut = e.submit(imread_wrapper, self.file_path, self.names[z], dtype)
-                my_futures.append((i, cache_key, fut))
-
-        for z, key, fut in my_futures:
-            if _cache.maxsize > 0:
-                _cache[key] = fut.result(None)
-            out[z] = fut.result(None)
-
-        # force release of shared memory for Python < 3.8
-        if sys.version_info < (3, 8):
-            import multiprocessing.heap as mph
-            mph.BufferWrapper._heap = mph.Heap()
-            gc.collect()
+            out[i] = imread_wrapper(self.file_path, self.names[z], dtype)
 
         return out

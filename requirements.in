@@ -2,7 +2,7 @@ cachetools
 coloredlogs
 cvxpy
 humanize
-imageio
+imagecodecs
 networkx>=2.0
 numpy
 opencv-python

@@ -16,7 +16,7 @@ humanfriendly==10.0
     # via coloredlogs
 humanize==3.14.0
     # via -r requirements.in
-imageio==2.15.0
+imagecodecs==2023.3.16
     # via -r requirements.in
 networkx==2.6.3
     # via -r requirements.in
@@ -25,7 +25,7 @@ numpy==1.22.2
     #   -r requirements.in
     #   cvxpy
     #   ecos
-    #   imageio
+    #   imagecodecs
     #   opencv-python
     #   osqp
     #   pandas
@@ -40,8 +40,6 @@ osqp==0.6.2.post5
     # via cvxpy
 pandas==1.4.0
     # via -r requirements.in
-pillow==9.0.1
-    # via imageio
 pims==0.5
     # via -r requirements.in
 psutil==5.9.0
