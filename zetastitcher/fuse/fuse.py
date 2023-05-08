@@ -19,7 +19,7 @@ def squircle_alpha(height, width):
     b = math.ceil(height / 2)
     grid = np.vstack(np.meshgrid(np.linspace(0, b - 1, b),
                                  np.linspace(0, a - 1, a))).reshape(2, -1).T
-    grid = grid.astype(np.int)
+    grid = grid.astype(np.int64)
     N = max(a, b)
     ps = np.logspace(np.log10(2), np.log10(50), N)  # exponents
     # ps = np.ones(N) * 2
