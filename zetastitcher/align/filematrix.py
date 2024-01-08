@@ -263,10 +263,10 @@ class FileMatrix:
     def compute_nominal_positions(self, px_size_z, px_size_xy):
         df = self.data_frame
 
-        df['Xs'] = (df['X'] // px_size_xy).astype(np.int)
-        df['Ys'] = (df['Y'] // px_size_xy).astype(np.int)
+        df['Xs'] = (df['X'] // px_size_xy).astype(np.int64)
+        df['Ys'] = (df['Y'] // px_size_xy).astype(np.int64)
 
-        df['Zs'] = (df['Z'] // px_size_z).astype(np.int)
+        df['Zs'] = (df['Z'] // px_size_z).astype(np.int64)
 
         self.compute_end_pos()
 
