@@ -4,74 +4,100 @@
 #
 #    pip-compile requirements.in
 #
-cachetools==5.0.0
+asciitree==0.3.3
+    # via zarr
+cachetools==5.3.2
     # via -r requirements.in
+clarabel==0.6.0
+    # via cvxpy
 coloredlogs==15.0.1
     # via -r requirements.in
-cvxpy==1.1.18
+cvxpy==1.4.1
     # via -r requirements.in
-ecos==2.0.10
-    # via cvxpy
+daqp==0.5.1
+    # via qpsolvers
+ecos==2.0.12
+    # via
+    #   cvxpy
+    #   qpsolvers
+fasteners==0.19
+    # via zarr
 humanfriendly==10.0
     # via coloredlogs
-humanize==3.14.0
+humanize==4.9.0
     # via -r requirements.in
 imagecodecs==2023.3.16
     # via -r requirements.in
-networkx==2.6.3
+imageio==2.33.1
+    # via pims
+networkx==3.1
     # via -r requirements.in
-numpy==1.22.2
+numcodecs==0.12.1
+    # via zarr
+numpy==1.24.4
     # via
     #   -r requirements.in
+    #   clarabel
     #   cvxpy
     #   ecos
     #   imagecodecs
+    #   imageio
+    #   numcodecs
     #   opencv-python
     #   osqp
     #   pandas
     #   pims
-    #   quadprog
+    #   qpsolvers
     #   scipy
     #   scs
     #   tifffile
-opencv-python==4.5.5.62
+    #   zarr
+opencv-python==4.9.0.80
     # via -r requirements.in
-osqp==0.6.2.post5
+osqp==0.6.3
+    # via
+    #   cvxpy
+    #   qpsolvers
+pandas==2.0.3
+    # via -r requirements.in
+pillow==10.2.0
+    # via imageio
+pims==0.6.1
+    # via -r requirements.in
+psutil==5.9.7
+    # via -r requirements.in
+pybind11==2.11.1
     # via cvxpy
-pandas==1.4.0
-    # via -r requirements.in
-pims==0.5
-    # via -r requirements.in
-psutil==5.9.0
-    # via -r requirements.in
 python-dateutil==2.8.2
     # via pandas
-pytz==2021.3
+pytz==2023.3.post1
     # via pandas
-pyyaml==6.0
+pyyaml==6.0.1
     # via -r requirements.in
-qdldl==0.1.5.post0
+qdldl==0.1.7.post0
     # via osqp
-qpsolvers==1.8.0
+qpsolvers==4.2.0
     # via -r requirements.in
-quadprog==0.1.11
-    # via qpsolvers
-scipy==1.8.0
+scipy==1.10.1
     # via
     #   -r requirements.in
+    #   clarabel
     #   cvxpy
     #   ecos
     #   osqp
     #   qpsolvers
     #   scs
-scs==3.1.0
-    # via cvxpy
-six==1.16.0
+scs==3.2.4.post1
     # via
-    #   pims
-    #   python-dateutil
-    #   slicerator
-slicerator==1.0.0
+    #   cvxpy
+    #   qpsolvers
+six==1.16.0
+    # via python-dateutil
+slicerator==1.1.0
     # via pims
-tifffile==2022.2.9
+tifffile==2023.7.10
+    # via -r requirements.in
+tzdata==2023.4
+    # via pandas
+zarr==2.16.1
     # via -r requirements.in

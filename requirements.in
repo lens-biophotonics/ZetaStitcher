@@ -13,3 +13,4 @@ pyyaml
 qpsolvers
 scipy
 tifffile
+zarr
