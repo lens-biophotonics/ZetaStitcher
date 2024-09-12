@@ -68,7 +68,7 @@ def squircle_alpha(height, width):
     return squircle
 
 
-def fuse_queue(q, dest, frame_shape, debug=False):
+def fuse_queue(q, dest, debug=False):
     """Fuse a queue of images along Y, optionally applying padding.
 
     Parameters
@@ -83,8 +83,6 @@ def fuse_queue(q, dest, frame_shape, debug=False):
         stack, `top_left` is a list specifying the image position in the form
         ``[Z, Y, X]``, `overlaps` is a :class:`pandas.DataFrame` specifying
         overlaps with adjacent tiles.
-    frame_shape : tuple
-        Shape of a stack plane (XY).
     dest : :class:`numpy.ndarray`
         Destination array.
     debug: bool
@@ -97,7 +95,7 @@ def fuse_queue(q, dest, frame_shape, debug=False):
         if got is None:
             break
 
-        my_slice, index_dbg, zfrom_dbg, sl, pos, overlaps = got
+        my_slice, index_dbg, zfrom_dbg, sl, pos, overlaps, frame_shape = got
 
         z_from = pos[0]
         z_to = z_from + my_slice.shape[0]

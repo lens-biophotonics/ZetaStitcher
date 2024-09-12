@@ -6,6 +6,7 @@ import logging
 
 import json
 import yaml
+import itertools
 
 import numpy as np
 import pandas as pd
@@ -181,9 +182,43 @@ class FileMatrix:
         n_of_files = len(df.index)
 
         if xsize * ysize != n_of_files:
-            msg = 'Mosaic is {}x{} tiles, but there are {} files!'.format(
-                xsize, ysize, n_of_files)
-            raise ValueError(msg)
+            logger.info('Mosaic is {}x{} tiles, but there are {} files! Adding empty tiles to fill spaces!'.format(
+                xsize, ysize, n_of_files))
+            x_values = df['X'].unique()
+            y_values = df['Y'].unique()
+
+            combinations = list(itertools.product(x_values, y_values))
+
+            existing_combinations = df[['X', 'Y']].apply(tuple, axis=1)
+            missing_combinations = [comb for comb in combinations if comb not in existing_combinations.tolist()]
+
+            missing_data = pd.DataFrame(missing_combinations, columns=['X', 'Y'])
+            missing_data['filename'] = None
+            nfrms_value = df['nfrms'].max()
+            missing_data['nfrms'] = nfrms_value
+            missing_data['Z'] = 0.0
+            missing_data['ysize'] = 0
+            missing_data['xsize'] = 0
+
+            df = pd.concat([df.reset_index(), missing_data], ignore_index=True)
+
+            sorted_x_values = sorted(df['X'].unique())
+            sorted_y_values = sorted(df['Y'].unique())
+
+            def compute_size(value, sorted_values, column_name):
+                return df.loc[df['X'] == value, column_name].max() if column_name == 'xsize' else df.loc[df['Y'] == value, column_name].max()
+
+            added_rows = df['filename'].isna()
+
+            df.loc[added_rows, 'xsize'] = df.loc[added_rows, 'X'].apply(lambda x: compute_size(x, sorted_x_values, 'xsize'))
+            df.loc[added_rows, 'ysize'] = df.loc[added_rows, 'Y'].apply(lambda y: compute_size(y, sorted_y_values, 'ysize'))
+
+            def generate_filename(row):
+                return f"Empty_x_{int(row['X'])}_y_{int(row['Y'])}_z_{int(row['Z'])}"
+
+            df.loc[added_rows, 'filename'] = df.loc[added_rows].apply(generate_filename, axis=1)
+
+            df.set_index('filename', inplace=True)
 
         keys = ['X', 'Y', 'Z']
         df[keys] -= df[keys].min()
@@ -194,6 +229,7 @@ class FileMatrix:
                 df[key] -= df[key].min()
 
         df = df.sort_values(['Z', 'Y', 'X'])
+        self.data_frame = df
         self.compute_end_pos()
         self.name_array = np.array(df.index.values).reshape(self.Ny, self.Nx)
 

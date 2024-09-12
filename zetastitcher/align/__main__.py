@@ -145,52 +145,61 @@ def worker(item, overlap_dict, channel, max_dz, max_dy, max_dx):
     axis = item['axis']
     overlap = overlap_dict[axis]
 
-    a = InputFile(aname)
-    b = InputFile(bname)
+    if aname.startswith("Empty") or bname.startswith("Empty"):
+        
+        item['score'] = 0
+        item['dz'] = 0
+        item['dy'] = 0
+        item['dx'] = 0
+    
+    else:
 
-    z_min = z_frame - max_dz
-    z_max = z_frame + max_dz + 1
+        a = InputFile(aname)
+        b = InputFile(bname)
 
-    aslice = a.zslice(z_min, z_max, copy=True)
-    if a.nchannels > 1:
-        if channel is not None:
-            aslice = aslice[:, channel]
-        else:
-            aslice = np.sum(aslice.astype(np.float32), axis=1)
-    if axis == 2:
-        aslice = np.rot90(aslice, axes=(-1, -2))
-    aslice = aslice[..., -(overlap + max_dy):, :]
+        z_min = z_frame - max_dz
+        z_max = z_frame + max_dz + 1
 
-    bframe = b.zslice_idx(z_frame, copy=True)
-    if b.nchannels > 1:
-        if channel is not None:
-            bframe = bframe[:, channel]
-        else:
-            bframe = np.sum(bframe.astype(np.float32), axis=1)
-    if axis == 2:
-        bframe = np.rot90(bframe, axes=(-1, -2))
-    bframe = bframe[..., :overlap - max_dy, :]
+        aslice = a.zslice(z_min, z_max, copy=True)
+        if a.nchannels > 1:
+            if channel is not None:
+                aslice = aslice[:, channel]
+            else:
+                aslice = np.sum(aslice.astype(np.float32), axis=1)
+        if axis == 2:
+            aslice = np.rot90(aslice, axes=(-1, -2))
+        aslice = aslice[..., -(overlap + max_dy):, :]
 
-    aslice = aslice.astype(np.float32)
-    bframe = bframe.astype(np.float32)
+        bframe = b.zslice_idx(z_frame, copy=True)
+        if b.nchannels > 1:
+            if channel is not None:
+                bframe = bframe[:, channel]
+            else:
+                bframe = np.sum(bframe.astype(np.float32), axis=1)
+        if axis == 2:
+            bframe = np.rot90(bframe, axes=(-1, -2))
+        bframe = bframe[..., :overlap - max_dy, :]
 
-    output_shape = np.array(aslice.shape) + np.array((0, 0, 2 * max_dx)) - np.array(bframe.shape) + 1
-    output_shape[0] = aslice.shape[0]
-    xcorr = np.zeros(output_shape)
+        aslice = aslice.astype(np.float32)
+        bframe = bframe.astype(np.float32)
 
-    for i in range(xcorr.shape[0]):
-        cc, max_loc = align_dog(aslice[i], bframe[0], 0, max_dx)
-        xcorr[i] = cc
+        output_shape = np.array(aslice.shape) + np.array((0, 0, 2 * max_dx)) - np.array(bframe.shape) + 1
+        output_shape[0] = aslice.shape[0]
+        xcorr = np.zeros(output_shape)
 
-    shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
-    score = xcorr[tuple(shift)]
-    if score < 0 or score > 1:
-        score = 0
+        for i in range(xcorr.shape[0]):
+            cc, max_loc = align_dog(aslice[i], bframe[0], 0, max_dx)
+            xcorr[i] = cc
 
-    item['score'] = score
-    item['dz'] = shift[0]
-    item['dy'] = shift[1]
-    item['dx'] = shift[2]
+        shift = list(np.unravel_index(np.argmax(xcorr), xcorr.shape))
+        score = xcorr[tuple(shift)]
+        if score < 0 or score > 1:
+            score = 0
+
+        item['score'] = score
+        item['dz'] = shift[0]
+        item['dy'] = shift[1]
+        item['dx'] = shift[2]
 
     return item
 
