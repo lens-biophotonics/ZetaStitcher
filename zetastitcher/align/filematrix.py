@@ -32,20 +32,17 @@ def parse_file_name(file_name):
         The parsed stage coordinates.
     """
     file_name = os.path.basename(file_name)
-    d = {
-        'intfl': '[-]?\d+\.?\d*'  # int or float
-    }
-    m = re.search('^.*x_({intfl}).*y_({intfl}).*z_({intfl}).*'.format(**d),
-                  file_name)
+    intfl = '[-]?\\d+\\.?\\d*' # int or float
+
+    m = re.search(f'^.*x_({intfl}).*y_({intfl}).*z_({intfl}).*', file_name)
     if m is None:
-        m = re.search('^.*x_({intfl}).*y_({intfl})'.format(**d), file_name)
+        m = re.search(f'^.*x_({intfl}).*y_({intfl})', file_name)
     if m is None:
-        m = re.search('^.*x({intfl}).*y({intfl})'.format(**d), file_name)
+        m = re.search(f'^.*x({intfl}).*y({intfl})', file_name)
     if m is None:
-        m = re.search('^({intfl})_({intfl})_({intfl})'.format(**d),
-                      file_name)
+        m = re.search(f'^({intfl})_({intfl})_({intfl})', file_name)
     if m is None:
-        m = re.search('^({intfl})_({intfl})'.format(**d), file_name)
+        m = re.search(f'^({intfl})_({intfl})', file_name)
     if m is None:
         raise ValueError('Invalid name {}'.format(file_name))
 
