@@ -1,9 +1,39 @@
 from pathlib import Path
+from cachetools import LRUCache
 
 import numpy as np
 import tifffile as tiff
 
 from zetastitcher.io.inputfile_mixin import InputFileMixin
+
+
+_cache = None
+
+
+def set_cache(cache):
+    """
+    Set a cache for `TiffWrapper.zslice`.
+
+    Example:
+
+    .. code-block:: python
+
+       import zetastitcher.io.tiffwrapper as tw
+       from cachetools import LRUCache
+       tw.set_cache(LRUCache(maxsize=32))
+
+    Parameters
+    ----------
+    cache : `cachetools:cachetools.Cache`
+        The cache instance to use.
+    """
+    global _cache
+    _cache = cache
+    _cache.hits = 0
+    _cache.misses = 0
+
+
+set_cache(LRUCache(maxsize=0))
 
 
 class TiffWrapper(InputFileMixin):
@@ -65,6 +95,13 @@ class TiffWrapper(InputFileMixin):
     def zslice(self, arg1, arg2=None, step=1, dtype=None, copy=True):
         myslice = self._args_to_slice(arg1, arg2, step)
 
+        cache_key = f'{self.file_path}__{myslice}__{dtype}'
+        cached = _cache.get(cache_key)
+        if cached is not None:
+            _cache.hits += 1
+            return cached
+        _cache.misses += 1
+
         if self.glob_mode:
             flist = self.flist[myslice]
             if not flist:
@@ -92,5 +129,9 @@ class TiffWrapper(InputFileMixin):
             a = np.moveaxis(a, self.axes.index('C') - len(self.axes), -1)
 
         if dtype is None:
-            return a
-        return a.astype(dtype)
+            ret = a
+        else:
+            ret = a.astype(dtype)
+        if _cache.maxsize > 0:
+            _cache[cache_key] = ret
+        return ret
