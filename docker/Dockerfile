@@ -6,7 +6,7 @@ COPY *.whl /home/
 
 RUN set -ex \
 	\
-    && apt-get update && apt-get install -y --no-install-recommends libopenjp2-7 libgl1 \
+    && apt-get update && apt-get install -y --no-install-recommends libopenjp2-7 libgl1 libglib2.0 \
 	&& savedAptMark="$(apt-mark showmanual)" \
 	&& apt-get install -y --no-install-recommends gcc g++ \
     \
