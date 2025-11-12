@@ -7,12 +7,12 @@ import yaml
 import humanize
 import coloredlogs
 
-from ..version import __version__
+from zetastitcher.version import __version__
 
 import numpy as np
 
-from . import absolute_positions
-from .fuse_runner import FuseRunner
+from zetastitcher.fuse import absolute_positions
+from zetastitcher.fuse.fuse_runner import FuseRunner
 from zetastitcher.align.filematrix import FileMatrix
 from zetastitcher.align.xcorr_filematrix import XcorrFileMatrix
 
