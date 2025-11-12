@@ -1,6 +1,6 @@
 cachetools
 coloredlogs
-cvxpy
+cvxopt
 humanize
 imagecodecs
 networkx>=2.0
