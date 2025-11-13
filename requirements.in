@@ -1,6 +1,6 @@
 cachetools
 coloredlogs
-cvxopt
+cvxpy==1.4.1
 humanize
 imagecodecs
 networkx>=2.0
@@ -10,7 +10,7 @@ pandas
 pims
 psutil
 pyyaml
-qpsolvers
+qpsolvers==1.8.1
 scipy
 tifffile
 zarr
